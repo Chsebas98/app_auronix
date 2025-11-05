@@ -1,0 +1,27 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "[DEV] Auronix",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "debug",
+			"program": "lib/main_dev.dart",
+			"args": [
+				"--flavor",
+				"dev"
+			]
+		},
+		{
+			"name": "Auronix",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release",
+			"program": "lib/main_prod.dart",
+			"args": [
+				"--flavor",
+				"prod"
+			]
+		}
+	]
+}

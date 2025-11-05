@@ -1,0 +1,59 @@
+part of 'auth_bloc.dart';
+
+class AuthState extends Equatable {
+  const AuthState({
+    this.showRegisterForm = false,
+    this.email = '',
+    this.password = '',
+    this.isRemember = false,
+    this.registerForm = const InitialFormSubmitStatus(),
+    this.loginForm = const InitialFormSubmitStatus(),
+  });
+
+  final bool showRegisterForm;
+  final String email;
+  final String password;
+  final bool isRemember;
+  final FormSubmitStatus registerForm;
+  final FormSubmitStatus loginForm;
+
+  ValidationFieldResult get isValidLoginEmail =>
+      FormValidators.validateLoginEmail(email);
+
+  ValidationFieldResult get isValidRegisterEmail =>
+      FormValidators.validateLoginEmail(email);
+
+  ValidationFieldResult get isValidLoginPsw =>
+      FormValidators.validateLoginPassword(password);
+
+  // ValidationFieldResult get isValidRegisterPsw =>
+  //     FormValidators.validateLoginEmail(email);
+
+  AuthState copyWith({
+    bool? showRegisterForm,
+    String? email,
+    String? password,
+    bool? isRemember,
+    FormSubmitStatus? registerForm,
+    FormSubmitStatus? loginForm,
+  }) {
+    return AuthState(
+      showRegisterForm: showRegisterForm ?? this.showRegisterForm,
+      email: email ?? this.email,
+      password: password ?? this.password,
+      isRemember: isRemember ?? this.isRemember,
+      registerForm: registerForm ?? this.registerForm,
+      loginForm: loginForm ?? this.loginForm,
+    );
+  }
+
+  @override
+  List<Object> get props => [
+    showRegisterForm,
+    email,
+    password,
+    isRemember,
+    registerForm,
+    loginForm,
+  ];
+}
