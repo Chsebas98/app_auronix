@@ -18,7 +18,7 @@ class AppAuronixMain extends StatelessWidget {
         BlocProvider(create: (context) => GlobalCubit()),
         BlocProvider(create: (context) => AppLifeCycleCubit()),
         BlocProvider(create: (context) => ThemeCubit()),
-        BlocProvider(create: (context) => SessionCubit()),
+        BlocProvider(create: (context) => SessionBloc()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(390, 844),
@@ -27,7 +27,7 @@ class AppAuronixMain extends StatelessWidget {
         ensureScreenSize: true,
         builder: (context, child) => Builder(
           builder: (context) {
-            final sessionCubit = context.read<SessionCubit>();
+            final sessionCubit = context.read<SessionBloc>();
             AppRouter.initialize(sessionCubit);
             return BlocListener<AppLifeCycleCubit, AppLifecycleState>(
               listener: (context, state) async {

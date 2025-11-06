@@ -74,9 +74,10 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
       final res = true;
       if (res) {
         emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
-      } else {
-        emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
       }
+      // else {
+      //   emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
+      // }
     } catch (e) {
       emit(state.copyWith(registerForm: FormSubmitFailed(e.toString())));
     }

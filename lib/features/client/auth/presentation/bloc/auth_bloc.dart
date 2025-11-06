@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final RxSharedPreferences _prefs;
-  AuthBloc(this._prefs) : super(AuthState()) {
+  final AuthRepository _authRepository;
+  AuthBloc(this._authRepository) : super(AuthState()) {
     on<InitRememberEvent>(_onInitRememberEvent);
     on<GoogleSignInRequestedEvent>(_onGoogleSignInRequestedEvent);
     on<ShowRegisterFormEvent>(_onShowRegisterFormEvent);
@@ -27,10 +27,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     InitRememberEvent event,
     Emitter<AuthState> emit,
   ) async {
-    final bool? saved = await _prefs.getBool(StaticVariables.rememberKey);
-    if (saved != null) {
-      emit(state.copyWith(isRemember: saved));
-    }
+    final bool saved = await _authRepository.getRemember();
+    emit(state.copyWith(isRemember: saved));
   }
 
   FutureOr<void> _onGoogleSignInRequestedEvent(
@@ -50,7 +48,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final newValue = !state.isRemember;
-    await _prefs.setBool(StaticVariables.rememberKey, newValue);
+    await _authRepository.setRemember(newValue);
     emit(state.copyWith(isRemember: newValue));
   }
 
@@ -79,9 +77,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final res = true;
       if (res) {
         emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
-      } else {
-        emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
       }
+      // else {
+      //   emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
+      // }
     } catch (e) {
       emit(state.copyWith(registerForm: FormSubmitFailed(e.toString())));
     }

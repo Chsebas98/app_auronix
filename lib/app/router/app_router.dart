@@ -22,15 +22,15 @@ class AppRouter {
   static late GoRouter _router;
   static GoRouter get instance => _router;
 
-  static void initialize(SessionCubit sessionCubit) {
+  static void initialize(SessionBloc sessionBloc) {
     _router = GoRouter(
       initialLocation: Routes.onBoarding,
-      refreshListenable: AuthChangeNotifier(sessionCubit),
+      refreshListenable: AuthChangeNotifier(sessionBloc),
       // errorBuilder: (context, state) => const NotFoundScreen(),
       redirect: (context, state) {
         // final currentLocation = state.uri.toString();
         // final isLoginPage = currentLocation == '/login';
-        final sessionState = sessionCubit.state;
+        final sessionState = sessionBloc.state;
         final currentLocation = state.uri.path;
         final isPublic =
             _publicRoutes.contains(currentLocation) ||
@@ -163,7 +163,7 @@ class AppRouter {
 }
 
 class AuthChangeNotifier extends ChangeNotifier {
-  final SessionCubit _sessionCubit;
+  final SessionBloc _sessionCubit;
 
   AuthChangeNotifier(this._sessionCubit) {
     _sessionCubit.stream.listen((_) {
