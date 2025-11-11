@@ -1,6 +1,8 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,7 +20,7 @@ class AppAuronixMain extends StatelessWidget {
         BlocProvider(create: (context) => GlobalCubit()),
         BlocProvider(create: (context) => AppLifeCycleCubit()),
         BlocProvider(create: (context) => ThemeCubit()),
-        BlocProvider(create: (context) => SessionBloc()),
+        BlocProvider(create: (context) => SessionBloc(sl<AuthRepository>())),
       ],
       child: ScreenUtilInit(
         designSize: const Size(390, 844),

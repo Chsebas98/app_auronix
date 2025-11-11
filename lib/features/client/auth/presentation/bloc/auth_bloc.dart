@@ -75,14 +75,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(registerForm: FormSubmitProgress()));
       await Future.delayed(Duration(seconds: 3));
       final res = true;
+      //todo:verificar usuario
       if (res) {
-        emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
+        emit(
+          state.copyWith(
+            registerForm: FormSubmitSuccesfull(),
+            showRegisterCompleteForm: true,
+          ),
+        );
       }
       // else {
-      //   emit(state.copyWith(registerForm: FormSubmitSuccesfull()));
+      //   emit(state.copyWith(registerForm: FormSubmitSuccesfull(),showRegisterCompleteForm: false));
       // }
     } catch (e) {
-      emit(state.copyWith(registerForm: FormSubmitFailed(e.toString())));
+      emit(
+        state.copyWith(
+          registerForm: FormSubmitFailed(e.toString()),
+          showRegisterCompleteForm: false,
+        ),
+      );
     }
   }
 

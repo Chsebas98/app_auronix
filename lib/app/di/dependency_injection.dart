@@ -1,9 +1,5 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/environments/environment.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/local/auth_local_services.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/remote/auth_remote_services.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';

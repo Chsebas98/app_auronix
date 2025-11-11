@@ -1,13 +1,13 @@
+import 'package:auronix_app/app/app.dart';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/auth/presentation/bloc/auth_bloc.dart';
-import 'package:auronix_app/features/client/auth/presentation/widgets/client_login_form.dart';
-import 'package:auronix_app/features/client/auth/presentation/widgets/client_register_form.dart';
-import 'package:auronix_app/shared/buttons/custom_outlined_button.dart';
-import 'package:auronix_app/shared/icons/horizontal_logo.dart';
+import 'package:auronix_app/features/client/auth/presentation/widgets/widgets.dart';
+import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/shared/shared.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,20 +41,12 @@ class _AuthScreenInit extends StatelessWidget {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.primaryColor,
-        appBar: AppBar(
-          forceMaterialTransparency: true,
-          title: Row(
+        appBar: AppbarDefault(
+          goTo: () => AppRouter.go(Routes.onBoarding),
+          content: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: () => AppRouter.go(Routes.onBoarding),
-                icon: Icon(Icons.arrow_back_ios_rounded, size: 24.r),
-              ),
-              const Spacer(),
-              HorizontalLogo(),
-            ],
+            children: [const Spacer(), HorizontalLogo()],
           ),
-          centerTitle: false,
         ),
         body: _AuthScreenController(theme: theme),
         bottomNavigationBar: SafeArea(
@@ -112,6 +104,24 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
   }
 
   @override
+  void dispose() {
+    rootMessengerKey.currentState?.hideCurrentSnackBar();
+    super.dispose();
+  }
+
+  void _showRegisterCompleteForm(BuildContext ctx) {
+    final bloc = ctx.read<AuthBloc>();
+    showGeneralDialog(
+      context: ctx,
+      barrierDismissible: false,
+      fullscreenDialog: true,
+      useRootNavigator: false,
+      pageBuilder: (_, __, ___) =>
+          BlocProvider.value(value: bloc, child: RegisterClientScreen()),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -126,6 +136,9 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
             onVisible: () => _isSnackOpen = false,
           );
           debugPrint('Hio');
+        }
+        if (state.showRegisterCompleteForm) {
+          _showRegisterCompleteForm(context);
         }
       },
       child: _AuthScreenStructure(theme: widget.theme),
