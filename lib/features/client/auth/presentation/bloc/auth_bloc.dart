@@ -73,7 +73,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(state.copyWith(registerForm: FormSubmitProgress()));
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(Duration(seconds: 1));
       final res = true;
       //todo:verificar usuario
       if (res) {

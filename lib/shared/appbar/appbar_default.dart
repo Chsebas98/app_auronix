@@ -17,7 +17,8 @@ class AppbarDefault extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       forceMaterialTransparency: true,
       centerTitle: isCenter,
-
+      automaticallyImplyLeading: false,
+      actions: [],
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

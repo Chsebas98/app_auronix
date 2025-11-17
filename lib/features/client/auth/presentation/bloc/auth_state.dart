@@ -33,8 +33,8 @@ class AuthState extends Equatable {
   ValidationFieldResult get isValidLoginPsw =>
       FormValidators.validateLoginPassword(password);
 
-  // ValidationFieldResult get isValidRegisterPsw =>
-  //     FormValidators.validateLoginEmail(email);
+  ValidationFieldResult get isValidRegisterPsw =>
+      FormValidators.validateRegisterPassword(password);
 
   AuthState copyWith({
     bool? showRegisterForm,

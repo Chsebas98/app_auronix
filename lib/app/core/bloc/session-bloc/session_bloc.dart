@@ -1,6 +1,4 @@
 import 'dart:async';
-
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

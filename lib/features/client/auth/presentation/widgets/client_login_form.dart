@@ -17,7 +17,7 @@ class ClientLoginForm extends StatelessWidget {
         debugPrint('AuthState.password ClientLogin = "${state.password}"');
         return Column(
           children: [
-            LoginFields(),
+            LoginFields(isRegister: false),
             5.verticalSpace,
             Row(
               mainAxisAlignment: MainAxisAlignment.start,

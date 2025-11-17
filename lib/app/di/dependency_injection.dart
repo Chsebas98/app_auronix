@@ -1,6 +1,7 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/environments/environment.dart';
 import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/shared/modals/modal_temp_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:get_it/get_it.dart';
@@ -64,6 +65,7 @@ Future<void> initDependencies() async {
       remote: sl<AuthRemoteServices>(),
     ),
   );
+  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerFactory<SessionBloc>(() => SessionBloc(sl<AuthRepository>()));
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
   sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));

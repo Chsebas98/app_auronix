@@ -14,7 +14,7 @@ class ClientRegisterForm extends StatelessWidget {
       builder: (context, state) {
         return Column(
           children: [
-            LoginFields(),
+            LoginFields(isRegister: true),
             10.verticalSpace,
             SizedBox(
               width: double.infinity,

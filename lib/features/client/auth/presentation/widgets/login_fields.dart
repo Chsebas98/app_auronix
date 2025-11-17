@@ -6,7 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class LoginFields extends StatelessWidget {
-  const LoginFields({super.key});
+  const LoginFields({super.key, required this.isRegister});
+  final bool isRegister;
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +46,14 @@ class LoginFields extends StatelessWidget {
               autovalidateMode: AutovalidateMode.onUserInteraction,
               autocorrect: false,
               hasShowHidePassword: true,
-              hasValidationRules: false,
-              hasStrengthIndicator: false,
+              hasValidationRules: isRegister ? true : false,
+              hasStrengthIndicator: isRegister ? true : false,
               hasSpace: false,
               allowSpecialCharacters: true,
               textInputAction: TextInputAction.done,
-              validator: (value) =>
-                  Helpers.getMessageFormValidation(state.isValidLoginPsw),
+              validator: (value) => isRegister
+                  ? Helpers.getMessageFormValidation(state.isValidRegisterPsw)
+                  : Helpers.getMessageFormValidation(state.isValidLoginPsw),
               onChanged: (value) =>
                   context.read<AuthBloc>().add(ChangePasswordEvent(psw: value)),
             ),

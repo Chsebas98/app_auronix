@@ -4,8 +4,6 @@ import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/presentation/bloc/auth_bloc.dart';
-import 'package:auronix_app/features/client/auth/presentation/widgets/widgets.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -109,9 +107,9 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
     super.dispose();
   }
 
-  void _showRegisterCompleteForm(BuildContext ctx) {
+  Future<void> _showRegisterCompleteForm(BuildContext ctx) {
     final bloc = ctx.read<AuthBloc>();
-    showGeneralDialog(
+    return showGeneralDialog(
       context: ctx,
       barrierDismissible: false,
       fullscreenDialog: true,
