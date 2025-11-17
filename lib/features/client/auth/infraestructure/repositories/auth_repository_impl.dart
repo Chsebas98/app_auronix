@@ -1,7 +1,4 @@
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/local/auth_local_services.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/remote/auth_remote_services.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
 import 'package:auronix_app/features/features.dart';
 
 class AuthRepositoryImpl implements AuthRepository {

@@ -8,8 +8,11 @@ class AuthState extends Equatable {
     this.isRemember = false,
     this.registerForm = const InitialFormSubmitStatus(),
     this.loginForm = const InitialFormSubmitStatus(),
+    //register
+    this.showRegisterCompleteForm = false,
   });
 
+  //auth
   final bool showRegisterForm;
   final String email;
   final String password;
@@ -17,6 +20,10 @@ class AuthState extends Equatable {
   final FormSubmitStatus registerForm;
   final FormSubmitStatus loginForm;
 
+  //register
+  final bool showRegisterCompleteForm;
+
+  //validaciones
   ValidationFieldResult get isValidLoginEmail =>
       FormValidators.validateLoginEmail(email);
 
@@ -26,8 +33,8 @@ class AuthState extends Equatable {
   ValidationFieldResult get isValidLoginPsw =>
       FormValidators.validateLoginPassword(password);
 
-  // ValidationFieldResult get isValidRegisterPsw =>
-  //     FormValidators.validateLoginEmail(email);
+  ValidationFieldResult get isValidRegisterPsw =>
+      FormValidators.validateRegisterPassword(password);
 
   AuthState copyWith({
     bool? showRegisterForm,
@@ -36,6 +43,8 @@ class AuthState extends Equatable {
     bool? isRemember,
     FormSubmitStatus? registerForm,
     FormSubmitStatus? loginForm,
+    //register
+    bool? showRegisterCompleteForm,
   }) {
     return AuthState(
       showRegisterForm: showRegisterForm ?? this.showRegisterForm,
@@ -44,6 +53,9 @@ class AuthState extends Equatable {
       isRemember: isRemember ?? this.isRemember,
       registerForm: registerForm ?? this.registerForm,
       loginForm: loginForm ?? this.loginForm,
+      //register
+      showRegisterCompleteForm:
+          showRegisterCompleteForm ?? this.showRegisterCompleteForm,
     );
   }
 
@@ -55,5 +67,7 @@ class AuthState extends Equatable {
     isRemember,
     registerForm,
     loginForm,
+    //register
+    showRegisterCompleteForm,
   ];
 }

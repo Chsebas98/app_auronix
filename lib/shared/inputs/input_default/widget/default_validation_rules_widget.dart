@@ -96,7 +96,7 @@ class DefaultRulePassedWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.check_circle, color: theme.primaryColor, size: 0.05.sw),
+        Icon(Icons.check_circle, color: AppColors.fifth, size: 0.05.sw),
         Text(
           name,
           maxLines: 2,

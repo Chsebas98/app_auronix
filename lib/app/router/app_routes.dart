@@ -13,6 +13,7 @@ class Routes {
   //Protegidas - Conductor
   static const String loginConductor = '/login-conductor';
   static const String registerConductor = '/register-conductor';
+  static const String homeConductor = 'home';
   static const String loginMember = '/login-member';
   static const String registerMember = '/register-member';
   //Protegidas - Gerente

@@ -168,11 +168,11 @@ class FormValidators {
         message: 'La contraseña debe contener al menos un número',
       );
     }
-    if (!RegExp(r'[@#+$%]').hasMatch(password)) {
+    if (!RegExp(r'[!#$%&()*+,-./:;<=>?@\\_,]').hasMatch(password)) {
       return const ValidationFieldResult(
         isValid: false,
         message:
-            'La contraseña debe contener al menos un carácter especial (@#+\$%)',
+            r'La contraseña debe contener al menos un carácter especial (@#+\$%)',
       );
     }
     return const ValidationFieldResult(isValid: true);
@@ -216,5 +216,15 @@ class FormValidators {
 
     //Si todo está posi regresa true
     return const ValidationFieldResult(isValid: true);
+  }
+
+  static ValidationFieldResult validateSelectOption(String option) {
+    if (option.trim().isEmpty || option == 'Seleccionar') {
+      return ValidationFieldResult(
+        isValid: false,
+        message: 'Por favor seleccione una opción',
+      );
+    }
+    return ValidationFieldResult(isValid: true);
   }
 }

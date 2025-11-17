@@ -150,7 +150,13 @@ class AppRouter {
             return Container();
           },
         ),
-
+        GoRoute(
+          name: 'homeConductor',
+          path: Routes.homeConductor,
+          builder: (context, state) {
+            return HomeScreen();
+          },
+        ),
         //Protegidas - Gerente
         //Protegidas - SuperAdming
       ],

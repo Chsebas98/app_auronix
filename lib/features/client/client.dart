@@ -1,11 +1,16 @@
 export 'about/presentation/screens/about_screen.dart';
+export 'auth/infraestructure/data/local/auth_local_services.dart';
+export 'auth/infraestructure/data/remote/auth_remote_services.dart';
 export 'auth/infraestructure/models/authentication_credentials.dart';
 export 'auth/infraestructure/models/models.dart';
+export 'auth/infraestructure/repositories/auth_repository.dart';
+export 'auth/infraestructure/repositories/auth_repository_impl.dart';
 export 'auth/presentation/bloc/auth_bloc.dart';
-export 'auth/presentation/pages/auth_screen.dart';
+export 'auth/presentation/screen/auth_screen.dart';
 export 'auth/presentation/widgets/client_login_form.dart';
 export 'auth/presentation/widgets/client_register_form.dart';
 export 'auth/presentation/widgets/login_fields.dart';
 export 'home/presentation/pages/home_screen.dart';
 export 'onBoarding/presentation/screens/onboarding_screen.dart';
+export 'auth/presentation/widgets/register_client_screen.dart';
 export 'root/presentation/screens/root_screen.dart';

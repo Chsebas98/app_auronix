@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class AppTheme {
   static final ThemeData lightTheme = ThemeData.light().copyWith(
     primaryColor: AppColors.primary,
+    primaryColorDark: AppColors.black,
+    primaryColorLight: AppColors.primary,
     scaffoldBackgroundColor: AppColors.primary,
     dividerTheme: DividerThemeData(color: AppColors.eight, thickness: 1.h),
     checkboxTheme: CheckboxThemeData(
@@ -201,6 +203,8 @@ class AppTheme {
   );
   static final ThemeData darkTheme = ThemeData.dark().copyWith(
     primaryColor: AppColors.secondary,
+    primaryColorDark: AppColors.primary,
+    primaryColorLight: AppColors.black,
     scaffoldBackgroundColor: AppColors.secondary,
     dividerTheme: DividerThemeData(color: AppColors.eight, thickness: 1.h),
     checkboxTheme: CheckboxThemeData(

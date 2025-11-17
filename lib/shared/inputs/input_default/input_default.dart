@@ -58,7 +58,10 @@ class CustomTextFormField extends StatefulWidget {
     this.onFieldSubmitted,
     this.justUpperCase = false,
     this.justNumbers = false,
+    this.justText = false,
     this.allowSpecialCharacters = false,
+    this.allowSeparator = false,
+    this.allowTildes = false,
     this.hasSpace = false,
     this.enabled,
     this.cursorWidth = 2.0,
@@ -258,14 +261,22 @@ class CustomTextFormField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
 
   // Condiciones para habilitar los formateadores del input.
-  // Permite ingresar unicamente mayusculas definidos en el inputFormatter propiedad de [TextFormField].
-  final bool justUpperCase;
+  // Permite ingresar unicamente el - en inputFormatter propiedad de [TextFormField].
+  final bool allowSeparator;
+
+  // Permite ingresar unicamente texto inputFormatter propiedad de [TextFormField].
+  final bool justText;
 
   // Permite ingresar unicamente números definidos en el inputFormatter propiedad de [TextFormField].
   final bool justNumbers;
 
   // Permite ingresar caracteres especiales definidos en el inputFormatter propiedad de [TextFormField].
   final bool allowSpecialCharacters;
+  // Permite ingresar unicamente la ñ y letras con tildes como caracter especial en inputFormatter propiedad de [TextFormField].
+  final bool allowTildes;
+
+  // Permite ingresar unicamente mayusculas definidos en el inputFormatter propiedad de [TextFormField].
+  final bool justUpperCase;
 
   // Permite ingresar espacios definidos en el inputFormatter propiedad de [TextFormField].
   final bool hasSpace;
@@ -439,27 +450,15 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
               onTap: widget.onTap,
               onEditingComplete: widget.onEditingComplete,
               onFieldSubmitted: widget.onFieldSubmitted,
-              inputFormatters: [
-                widget.justUpperCase
-                    ? UpperCaseTextFormatter()
-                    : widget.justNumbers
-                    ? FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))
-                    : widget.allowSpecialCharacters && widget.hasSpace
-                    ? FilteringTextInputFormatter.allow(
-                        RegExp(r'[a-zA-Z0-9\s!#$%&()*+,-./:;<=>?@\\_,]'),
-                      ) // Permite caracteres especiales CON espacio
-                    : widget.allowSpecialCharacters && !widget.hasSpace
-                    ? FilteringTextInputFormatter.allow(
-                        RegExp(r'[a-zA-Z0-9!#$%&()*+,-./:;<=>?@\\_,]'),
-                      ) // Permite caracteres especiales SIN espacio
-                    : widget.hasSpace
-                    ? FilteringTextInputFormatter.allow(
-                        RegExp(r'[a-zA-Z0-9\- ]'),
-                      )
-                    : FilteringTextInputFormatter.allow(
-                        RegExp(r'[a-zA-Z0-9]'),
-                      ), // Solo permite letras, números
-              ],
+              inputFormatters: defaultFormatters(
+                justUpperCase: widget.justUpperCase,
+                justNumbers: widget.justNumbers,
+                allowSpecialCharacters: widget.allowSpecialCharacters,
+                hasSpace: widget.hasSpace,
+                justText: widget.justText,
+                allowSeparator: widget.allowSeparator,
+                allowTildes: widget.allowTildes,
+              ),
               enabled: widget.enabled,
               cursorWidth: widget.cursorWidth,
               cursorHeight: widget.cursorHeight,
