@@ -1,3 +1,4 @@
+import 'package:auronix_app/app/core/bloc/session-bloc/session_bloc.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/theme/theme.dart';
 import 'package:auronix_app/core/core.dart';
@@ -9,23 +10,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-GlobalKey<FormState> _registerClientFormKey = GlobalKey<FormState>();
-
 class RegisterClientScreen extends StatelessWidget {
   const RegisterClientScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<ModalTempCubit>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => sl<ModalTempCubit>()),
+        BlocProvider(create: (context) => sl<SessionBloc>()),
+      ],
       child: _RegisterClientScreenStructure(),
     );
   }
 }
 
-class _RegisterClientScreenStructure extends StatelessWidget {
+class _RegisterClientScreenStructure extends StatefulWidget {
   const _RegisterClientScreenStructure();
 
+  @override
+  State<_RegisterClientScreenStructure> createState() =>
+      _RegisterClientScreenStructureState();
+}
+
+class _RegisterClientScreenStructureState
+    extends State<_RegisterClientScreenStructure> {
+  final GlobalKey<FormState> _registerClientFormKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -35,20 +45,42 @@ class _RegisterClientScreenStructure extends StatelessWidget {
         builder: (context, state) {
           return Scaffold(
             backgroundColor: AppColors.white,
-            appBar: AppbarDefault(goTo: () => Navigator.pop(context)),
-            bottomNavigationBar: SafeArea(
-              child: Padding(
-                padding: EdgeInsetsGeometry.symmetric(horizontal: 24.w),
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('Completar Registro'),
-                ),
+            appBar: AppbarDefault(
+              isCenter: true,
+              content: Text(
+                'Completar Registro',
+                style: theme.textTheme.titleMedium,
               ),
+              goTo: () => Navigator.pop(context),
+            ),
+            bottomNavigationBar: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                return SafeArea(
+                  child: Padding(
+                    padding: EdgeInsetsGeometry.symmetric(horizontal: 24.w),
+                    child: FilledButton(
+                      onPressed: () {
+                        if (_registerClientFormKey.currentState!.validate()) {
+                          context.read<AuthBloc>().add(
+                            CompleteRegisterSubmitEvent(
+                              name: state.stringTemp1,
+                              email: authState.email,
+                              gender: state.stringTemp2,
+                              psw: state.stringTemp3,
+                            ),
+                          );
+
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text('Completar Registro'),
+                    ),
+                  ),
+                );
+              },
             ),
             body: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
+              builder: (context, authState) {
                 return Form(
                   key: _registerClientFormKey,
                   child: ListView(
@@ -61,6 +93,10 @@ class _RegisterClientScreenStructure extends StatelessWidget {
                         hasShowHidePassword: false,
                         hasValidationRules: false,
                         hasStrengthIndicator: false,
+                        hasSpace: true,
+                        justText: true,
+                        justUpperCase: true,
+                        maxLength: 80,
                         decoration: InputDecoration(
                           hintText: 'Ingresa tu nombre',
                           labelText: 'Nombre',
@@ -92,7 +128,7 @@ class _RegisterClientScreenStructure extends StatelessWidget {
                           border: InputBorder.none,
                         ),
                         textInputAction: TextInputAction.next,
-                        initialValue: state.email,
+                        initialValue: authState.email,
                       ),
                       20.verticalSpace,
                       CustomInputSelect(
@@ -112,6 +148,8 @@ class _RegisterClientScreenStructure extends StatelessWidget {
                         hasShowHidePassword: false,
                         hasValidationRules: false,
                         hasStrengthIndicator: false,
+                        justNumbers: true,
+                        maxLength: 10,
                         decoration: InputDecoration(
                           labelText: 'Número de celular',
                           hintText: 'Ingresa tu número de celular',
@@ -132,6 +170,7 @@ class _RegisterClientScreenStructure extends StatelessWidget {
                         hasShowHidePassword: true,
                         hasSpace: false,
                         allowSpecialCharacters: true,
+                        maxLength: 20,
                         hasStrengthIndicator:
                             context.read<ModalTempCubit>().state.boolTemp1
                             ? false
@@ -163,7 +202,7 @@ class _RegisterClientScreenStructure extends StatelessWidget {
                           context.read<ModalTempCubit>().boolTemp1ChangedEvent(
                             isValid.isValid,
                           );
-                          final coincidePsw = value == state.password;
+                          final coincidePsw = value == authState.password;
                           context.read<ModalTempCubit>().boolTemp2ChangedEvent(
                             coincidePsw,
                           );

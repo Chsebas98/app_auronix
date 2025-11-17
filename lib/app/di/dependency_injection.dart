@@ -65,8 +65,8 @@ Future<void> initDependencies() async {
       remote: sl<AuthRemoteServices>(),
     ),
   );
-  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerFactory<SessionBloc>(() => SessionBloc(sl<AuthRepository>()));
+  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
   sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));
 }

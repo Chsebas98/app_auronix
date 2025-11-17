@@ -20,6 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ChangeEmailEvent>(_onChangeEmailEvent);
     on<ChangePasswordEvent>(_onChangePasswordEvent);
     on<RegisterSubmitEvent>(_onRegisterSubmitEvent);
+    on<CompleteRegisterSubmitEvent>(_onCompleteRegisterSubmitEvent);
     on<LoginSubmittedEvent>(_onLoginSubmittedEvent);
   }
 
@@ -92,6 +93,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         state.copyWith(
           registerForm: FormSubmitFailed(e.toString()),
           showRegisterCompleteForm: false,
+        ),
+      );
+    }
+  }
+
+  FutureOr<void> _onCompleteRegisterSubmitEvent(
+    CompleteRegisterSubmitEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(completeRegisterForm: FormSubmitProgress()));
+      await Future.delayed(Duration(seconds: 1));
+      emit(
+        state.copyWith(
+          showRegisterCompleteForm: false,
+          completeRegisterForm: FormSubmitSuccesfull(),
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          completeRegisterForm: FormSubmitFailed(e.toString()),
+          showRegisterCompleteForm: true,
         ),
       );
     }

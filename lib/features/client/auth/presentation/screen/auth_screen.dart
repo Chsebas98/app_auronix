@@ -138,6 +138,12 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
         if (state.showRegisterCompleteForm) {
           _showRegisterCompleteForm(context);
         }
+
+        if (state.completeRegisterForm is FormSubmitSuccesfull) {
+          context.read<SessionBloc>().add(
+            LoginUserEvent(email: state.email, password: state.password),
+          );
+        }
       },
       child: _AuthScreenStructure(theme: widget.theme),
     );
