@@ -70,6 +70,14 @@ class AppRouter {
         return null;
       },
       routes: [
+        //Generales
+        GoRoute(
+          name: 'allowLocation',
+          path: Routes.allowLocation,
+          builder: (context, state) {
+            return AllowPermitsScreen();
+          },
+        ),
         //Protegidas - Cliente
         GoRoute(
           name: 'onBoarding',

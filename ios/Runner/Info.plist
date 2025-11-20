@@ -52,5 +52,15 @@
 			<string>en</string>
 			<string>es</string>
 		</array>
+
+		<!-- Permission options for the `location` group -->
+    		<key>NSLocationWhenInUseUsageDescription</key>
+    		<string>Necesitamos acceder a la ubicación durante el uso</string>
+    		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    		<string>Habilitar ubicación siempre que este en uso</string>
+    		<key>NSLocationUsageDescription</key>
+    		<string>Necesitamos acceder a tu ubicación</string>
+    		<key>NSLocationAlwaysUsageDescription</key>
+    		<string>Necesitamos acceder a tu ubicación siempre</string>
 	</dict>
 </plist>
