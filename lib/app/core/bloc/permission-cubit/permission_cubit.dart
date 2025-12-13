@@ -79,7 +79,7 @@ class PermissionCubit extends Cubit<PermissionState>
   Future<bool> ensureLocationAlways({
     bool automaticOpenAppSettings = true,
   }) async {
-    debugPrint("Entra");
+    // debugPrint("Entra");
     if (state.ubicacionAlwaysGranted) return true;
     final okInUse = await ensureLocationWhenInUse(
       automaticOpenAppSettings: automaticOpenAppSettings,

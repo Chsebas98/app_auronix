@@ -60,7 +60,7 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
     MemberChangePasswordEvent event,
     Emitter<MemberState> emit,
   ) {
-    debugPrint(event.psw);
+    // debugPrint(event.psw);
     emit(state.copyWith(password: event.psw));
   }
 

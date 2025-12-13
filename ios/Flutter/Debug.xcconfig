@@ -1,2 +1,5 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+GID_CLIENT_ID=115390315336-h2nbu0nji72mu9j66avjangp5e4euk4i.apps.googleusercontent.com
+REVERSED_CLIENT_ID=com.googleusercontent.apps.115390315336-h2nbu0nji72mu9j66avjangp5e4euk4i

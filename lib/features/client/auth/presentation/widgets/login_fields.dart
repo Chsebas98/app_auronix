@@ -13,7 +13,7 @@ class LoginFields extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        debugPrint('AuthState.password LoginFields= "${state.password}"');
+        // debugPrint('AuthState.password LoginFields= "${state.password}"');
         return Column(
           children: [
             CustomTextFormField(

@@ -65,10 +65,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final googleAccount = await _googleSignIn.authenticate();
 
-      final auth = await googleAccount.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          googleAccount.authentication;
 
       debugPrint('Google Google Acount: $googleAccount');
-      debugPrint('Google Auth Token: ${auth.idToken} $auth');
+      debugPrint('Google Auth Token: ${googleAuth.idToken} $googleAuth');
       // final credential = GoogleAuthProvider.credential(
       //   accessToken: googleAuth.,
       //   idToken: googleAuth.idToken,

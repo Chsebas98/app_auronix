@@ -72,7 +72,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ChangePasswordEvent event,
     Emitter<AuthState> emit,
   ) {
-    debugPrint(event.psw);
+    // debugPrint(event.psw);
     emit(state.copyWith(password: event.psw));
   }
 

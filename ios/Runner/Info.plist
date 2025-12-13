@@ -2,6 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- FIREBASE AUTH -->
+	<key>GIDClientID</key>
+	<string>$(GID_CLIENT_ID)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+  	  <dict>
+    	    <key>CFBundleTypeRole</key>
+	    <string>Editor</string>
+	    <key>CFBundleURLSchemes</key>
+	    <array>
+              <string>$(REVERSED_CLIENT_ID)</string>
+	    </array>
+  	  </dict>
+	</array>
 	<!-- Permission options for the `location` group -->
     	<key>NSLocationWhenInUseUsageDescription</key>
     	<string>Necesitamos acceder a la ubicación durante el uso</string>
@@ -21,7 +35,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Auronix App</string>
+	<string>Ando</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -29,7 +43,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>auronix_app</string>
+	<string>Ando</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

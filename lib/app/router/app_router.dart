@@ -35,38 +35,32 @@ class AppRouter {
         final isPublic =
             _publicRoutes.contains(currentLocation) ||
             _publicPrefixes.any((p) {
-              debugPrint("QUE ES P: $p");
+              // debugPrint("QUE ES P: $p");
               return currentLocation.contains(p);
             });
 
-        debugPrint(
-          'Router redirect - Ruta actual: $currentLocation, Session state: ${sessionState.runtimeType}',
-        );
+        // debugPrint('Router redirect - Ruta actual: $currentLocation, Session state: ${sessionState.runtimeType}',);
 
         if (sessionState is SessionUnauthenticated ||
             sessionState is SessionTokenExpired) {
           if (sessionState is SessionTokenExpired) {
-            debugPrint(
-              'Router detecto State AuthTokenExpired, message: ${sessionState.message}',
-            );
+            // debugPrint('Router detecto State AuthTokenExpired, message: ${sessionState.message}',);
             return Routes.sessionExpired;
           }
           if (!isPublic) {
-            debugPrint('Redirect a /session_expired from $currentLocation');
+            // debugPrint('Redirect a /session_expired from $currentLocation');
             return Routes.auth;
           }
-          debugPrint('Already on public route');
+          // debugPrint('Already on public route');
           return null;
         }
 
         if (sessionState is SessionAuthenticated && isPublic) {
-          debugPrint(
-            'User Autenticado, redirect to /summary from $currentLocation',
-          );
+          // debugPrint('User Autenticado, redirect to /summary from $currentLocation',);
           return Routes.home;
         }
 
-        debugPrint('No redirect needed');
+        // debugPrint('No redirect needed');
         return null;
       },
       routes: [
