@@ -35,7 +35,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   FutureOr<void> _onGoogleSignInRequestedEvent(
     GoogleSignInRequestedEvent event,
     Emitter<AuthState> emit,
-  ) {}
+  ) async {
+    try {
+      await _authRepository.loginWithGoogle();
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
+  }
 
   FutureOr<void> _onShowRegisterFormEvent(
     ShowRegisterFormEvent event,

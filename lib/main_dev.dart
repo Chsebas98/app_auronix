@@ -1,7 +1,7 @@
 import 'package:auronix_app/app/app.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/environments/environment.dart';
-import 'package:auronix_app/core/firebase/dev/firebase_options.dart';
+import 'package:auronix_app/core/firebase/dev/firebase_options_dev.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 

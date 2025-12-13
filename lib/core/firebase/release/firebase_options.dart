@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -49,20 +46,30 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDoMGjbMl3fFdZ0g6C2SnQiRtwj5KbdR7s',
+    appId: '1:1007239374066:web:c6295cc1b98a9e8ea01c6b',
+    messagingSenderId: '1007239374066',
+    projectId: 'app-ando',
+    authDomain: 'app-ando.firebaseapp.com',
+    storageBucket: 'app-ando.firebasestorage.app',
+    measurementId: 'G-N8DYT22CZM',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAvhy7XRwTzWSqQJYFP1UkjoVznHqpLW2I',
-    appId: '1:664587774117:android:c8a5606934e7a01070c54c',
-    messagingSenderId: '664587774117',
-    projectId: 'app-auronix',
-    storageBucket: 'app-auronix.firebasestorage.app',
+    apiKey: 'AIzaSyAf-tp5-opoXJSADXkBeB31DMBdqRyEb0U',
+    appId: '1:364283556136:android:9c8f501a3997e22a9ce01d',
+    messagingSenderId: '364283556136',
+    projectId: 'app-ando-auronix',
+    storageBucket: 'app-ando-auronix.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDwsZsfXV9n0cl7OXYTs4E2LX_Nu5uh57E',
-    appId: '1:664587774117:ios:9ecbbadc0d374b1570c54c',
-    messagingSenderId: '664587774117',
-    projectId: 'app-auronix',
-    storageBucket: 'app-auronix.firebasestorage.app',
-    iosBundleId: 'com.example.auronixApp',
+    apiKey: 'AIzaSyAxhwfxMh09ifEVCiPoa5rfUpMppjDx8Qo',
+    appId: '1:364283556136:ios:c5604bdaece7ba829ce01d',
+    messagingSenderId: '364283556136',
+    projectId: 'app-ando-auronix',
+    storageBucket: 'app-ando-auronix.firebasestorage.app',
+    iosBundleId: 'com.package.appauronix2026',
   );
 }

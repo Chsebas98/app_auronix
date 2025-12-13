@@ -6,7 +6,10 @@ class InitialFormSubmitStatus extends FormSubmitStatus {
   const InitialFormSubmitStatus();
 }
 
-class FormSubmitProgress extends FormSubmitStatus {}
+class FormSubmitProgress extends FormSubmitStatus {
+  final String? message;
+  const FormSubmitProgress({this.message});
+}
 
 class FormSubmitSuccesfull extends FormSubmitStatus {
   final String? message;
@@ -14,6 +17,6 @@ class FormSubmitSuccesfull extends FormSubmitStatus {
 }
 
 class FormSubmitFailed extends FormSubmitStatus {
-  final String exception;
-  FormSubmitFailed(this.exception);
+  final String message;
+  FormSubmitFailed(this.message);
 }

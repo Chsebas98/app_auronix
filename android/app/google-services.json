@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "7143246109",
-    "project_id": "dev-app-auronix",
-    "storage_bucket": "dev-app-auronix.firebasestorage.app"
+    "project_number": "115390315336",
+    "project_id": "dev-app-ando-auronix",
+    "storage_bucket": "dev-app-ando-auronix.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:7143246109:android:ee8fcc23bf563e680ff9f4",
+        "mobilesdk_app_id": "1:115390315336:android:00bb318f505e35fa00517d",
         "android_client_info": {
-          "package_name": "com.package.auronixapp"
+          "package_name": "com.package.appauronix2026"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBo2dWgJI-zP4hlKtrZVo6dQG4E1zaekCI"
+          "current_key": "AIzaSyCqUwJ2ttUgVyUbg_iIay2nz6CmK-yYENc"
         }
       ],
       "services": {

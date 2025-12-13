@@ -100,13 +100,7 @@ class AppRouter {
             return AuthScreen();
           },
         ),
-        GoRoute(
-          name: 'newVersion',
-          path: Routes.newVersion,
-          builder: (context, state) {
-            return VersionScreen();
-          },
-        ),
+
         GoRoute(
           name: 'root',
           path: Routes.root,
@@ -114,13 +108,13 @@ class AppRouter {
             return RootScreen();
           },
         ),
-        GoRoute(
-          name: 'sesionExpired',
-          path: Routes.sessionExpired,
-          builder: (context, state) {
-            return SessionScreen();
-          },
-        ),
+        // GoRoute(
+        //   name: 'sesionExpired',
+        //   path: Routes.sessionExpired,
+        //   builder: (context, state) {
+        //     return SessionScreen();
+        //   },
+        // ),
         GoRoute(
           name: 'homeClient',
           path: Routes.home,

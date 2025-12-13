@@ -6,6 +6,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Plugin para el auth de Google
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -46,13 +48,11 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            // Si quieres sufijo, actívalo:
-            // applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Auronix")
+            resValue("string", "app_name", "Ando Dev")
         }
         create("prod") {
             dimension = "env"
-            resValue("string", "app_name", "Auronix")
+            resValue("string", "app_name", "Ando")
         }
     }
 }

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "364283556136",
+    "project_id": "app-ando-auronix",
+    "storage_bucket": "app-ando-auronix.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364283556136:android:9c8f501a3997e22a9ce01d",
+        "android_client_info": {
+          "package_name": "com.package.appauronix2026"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "364283556136-vnchonh2ptsdbj1854ackgjfi3elfpsh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.package.appauronix2026",
+            "certificate_hash": "706629bd3ef86cc2e128620bad24f2a20d8fdb6d"
+          }
+        },
+        {
+          "client_id": "364283556136-4nmihsd7fgbaa3d724k5o4bjhfnkjhmd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAf-tp5-opoXJSADXkBeB31DMBdqRyEb0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "364283556136-4nmihsd7fgbaa3d724k5o4bjhfnkjhmd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "364283556136-rlruiap41a712j8s8hsnkfodecputjdh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.package.appauronix2026"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

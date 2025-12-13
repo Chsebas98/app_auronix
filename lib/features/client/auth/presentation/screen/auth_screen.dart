@@ -119,21 +119,25 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
     );
   }
 
+  void _showToastValidation(BuildContext ctx) {
+    return SnackUtil.showToastValidation(
+      context: context,
+      isDefaultSnackbar: TypeToast.actionToast,
+      theme: widget.theme,
+      title: '',
+      description: 'askdjaskldjals djakls jaskl jdakls j',
+      onVisible: () => _isSnackOpen = false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.registerForm is FormSubmitSuccesfull && !_isSnackOpen) {
           _isSnackOpen = true;
-          SnackUtil.showToastValidation(
-            context: context,
-            isDefaultSnackbar: TypeToast.actionToast,
-            theme: widget.theme,
-            title: '',
-            description: 'askdjaskldjals djakls jaskl jdakls j',
-            onVisible: () => _isSnackOpen = false,
-          );
-          debugPrint('Hio');
+          _showToastValidation(context);
+          // debugPrint('Hio');
         }
         if (state.showRegisterCompleteForm) {
           _showRegisterCompleteForm(context);
@@ -231,7 +235,11 @@ class _AuthScreenStructure extends StatelessWidget {
                                 height: 24.r,
                               ),
                               desc: 'Iniciar sesión con Google',
-                              action: () {},
+                              action: () {
+                                context.read<AuthBloc>().add(
+                                  GoogleSignInRequestedEvent(),
+                                );
+                              },
                             ),
                           ),
                           20.verticalSpace,

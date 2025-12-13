@@ -14,7 +14,7 @@ class ClientLoginForm extends StatelessWidget {
     final theme = Theme.of(context);
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        debugPrint('AuthState.password ClientLogin = "${state.password}"');
+        // debugPrint('AuthState.password ClientLogin = "${state.password}"');
         return Column(
           children: [
             LoginFields(isRegister: false),

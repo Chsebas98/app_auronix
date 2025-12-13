@@ -1,9 +1,13 @@
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/features.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteServices remote;
   final AuthLocalServices local;
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  bool _googleInitialized = false;
   // (Opcional) final LocalDatabase localDb;
 
   AuthRepositoryImpl({
@@ -44,6 +48,40 @@ class AuthRepositoryImpl implements AuthRepository {
       username: 'Chsebas',
     );
     return creds;
+  }
+
+  Future<void> _ensureGoogleInitialized() async {
+    if (_googleInitialized) return;
+
+    await _googleSignIn.initialize();
+
+    _googleInitialized = true;
+  }
+
+  @override
+  Future<void> loginWithGoogle() async {
+    try {
+      await _ensureGoogleInitialized();
+
+      final googleAccount = await _googleSignIn.authenticate();
+
+      final auth = await googleAccount.authentication;
+
+      debugPrint('Google Google Acount: $googleAccount');
+      debugPrint('Google Auth Token: ${auth.idToken} $auth');
+      // final credential = GoogleAuthProvider.credential(
+      //   accessToken: googleAuth.,
+      //   idToken: googleAuth.idToken,
+      // );
+
+      // await remote.loginWithGoogle();
+    } catch (e) {
+      debugPrintStack(
+        label: 'Error en login con Google',
+        stackTrace: StackTrace.current,
+      );
+      rethrow;
+    }
   }
 
   @override

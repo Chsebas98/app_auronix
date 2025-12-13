@@ -2,7 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "[DEV] Auronix",
+			"name": "[DEV] Ando",
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "debug",
@@ -13,7 +13,7 @@
 			]
 		},
 		{
-			"name": "Auronix",
+			"name": "Ando",
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "release",

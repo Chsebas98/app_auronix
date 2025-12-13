@@ -12,6 +12,8 @@ abstract class AuthRepository {
     bool rememberMe = false,
   });
 
+  Future<void> loginWithGoogle();
+
   Future<AuthenticationCredentials?> getSavedSession();
 
   Future<void> logout();
