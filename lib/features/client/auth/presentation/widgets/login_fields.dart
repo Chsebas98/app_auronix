@@ -31,8 +31,9 @@ class LoginFields extends StatelessWidget {
               allowSpecialCharacters: true,
               hasStrengthIndicator: false,
               textInputAction: TextInputAction.next,
-              validator: (value) =>
-                  Helpers.getMessageFormValidation(state.isValidLoginEmail),
+              validator: (value) => FormsHelpers.getMessageFormValidation(
+                state.isValidLoginEmail,
+              ),
               onChanged: (value) =>
                   context.read<AuthBloc>().add(ChangeEmailEvent(email: value)),
             ),
@@ -52,8 +53,12 @@ class LoginFields extends StatelessWidget {
               allowSpecialCharacters: true,
               textInputAction: TextInputAction.done,
               validator: (value) => isRegister
-                  ? Helpers.getMessageFormValidation(state.isValidRegisterPsw)
-                  : Helpers.getMessageFormValidation(state.isValidLoginPsw),
+                  ? FormsHelpers.getMessageFormValidation(
+                      state.isValidRegisterPsw,
+                    )
+                  : FormsHelpers.getMessageFormValidation(
+                      state.isValidLoginPsw,
+                    ),
               onChanged: (value) =>
                   context.read<AuthBloc>().add(ChangePasswordEvent(psw: value)),
             ),

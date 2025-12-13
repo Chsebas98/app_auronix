@@ -134,9 +134,10 @@ class _RegisterClientScreenStructureState
                       CustomInputSelect(
                         label: 'Género',
                         options: ['Masculino', 'Femenino', 'Otro'],
-                        validator: (value) => Helpers.getMessageFormValidation(
-                          FormValidators.validateSelectOption(value ?? ''),
-                        ),
+                        validator: (value) =>
+                            FormsHelpers.getMessageFormValidation(
+                              FormValidators.validateSelectOption(value ?? ''),
+                            ),
                         onChanged: (value) => context
                             .read<ModalTempCubit>()
                             .stringTemp2ChangedEvent(value ?? 'Seleccionar'),
@@ -157,9 +158,10 @@ class _RegisterClientScreenStructureState
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                         ),
                         textInputAction: TextInputAction.done,
-                        validator: (value) => Helpers.getMessageFormValidation(
-                          FormValidators.validatePhone(value ?? ''),
-                        ),
+                        validator: (value) =>
+                            FormsHelpers.getMessageFormValidation(
+                              FormValidators.validatePhone(value ?? ''),
+                            ),
                         onChanged: (value) => context
                             .read<ModalTempCubit>()
                             .stringTemp2ChangedEvent(value),

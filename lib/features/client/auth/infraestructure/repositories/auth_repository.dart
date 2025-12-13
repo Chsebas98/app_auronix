@@ -12,7 +12,7 @@ abstract class AuthRepository {
     bool rememberMe = false,
   });
 
-  Future<void> loginWithGoogle();
+  Future<AuthenticationCredentials> loginWithGoogle();
 
   Future<AuthenticationCredentials?> getSavedSession();
 

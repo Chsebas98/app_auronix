@@ -59,30 +59,38 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> loginWithGoogle() async {
-    try {
-      await _ensureGoogleInitialized();
+  Future<AuthenticationCredentials> loginWithGoogle() async {
+    await _ensureGoogleInitialized();
 
-      final googleAccount = await _googleSignIn.authenticate();
+    final googleAccount = await _googleSignIn.authenticate();
 
-      final GoogleSignInAuthentication googleAuth =
-          googleAccount.authentication;
+    final GoogleSignInAuthentication googleAuth = googleAccount.authentication;
 
-      debugPrint('Google Google Acount: $googleAccount');
-      debugPrint('Google Auth Token: ${googleAuth.idToken} $googleAuth');
-      // final credential = GoogleAuthProvider.credential(
-      //   accessToken: googleAuth.,
-      //   idToken: googleAuth.idToken,
-      // );
+    debugPrint('Google Google Acount: $googleAccount');
+    debugPrint('Google Auth Token: $googleAuth');
 
-      // await remote.loginWithGoogle();
-    } catch (e) {
-      debugPrintStack(
-        label: 'Error en login con Google',
-        stackTrace: StackTrace.current,
+    if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
+      throw GoogleSignInException(
+        code: GoogleSignInExceptionCode.unknownError,
+        description: 'El token no se obtuvo correctamente',
       );
-      rethrow;
     }
+    final (firstName, lastName) = ResponseHelpers.compoundNamesGoogle(
+      googleAccount.displayName ?? '',
+    );
+
+    final authModel = AuthenticationCredentials(
+      token: googleAuth.idToken!,
+      role: Roles.rolUser,
+      username: '',
+      firstName: firstName,
+      secondName: '',
+      lastName: lastName ?? '',
+      secondlastName: '',
+      isGoogleUser: true,
+    );
+
+    return authModel;
   }
 
   @override

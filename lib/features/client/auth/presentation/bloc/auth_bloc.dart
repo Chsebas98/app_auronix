@@ -37,11 +37,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      await _authRepository.loginWithGoogle();
+      emit(state.copyWith(loginForm: FormSubmitProgress()));
+
+      final creds = await _authRepository.loginWithGoogle();
+
+      debugPrint('Credenciales Google: ${creds.copyWith(token: '***')}');
+      //todo: aqui es donde se debe llamar al login en el backend con las credenciales de google
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+      debugPrint('Error en Google Sign-In: $e');
+      emit(state.copyWith(loginForm: FormSubmitFailed(e.toString())));
     }
   }
 
