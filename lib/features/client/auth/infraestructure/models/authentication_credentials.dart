@@ -10,6 +10,8 @@ class AuthenticationCredentials {
   final dynamic secondName;
   final String lastName;
   final String secondlastName;
+  final String email;
+  final String photoUrl;
   final bool isGoogleUser;
 
   const AuthenticationCredentials({
@@ -20,6 +22,8 @@ class AuthenticationCredentials {
     required this.secondName,
     required this.lastName,
     required this.secondlastName,
+    required this.email,
+    this.photoUrl = '',
     this.isGoogleUser = false,
   });
 
@@ -31,6 +35,8 @@ class AuthenticationCredentials {
       secondName = null,
       lastName = '',
       secondlastName = '',
+      email = '',
+      photoUrl = '',
       isGoogleUser = false;
 
   AuthenticationCredentials copyWith({
@@ -41,6 +47,8 @@ class AuthenticationCredentials {
     dynamic secondName,
     String? lastName,
     String? secondlastName,
+    String? email,
+    String? photoUrl,
     bool? isGoogleUser,
   }) {
     return AuthenticationCredentials(
@@ -51,11 +59,13 @@ class AuthenticationCredentials {
       secondName: secondName ?? this.secondName,
       lastName: lastName ?? this.lastName,
       secondlastName: secondlastName ?? this.secondlastName,
+      email: email ?? this.email,
+      photoUrl: photoUrl ?? this.photoUrl,
       isGoogleUser: isGoogleUser ?? this.isGoogleUser,
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson({bool includeToken = true}) => {
     'token': token,
     'role': role.name,
     'username': username,
@@ -63,9 +73,20 @@ class AuthenticationCredentials {
     'secondName': secondName,
     'lastName': lastName,
     'secondlastName': secondlastName,
+    'email': email,
+    'photoUrl': photoUrl,
     'isGoogleUser': isGoogleUser,
   };
 
+  Map<String, dynamic> toSafeJson({String mask = '***'}) => {
+    ...toJson(),
+    'token': mask,
+  };
+
+  /// Para debug explícito (incluye token)
+  String debugString() => jsonEncode(toJson());
+
+  /// Para logs por defecto (NO incluye token)
   @override
-  String toString() => jsonEncode(toJson());
+  String toString() => jsonEncode(toSafeJson());
 }

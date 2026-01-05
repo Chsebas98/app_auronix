@@ -4,7 +4,6 @@ abstract class AuthRepository {
   //?Local
   Future<void> setRemember(bool value);
   Future<bool> getRemember();
-
   //?Remote
   Future<AuthenticationCredentials> login({
     required String email,

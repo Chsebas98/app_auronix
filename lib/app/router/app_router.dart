@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/features/features.dart';
@@ -22,10 +24,14 @@ class AppRouter {
   static late GoRouter _router;
   static GoRouter get instance => _router;
 
-  static void initialize(SessionBloc sessionBloc) {
+  static void initialize(
+    SessionBloc sessionBloc,
+    GlobalKey<NavigatorState> rootNavKey,
+  ) {
     _router = GoRouter(
+      navigatorKey: rootNavKey,
       initialLocation: Routes.onBoarding,
-      refreshListenable: AuthChangeNotifier(sessionBloc),
+      refreshListenable: GoRouterRefreshBloc(sessionBloc.stream),
       // errorBuilder: (context, state) => const NotFoundScreen(),
       redirect: (context, state) {
         // final currentLocation = state.uri.toString();
@@ -164,12 +170,26 @@ class AppRouter {
   }
 }
 
-class AuthChangeNotifier extends ChangeNotifier {
-  final SessionBloc _sessionCubit;
+class GoRouterRefreshBloc extends ChangeNotifier {
+  GoRouterRefreshBloc(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
 
-  AuthChangeNotifier(this._sessionCubit) {
-    _sessionCubit.stream.listen((_) {
-      notifyListeners();
-    });
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }
+
+// class AuthChangeNotifier extends ChangeNotifier {
+//   final SessionBloc _sessionCubit;
+
+//   AuthChangeNotifier(this._sessionCubit) {
+//     _sessionCubit.stream.listen((_) {
+//       notifyListeners();
+//     });
+//   }
+// }

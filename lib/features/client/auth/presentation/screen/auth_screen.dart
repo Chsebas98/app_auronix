@@ -1,5 +1,6 @@
 import 'package:auronix_app/app/app.dart';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
@@ -134,6 +135,17 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        if (state.completeRegisterForm is FormSubmitProgress ||
+            state.loginForm is FormSubmitProgress) {
+          rootMessengerKey.currentState?.hideCurrentSnackBar();
+          context.read<DialogCubit>().showLoading();
+          debugPrint(
+            'Cargando... completeRegisterForm: ${state.completeRegisterForm} loginForm:${state.loginForm}',
+          );
+        } else {
+          context.read<DialogCubit>().hide();
+        }
+
         if (state.registerForm is FormSubmitSuccesfull && !_isSnackOpen) {
           _isSnackOpen = true;
           _showToastValidation(context);
@@ -141,6 +153,13 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
         }
         if (state.showRegisterCompleteForm) {
           _showRegisterCompleteForm(context);
+        }
+
+        final status = state.loginForm;
+        if (status is FormSubmitSuccesfull) {
+          context.read<SessionBloc>().add(
+            LoginUserEvent(email: state.email, password: state.password),
+          );
         }
 
         if (state.completeRegisterForm is FormSubmitSuccesfull) {
