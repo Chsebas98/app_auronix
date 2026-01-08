@@ -39,6 +39,24 @@ class AuthenticationCredentials {
       photoUrl = '',
       isGoogleUser = false;
 
+  factory AuthenticationCredentials.fromJson(Map<String, dynamic> json) {
+    return AuthenticationCredentials(
+      token: json['token'] ?? '',
+      role: Roles.values.firstWhere(
+        (role) => role.name == (json['role'] ?? 'rolUser'),
+        orElse: () => Roles.rolUser,
+      ),
+      username: json['username'] ?? '',
+      firstName: json['firstName'] ?? '',
+      secondName: json['secondName'],
+      lastName: json['lastName'] ?? '',
+      secondlastName: json['secondlastName'] ?? '',
+      email: json['email'] ?? '',
+      photoUrl: json['photoUrl'] ?? '',
+      isGoogleUser: json['isGoogleUser'] ?? false,
+    );
+  }
+
   AuthenticationCredentials copyWith({
     String? token,
     Roles? role,

@@ -46,6 +46,7 @@ class _RegisterClientScreenStructureState
           return Scaffold(
             backgroundColor: AppColors.white,
             appBar: AppbarDefault(
+              hasBackButton: true,
               isCenter: true,
               content: Text(
                 'Completar Registro',

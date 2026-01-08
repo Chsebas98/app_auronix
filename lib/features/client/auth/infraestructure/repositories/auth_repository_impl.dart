@@ -1,7 +1,6 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/features.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -36,22 +35,30 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthenticationCredentials> login({
     required String email,
     required String password,
+    AuthenticationCredentials isGoogle =
+        const AuthenticationCredentials.empty(),
     bool rememberMe = false,
   }) async {
     final response = await remote.loginUser(email: email, password: password);
+
     await local.saveToken(response['token'] ?? 'hola');
     await local.setRememberMe(true);
-    final creds = AuthenticationCredentials(
-      token: response['token'] ?? 'hola',
-      firstName: 'Sebas',
-      lastName: 'Soberon',
-      role: Roles.rolUser,
-      secondName: 'Charly',
-      secondlastName: 'Mateus',
-      username: 'Chsebas',
-      email: email,
-      photoUrl: '',
-    );
+    AuthenticationCredentials creds;
+    if (isGoogle.username.isEmpty) {
+      creds = isGoogle;
+    } else {
+      creds = AuthenticationCredentials(
+        token: response['token'] ?? 'hola',
+        firstName: 'Sebas',
+        lastName: 'Soberon',
+        role: Roles.rolUser,
+        secondName: 'Charly',
+        secondlastName: 'Mateus',
+        username: 'Chsebas',
+        email: email,
+        photoUrl: '',
+      );
+    }
 
     await localDb.saveUser(creds);
 
@@ -99,8 +106,8 @@ class AuthRepositoryImpl implements AuthRepository {
       photoUrl: googleAccount.photoUrl ?? '',
       isGoogleUser: true,
     );
-    final exists = await localDb.readUser();
-    debugPrint('Usuario existe en BD local: ${exists}');
+    // final exists = await localDb.readUser();
+    // debugPrint('Usuario existe en BD local: ${exists}');
 
     await localDb.saveUser(authModel);
 

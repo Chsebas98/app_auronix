@@ -1,3 +1,4 @@
+export 'package:auronix_app/shared/dialogs/dialogs.dart';
 export 'appbar/appbar_default.dart';
 export 'buttons/custom_filled_button.dart';
 export 'buttons/custom_outlined_button.dart';

@@ -3,6 +3,9 @@ import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/environments/environment.dart';
+import 'package:auronix_app/features/client/home/domain/repository/home_client_repository.dart';
+import 'package:auronix_app/features/client/home/domain/repository/home_client_repository_impl.dart';
+import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/modals/modal_temp_cubit.dart';
 import 'package:dio/dio.dart';
@@ -68,7 +71,7 @@ Future<void> initDependencies() async {
   //remote
   sl.registerLazySingleton<AuthRemoteServices>(() => AuthRemoteServices());
 
-  //Blocs
+  //Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       local: sl<AuthLocalServices>(),
@@ -76,10 +79,19 @@ Future<void> initDependencies() async {
       localDb: sl<AuthLocalDbDataSource>(),
     ),
   );
+
+  sl.registerLazySingleton<HomeClientRepository>(
+    () => HomeClientRepositoryImpl(localDb: sl<AuthLocalDbDataSource>()),
+  );
+
+  //Blocs
   sl.registerLazySingleton<SessionBloc>(
     () => SessionBloc(sl<AuthRepository>()),
   );
   sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
   sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));
+  sl.registerFactory<HomeClientBloc>(
+    () => HomeClientBloc(sl<HomeClientRepository>()),
+  );
 }

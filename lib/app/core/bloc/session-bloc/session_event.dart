@@ -12,10 +12,15 @@ class CheckLoggedUserEvent extends SessionEvent {}
 class LoginUserEvent extends SessionEvent {
   final String email;
   final String password;
-  const LoginUserEvent({required this.email, required this.password});
+  final AuthenticationCredentials isGoogle;
+  const LoginUserEvent({
+    required this.email,
+    required this.password,
+    this.isGoogle = const AuthenticationCredentials.empty(),
+  });
 
   @override
-  List<Object> get props => [email, password];
+  List<Object> get props => [email, password, isGoogle];
 }
 
 class LoggoutUserEvent extends SessionEvent {}

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
+import 'package:auronix_app/features/client/client.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,7 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final creds = await _authRepository.loginWithGoogle();
 
-      debugPrint('Credenciales Google: ${creds.toString()}');
+      // debugPrint('Credenciales Google: ${creds.toString()}');
       await Future.delayed(Duration(seconds: 10));
       if (creds.token.isEmpty) {
         throw Exception('No se pudieron obtener las credenciales de Google');
@@ -55,6 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           state.copyWith(
             email: creds.email,
             password: creds.token,
+            credentialsGoogle: creds,
             loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
           ),
         );

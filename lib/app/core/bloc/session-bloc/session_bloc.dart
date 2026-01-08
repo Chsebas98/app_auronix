@@ -36,6 +36,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
       final response = await _authRepository.login(
         email: event.email,
         password: event.password,
+        isGoogle: event.isGoogle,
       );
       emit(SessionAuthenticated(dataUser: response));
     } catch (e) {

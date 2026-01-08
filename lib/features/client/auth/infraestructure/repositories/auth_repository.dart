@@ -8,6 +8,8 @@ abstract class AuthRepository {
   Future<AuthenticationCredentials> login({
     required String email,
     required String password,
+    AuthenticationCredentials isGoogle =
+        const AuthenticationCredentials.empty(),
     bool rememberMe = false,
   });
 

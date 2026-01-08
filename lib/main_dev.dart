@@ -6,6 +6,7 @@ import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/core/firebase/dev/firebase_options_dev.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:rive/rive.dart';
 
 final rootNavKey = GlobalKey<NavigatorState>();
 void main() async {
@@ -17,6 +18,7 @@ void main() async {
   Environment().initConfig(environment);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initDependencies();
+  await RiveNative.init();
   final sessionBloc = sl<SessionBloc>();
   AppRouter.initialize(sessionBloc, rootNavKey);
   runApp(const AppAuronixMain());

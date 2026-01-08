@@ -41,6 +41,7 @@ class _AuthScreenInit extends StatelessWidget {
       child: Scaffold(
         backgroundColor: theme.primaryColor,
         appBar: AppbarDefault(
+          hasBackButton: true,
           goTo: () => AppRouter.go(Routes.onBoarding),
           content: Row(
             mainAxisSize: MainAxisSize.min,
@@ -139,9 +140,6 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
             state.loginForm is FormSubmitProgress) {
           rootMessengerKey.currentState?.hideCurrentSnackBar();
           context.read<DialogCubit>().showLoading();
-          debugPrint(
-            'Cargando... completeRegisterForm: ${state.completeRegisterForm} loginForm:${state.loginForm}',
-          );
         } else {
           context.read<DialogCubit>().hide();
         }
@@ -158,7 +156,11 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
         final status = state.loginForm;
         if (status is FormSubmitSuccesfull) {
           context.read<SessionBloc>().add(
-            LoginUserEvent(email: state.email, password: state.password),
+            LoginUserEvent(
+              email: state.email,
+              password: state.password,
+              isGoogle: state.credentialsGoogle,
+            ),
           );
         }
 
