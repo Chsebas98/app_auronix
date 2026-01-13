@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/client.dart';

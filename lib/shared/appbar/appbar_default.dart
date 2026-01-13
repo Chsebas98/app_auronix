@@ -47,7 +47,7 @@ class AppbarDefault extends StatelessWidget implements PreferredSizeWidget {
   void _showExitWithoutSavingDialog(BuildContext context) {
     CustomDialog(
       context: context,
-      dialogType: DialogType.infoReverse,
+      dialogType: DialogType.warning,
       animType: AnimType.rightSlide,
       useRootNavigator: true,
       dismissOnTouchOutside: false,
@@ -57,7 +57,7 @@ class AppbarDefault extends StatelessWidget implements PreferredSizeWidget {
       desc: '¿Estás seguro de salir sin guardar?',
 
       btnCancelText: 'Cancelar',
-      btnOkText: 'Salir',
+      // btnOkText: 'Salir',
       btnCancelOnPress: () {},
       btnOkOnPress: () {
         (goTo ?? () => Navigator.of(context).maybePop()).call();

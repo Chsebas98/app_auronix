@@ -20,10 +20,11 @@ class _HomeScreenInit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return BlocProvider.value(
       value: sl<HomeClientBloc>(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.primaryColor,
         appBar: null,
         body: _HomeScreenController(),
       ),

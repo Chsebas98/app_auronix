@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 ///Main widget to render dialog UI
 class VerticalStackDialog extends StatelessWidget {
@@ -90,8 +91,29 @@ class VerticalStackDialog extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
+                      20.verticalSpace,
+                      if (header != null)
+                        SizedBox(
+                          width: width ?? mediaQueryData.size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Material(
+                                shape: CircleBorder(
+                                  side: borderSide ?? BorderSide.none,
+                                ),
+                                child: CircleAvatar(
+                                  backgroundColor:
+                                      dialogBackgroundColor ?? theme.cardColor,
+                                  radius: 20,
+                                  child: header,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       SizedBox(
-                        height: header != null ? 50.0 : bodyHeaderDistance,
+                        height: header != null ? 20.0 : bodyHeaderDistance,
                       ),
                       body ??
                           Column(
@@ -143,23 +165,6 @@ class VerticalStackDialog extends StatelessWidget {
               ),
             ),
           ),
-          if (header != null)
-            SizedBox(
-              width: width ?? mediaQueryData.size.width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Material(
-                    shape: CircleBorder(side: borderSide ?? BorderSide.none),
-                    child: CircleAvatar(
-                      backgroundColor: dialogBackgroundColor ?? theme.cardColor,
-                      radius: 55,
-                      child: header,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           if (showCloseIcon!)
             Positioned(
               right: 50,

@@ -109,6 +109,10 @@ class _PlanDropdownState extends State<CustomInputSelect> {
           decoration: InputDecoration(
             labelText: widget.label,
             floatingLabelBehavior: FloatingLabelBehavior.auto,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 10.w,
+              vertical: 14.h,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
               borderSide: BorderSide(color: AppColors.third),
@@ -122,13 +126,11 @@ class _PlanDropdownState extends State<CustomInputSelect> {
               borderSide: BorderSide(color: AppColors.third),
             ),
           ),
-          hint: Text('Seleccionar', style: theme.textTheme.bodyMedium),
+          hint: Text('Seleccionar'),
           items: _addDividersAfterItems(widget.options, theme),
           validator: widget.validator,
           onChanged: widget.onChanged,
-          buttonStyleData: ButtonStyleData(
-            padding: EdgeInsets.only(right: 12.w),
-          ),
+          buttonStyleData: ButtonStyleData(padding: EdgeInsets.zero),
           iconStyleData: IconStyleData(
             icon: Icon(
               Icons.keyboard_arrow_down_rounded,
@@ -137,16 +139,20 @@ class _PlanDropdownState extends State<CustomInputSelect> {
             iconSize: 0.065.sw,
           ),
           dropdownStyleData: DropdownStyleData(
-            elevation: 1,
+            elevation: 6,
+
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.third),
               borderRadius: BorderRadius.circular(12.r),
-              color: AppColors.white,
+              color: theme.primaryColor,
             ),
           ),
           menuItemStyleData: MenuItemStyleData(
             customHeights: _getCustomItemsHeights(),
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            padding: EdgeInsets.zero,
+            selectedMenuItemBuilder: (context, child) {
+              return Align(alignment: Alignment.centerLeft, child: child);
+            },
           ),
         ),
       ],
@@ -162,8 +168,9 @@ class _PlanDropdownState extends State<CustomInputSelect> {
       menuItems.addAll([
         DropdownMenuItem<String>(
           value: item,
+          alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            padding: EdgeInsets.symmetric(horizontal: 14.w),
             child: Text(item, style: theme.textTheme.bodyMedium),
           ),
         ),

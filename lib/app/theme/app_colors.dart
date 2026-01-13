@@ -41,4 +41,18 @@ class AppColors {
   static const toastWarningText = Color(0xFF5C4500);
   static const toastWarningBorder = Color(0xFFFFE6B5);
   static const toastWarningShadow = Color(0x1D293D0D);
+
+  // INFO
+  static const toastInfoBg = Color(0xFFEEF5FB);
+  static const toastInfoButton = Color(0xFF338ACC);
+  static const toastInfoText = Color(0xFF70ADDB);
+  static const toastInfoBorder = Color(0xFFDBEAF6);
+  static const toastInfoShadow = Color(0x1D293D0D);
+
+  // NEUTROS (para todos los DialogType)
+  static const dialogBtnOkBg = Color(0xFFFFC107);
+  static const dialogBtnOkText = Color(0xFF1D2939);
+
+  static const dialogBtnCancelBg = Color(0xFFF2F4F7);
+  static const dialogBtnCancelText = Color(0xFF344054);
 }

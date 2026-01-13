@@ -1,3 +1,4 @@
+import 'package:auronix_app/app/theme/theme.dart';
 import 'package:auronix_app/shared/dialogs/anims/native_animations.dart';
 import 'package:auronix_app/shared/dialogs/widgets/animated_button.dart';
 import 'package:auronix_app/shared/dialogs/widgets/header_dialog.dart';
@@ -392,11 +393,16 @@ class CustomDialog {
       dismiss();
       btnOkOnPress?.call();
     },
-    text: btnOkText ?? 'Ok',
-    color: btnOkColor ?? const Color(0xFF00CA71),
+    text: btnOkText ?? 'Entendido',
+    color: btnOkColor ?? AppColors.dialogBtnOkBg,
     icon: btnOkIcon,
     borderRadius: buttonsBorderRadius,
-    buttonTextStyle: buttonsTextStyle,
+    buttonTextStyle:
+        buttonsTextStyle ??
+        TextStyle(
+          fontWeight: FontWeight.w700,
+          color: AppColors.dialogBtnOkText,
+        ),
   );
 
   /// Returns the default `Cancel Button` widget
@@ -407,11 +413,16 @@ class CustomDialog {
       dismiss();
       btnCancelOnPress?.call();
     },
-    text: btnCancelText ?? 'Cancel',
-    color: btnCancelColor ?? Colors.red,
+    text: btnCancelText ?? 'Cancelar',
+    color: btnCancelColor ?? AppColors.dialogBtnCancelBg,
     icon: btnCancelIcon,
     borderRadius: buttonsBorderRadius,
-    buttonTextStyle: buttonsTextStyle,
+    buttonTextStyle:
+        buttonsTextStyle ??
+        TextStyle(
+          fontWeight: FontWeight.w700,
+          color: AppColors.dialogBtnCancelText,
+        ),
   );
 
   /// Called to dismiss the dialog using the [Navigator.pop] method
