@@ -21,15 +21,18 @@
     	<string>Necesitamos acceder a la ubicación durante el uso</string>
     	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     	<string>Habilitar ubicación siempre que este en uso</string>
-    	<key>NSLocationUsageDescription</key>
-    	<string>Necesitamos acceder a tu ubicación</string>
-    	<key>NSLocationAlwaysUsageDescription</key>
-    	<string>Necesitamos acceder a tu ubicación siempre</string>
 	
 	<!-- Permiso de internet -->
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Necesitamos acceder a tu red local para detectar y conectarnos a dispositivos/servicios cercanos.</string>
 
+	<!-- Permiso para fotos -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a tus fotos para que puedas seleccionar una imagen de perfil o documentos.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Necesitamos permiso para guardar imágenes en tu galería cuando elijas hacerlo.</string>
+	
 	<!-- Las previas -->
 
 	<key>CFBundleDevelopmentRegion</key>

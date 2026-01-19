@@ -41,6 +41,7 @@ dependencies:
  dropdown_button2: ^2.3.9
  encrypt: ^5.0.3
  equatable: ^2.0.7
+ firebase_core: ^4.2.1
  flutter_bloc: ^9.1.1
  flutter_localization: ^0.3.3
  flutter_screenutil: ^5.9.3
@@ -53,15 +54,22 @@ dependencies:
  path: ^1.9.1
  permission_handler: ^12.0.1
  pointycastle: ^3.9.1
+ rive: ^0.14.0
  rx_shared_preferences: ^4.0.0
  rxdart: ^0.28.0
  sqflite: ^2.4.2
- firebase_core: ^4.2.1
- rive: ^0.14.0
 
 dev_dependencies:
+ flutter_launcher_icons: ^0.14.4
  change_app_package_name: ^1.5.0
  flutter_native_splash: ^2.4.6
+
+# cada que se cambie el icono correr #?dart run flutter_launcher_icons
+flutter_launcher_icons:
+ android: true
+ ios: true
+ image_path: "assets/icon/app_icon.png"
+ remove_alpha_ios: true
  flutter_test:
   sdk: flutter
 
@@ -103,6 +111,7 @@ flutter:
   - assets/images/svg/
   - assets/images/flr/
   - assets/images/rive/
+  - assets/icon/
  #   - images/a_dot_ham.jpeg
 
  # An image asset can refer to one or more resolution-specific "variants", see
