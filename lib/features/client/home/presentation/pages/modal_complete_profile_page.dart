@@ -1,5 +1,6 @@
 import 'package:auronix_app/app/app.dart';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/theme/theme.dart';
 import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/shared/shared.dart';
@@ -80,7 +81,7 @@ class _ModalCompleteProfilePageStructureState
       listener: (context, state) {
         final completeStateForm = state.completeProfileStatus;
         if (completeStateForm is FormSubmitSuccesfull) {
-          Navigator.pop(context);
+          context.read<DialogCubit>().hideAll();
         }
         if (completeStateForm is FormSubmitFailed) {
           _showErrorToast(context, completeStateForm.message);

@@ -62,11 +62,7 @@ class EditableAvatar extends StatelessWidget {
         foregroundImage: image, // foto principal
         child: image == null
             ? (placeholder ??
-                  Icon(
-                    Icons.person,
-                    size: size * 0.45,
-                    color: Colors.white.withOpacity(0.85),
-                  ))
+                  Icon(Icons.person, size: size * 0.45, color: AppColors.white))
             : null,
       ),
     );

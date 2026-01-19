@@ -141,7 +141,7 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
           rootMessengerKey.currentState?.hideCurrentSnackBar();
           context.read<DialogCubit>().showLoading();
         } else {
-          context.read<DialogCubit>().hide();
+          context.read<DialogCubit>().hideTop();
         }
 
         if (state.registerForm is FormSubmitSuccesfull && !_isSnackOpen) {

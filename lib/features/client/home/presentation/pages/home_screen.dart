@@ -1,5 +1,7 @@
-import 'package:auronix_app/app/core/bloc/session-bloc/session_bloc.dart';
+import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/packages/handler/handler.dart';
+import 'package:auronix_app/app/core/permission/domain/models/interfaces/app_permission_type.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/features/client/home/presentation/pages/pages.dart';
@@ -88,28 +90,39 @@ class _HomeClientAuthenticatedStructure extends StatefulWidget {
 
 class _HomeClientAuthenticatedStructureState
     extends State<_HomeClientAuthenticatedStructure> {
-  bool _needShowModal = false;
-
-  Future<void> _showCompleteProfileModal(BuildContext context) {
+  Future<void> _showCompleteProfileModal(BuildContext context) async {
     final bloc = context.read<HomeClientBloc>();
-    _needShowModal = false;
-    return showGeneralDialog(
-      context: context,
-      barrierDismissible: false, //cambiar a false
-      fullscreenDialog: true,
+
+    context.read<DialogCubit>().showFullscreenDialog(
+      barrierDismissible: false,
       useRootNavigator: false,
-      pageBuilder: (_, __, ___) =>
-          BlocProvider.value(value: bloc, child: ModalCompleteProfilePage()),
+      pageBuilder: (_) => BlocProvider.value(
+        value: bloc,
+        child: const ModalCompleteProfilePage(),
+      ),
     );
+  }
+
+  Future<void> _checkPermissions(BuildContext context) async {
+    final ok = await context.read<PermissionCubit>().ensure(
+      AppPermissionType.locationAlways,
+    );
+    if (!ok) return;
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomeClientBloc, HomeClientState>(
+      listenWhen: (prev, curr) =>
+          prev.needCompleteProfile != curr.needCompleteProfile,
       listener: (context, state) {
-        if (state.needCompleteProfile && !_needShowModal) {
-          _needShowModal = true;
-          _showCompleteProfileModal(context);
+        if (state.needCompleteProfile) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _showCompleteProfileModal(context);
+          });
+        } else {
+          _checkPermissions(context);
         }
       },
       builder: (context, state) {

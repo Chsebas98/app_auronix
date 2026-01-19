@@ -4,7 +4,6 @@ import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/handlers/dialog_handler.dart';
 import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,12 +18,12 @@ class AppAuronixMain extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => GlobalCubit()),
-        BlocProvider(create: (context) => AppLifeCycleCubit()),
-        BlocProvider(create: (context) => ThemeCubit()),
-        BlocProvider(create: (context) => SessionBloc(sl<AuthRepository>())),
+        BlocProvider.value(value: sl<GlobalCubit>()),
+        BlocProvider.value(value: sl<AppLifeCycleCubit>()),
+        BlocProvider.value(value: sl<ThemeCubit>()),
         BlocProvider.value(value: sl<SessionBloc>()),
         BlocProvider.value(value: sl<DialogCubit>()),
+        BlocProvider.value(value: sl<PermissionCubit>()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(390, 844),
@@ -50,30 +49,33 @@ class AppAuronixMain extends StatelessWidget {
                   default:
                 }
               },
-              child: DialogHandler(
-                navigatorKey: AppRouter.instance.routerDelegate.navigatorKey,
-                child: BlocBuilder<ThemeCubit, ThemeMode>(
-                  builder: (context, themeMode) {
-                    return MediaQuery(
-                      data: MediaQuery.of(
-                        context,
-                      ).copyWith(textScaler: TextScaler.noScaling),
-                      child: MaterialApp.router(
-                        debugShowCheckedModeBanner: false,
-                        // debugShowMaterialGrid: true,
-                        scaffoldMessengerKey: rootMessengerKey,
-
-                        routerConfig: AppRouter.instance,
-                        theme: AppTheme.lightTheme,
-                        darkTheme: AppTheme.darkTheme,
-                        themeMode: themeMode,
-                        localizationsDelegates:
-                            AppLocalizations.localizationsDelegates,
-                        supportedLocales: AppLocalizations.supportedLocales,
-                      ),
-                    );
-                  },
-                ),
+              child: BlocBuilder<ThemeCubit, ThemeMode>(
+                builder: (context, themeMode) {
+                  return MediaQuery(
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(textScaler: TextScaler.noScaling),
+                    child: MaterialApp.router(
+                      // debugShowMaterialGrid: true,
+                      debugShowCheckedModeBanner: false,
+                      scaffoldMessengerKey: rootMessengerKey,
+                      routerConfig: AppRouter.instance,
+                      theme: AppTheme.lightTheme,
+                      darkTheme: AppTheme.darkTheme,
+                      themeMode: themeMode,
+                      localizationsDelegates:
+                          AppLocalizations.localizationsDelegates,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      builder: (context, child) {
+                        return DialogHandler(
+                          navigatorKey:
+                              AppRouter.instance.routerDelegate.navigatorKey,
+                          child: child ?? SizedBox.shrink(),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             );
           },

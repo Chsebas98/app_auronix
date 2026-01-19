@@ -1,6 +1,6 @@
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
-import 'package:auronix_app/core/interfaces/core_enums.dart';
+import 'package:auronix_app/core/models/interfaces/core_enums.dart';
 import 'package:auronix_app/features/features.dart';
 
 class AuthLocalDbDataSource {
