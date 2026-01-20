@@ -1,5 +1,5 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/models/authentication_credentials.dart';
+import 'package:auronix_app/features/client/auth/infraestructure/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/client/home/domain/repository/home_client_repository.dart';
 import 'package:flutter/widgets.dart';
 

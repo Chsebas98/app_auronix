@@ -68,9 +68,15 @@ class _ModalCompleteProfilePageStructureState
       final name = _nameCtrl.text.trim();
       final phone = _phoneCtrl.text.trim();
       final gender = _gender;
-      debugPrint(
-        'Saving profile data: name=$name, phone=$phone, gender=$gender',
+      context.read<HomeClientBloc>().add(
+        CompleteProfileEvent(
+          imgUrl: 'imgUrl',
+          name: name,
+          phone: phone,
+          gender: gender.toString(),
+        ),
       );
+      context.read<DialogCubit>().hideAll();
     }
   }
 
@@ -130,6 +136,7 @@ class _ModalCompleteProfilePageStructureState
                 Center(
                   child: EditableAvatar(
                     size: 120.w,
+                    image: NetworkImage(state.dataProfile.photoUrl),
                     onEdit: () async {
                       // Aquí abres tu flujo: picker/cámara/archivo
                       // y solo guardas en _avatarImage (temporal)

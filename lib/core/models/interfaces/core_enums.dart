@@ -13,3 +13,19 @@ enum TypeElementToast {
 enum TypeDialog { resDialog, actionDialog, optionDialog }
 
 enum Roles { rolAdmin, rolGerente, rolDriver, rolMember, rolUser }
+
+enum AppTab {
+  home,
+  cooperativas,
+  supervision,
+  pagos,
+  ganancias,
+  gestion,
+  viajes,
+  mensajes,
+  vehiculo,
+  asignados,
+  guardados,
+  cuenta,
+  mas,
+}

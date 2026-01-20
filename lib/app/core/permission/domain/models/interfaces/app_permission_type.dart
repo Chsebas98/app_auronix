@@ -1,4 +1,5 @@
 enum AppPermissionType {
+  locationWhenInUse,
   locationAlways,
   camera,
   mediaLibrary,

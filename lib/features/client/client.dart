@@ -1,7 +1,7 @@
 export 'about/presentation/screens/about_screen.dart';
 export 'auth/infraestructure/data/local/auth_local_services.dart';
 export 'auth/infraestructure/data/remote/auth_remote_services.dart';
-export 'auth/infraestructure/models/authentication_credentials.dart';
+export 'auth/infraestructure/models/interfaces/authentication_credentials.dart';
 export 'auth/infraestructure/models/models.dart';
 export 'auth/infraestructure/repositories/auth_repository.dart';
 export 'auth/infraestructure/repositories/auth_repository_impl.dart';

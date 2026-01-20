@@ -18,6 +18,7 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
   final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
   HomeClientBloc(this._homeClientRepository) : super(HomeClientState()) {
     on<GetDataProfileEvent>(_onSetDataProfileEvent);
+    on<CompleteProfileEvent>(_onCompleteProfileEvent);
   }
 
   FutureOr<void> _onSetDataProfileEvent(
@@ -33,5 +34,13 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
       emit(state.copyWith(needCompleteProfile: true));
     }
     emit(state.copyWith(dataProfile: res));
+  }
+
+  FutureOr<void> _onCompleteProfileEvent(
+    CompleteProfileEvent event,
+    Emitter<HomeClientState> emit,
+  ) {
+    emit(state.copyWith(needCompleteProfile: false));
+    _prefs.setBool(StaticVariables.needsProfileComplete, false);
   }
 }

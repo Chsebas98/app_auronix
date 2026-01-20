@@ -17,6 +17,15 @@ class PermissionSpec {
 
 PermissionSpec specOf(AppPermissionType type) {
   switch (type) {
+    case AppPermissionType.locationWhenInUse:
+      return const PermissionSpec(
+        type: AppPermissionType.locationWhenInUse,
+        title: 'Ubicación mientras se usa la app',
+        description:
+            'Esto permite mejorar el seguimiento del viaje y la seguridad.',
+        permission: Permission.locationWhenInUse,
+      );
+
     case AppPermissionType.locationAlways:
       return const PermissionSpec(
         type: AppPermissionType.locationAlways,

@@ -68,13 +68,34 @@ class PermissionCubit extends Cubit<PermissionState>
   Future<void> request(AppPermissionType type) async {
     if (_isAsking) return;
     _isAsking = true;
-    try {
-      final spec = specOf(type);
-      final result = await spec.permission.request();
-      _updateStatus(type, result);
 
-      // Cierra el request UI
-      emit(state.copyWith(uiRequest: null));
+    try {
+      switch (type) {
+        case AppPermissionType.locationAlways:
+          // ✅ PRO: iOS requiere WhenInUse antes de Always
+          final when = await Permission.locationWhenInUse.request();
+          _updateStatus(AppPermissionType.locationWhenInUse, when);
+
+          if (when != PermissionStatus.granted) {
+            // No puedp seguir a Always si no dieron WhenInUse
+            // Mantén la UI abierta (o ciérrala si prefieres) -> yo la cierro solo si granted
+            return;
+          }
+
+          final always = await Permission.locationAlways.request();
+          _updateStatus(AppPermissionType.locationAlways, always);
+
+          emit(state.copyWith(uiRequest: null));
+          return;
+
+        default:
+          final spec = specOf(type);
+          final result = await spec.permission.request();
+          _updateStatus(type, result);
+
+          emit(state.copyWith(uiRequest: null));
+          return;
+      }
     } finally {
       _isAsking = false;
     }

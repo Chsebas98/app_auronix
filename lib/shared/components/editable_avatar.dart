@@ -96,9 +96,9 @@ class EditableAvatar extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: editBackgroundColor,
                       borderRadius: BorderRadius.circular(editButtonRadius),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x33000000),
+                          color: AppShadowColors.ninethSoft,
                           blurRadius: 10,
                           offset: Offset(0, 6),
                         ),

@@ -18,7 +18,7 @@ final sl = GetIt.instance;
 Future<void> initDependencies() async {
   //?GLobales
   sl.registerFactory<GlobalCubit>(() => GlobalCubit());
-  sl.registerFactory<ThemeCubit>(() => ThemeCubit());
+  sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   sl.registerFactory<AppLifeCycleCubit>(() => AppLifeCycleCubit());
   sl.registerFactory<PermissionCubit>(() => PermissionCubit());
   sl.registerLazySingleton<RxSharedPreferences>(
@@ -89,6 +89,7 @@ Future<void> initDependencies() async {
     () => SessionBloc(sl<AuthRepository>()),
   );
   sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
+  sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
   sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));
   sl.registerFactory<HomeClientBloc>(

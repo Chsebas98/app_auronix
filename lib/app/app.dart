@@ -4,6 +4,7 @@ import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/handlers/dialog_handler.dart';
 import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,7 @@ class AppAuronixMain extends StatelessWidget {
         BlocProvider.value(value: sl<SessionBloc>()),
         BlocProvider.value(value: sl<DialogCubit>()),
         BlocProvider.value(value: sl<PermissionCubit>()),
+        BlocProvider.value(value: sl<BottomNavCubit>()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(390, 844),
