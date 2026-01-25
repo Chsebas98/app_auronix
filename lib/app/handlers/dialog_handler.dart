@@ -88,7 +88,7 @@ class _DialogHandlerState extends State<DialogHandler> {
     });
   }
 
-  Future<void> _showConfirm(DialogConfirm s) async {
+  Future<void> _showConfirm(DialogConfirm s, ThemeData theme) async {
     final ctx = widget.navigatorKey.currentContext;
     if (ctx == null) return;
 
@@ -105,7 +105,7 @@ class _DialogHandlerState extends State<DialogHandler> {
               TextButton(
                 onPressed: () =>
                     Navigator.of(dCtx, rootNavigator: true).pop(false),
-                child: Text(s.cancelText),
+                child: Text(s.cancelText, style: theme.textTheme.labelMedium),
               ),
               FilledButton(
                 onPressed: () =>
@@ -157,6 +157,7 @@ class _DialogHandlerState extends State<DialogHandler> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return BlocListener<DialogCubit, DialogState>(
       listener: (_, state) {
         final ctx = widget.navigatorKey.currentContext;
@@ -194,7 +195,7 @@ class _DialogHandlerState extends State<DialogHandler> {
 
           if (state is DialogConfirm) {
             if (state.presentation == DialogPresentation.replaceTop) _popTop();
-            await _showConfirm(state);
+            await _showConfirm(state, theme);
             context.read<DialogCubit>().idle();
             return;
           }

@@ -1,8 +1,9 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
+import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/app/environments/environment.dart';
+import 'package:auronix_app/features/client/auth/infraestructure/data/remote/strapi_services.dart';
 import 'package:auronix_app/features/client/home/domain/repository/home_client_repository.dart';
 import 'package:auronix_app/features/client/home/domain/repository/home_client_repository_impl.dart';
 import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
@@ -36,26 +37,12 @@ Future<void> initDependencies() async {
     ),
   );
 
-  sl.registerLazySingleton<Dio>(() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: Environment().config!.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {'Accept': 'application/json'},
-      ),
-    );
-    dio.interceptors.add(DioCacheInterceptor(options: sl<CacheOptions>()));
-    dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        requestHeader: false,
-        responseHeader: false,
-      ),
-    );
-    return dio;
-  });
+  final dio = await DioClient.getInstance(
+    enableSSLPinning: false, // Cambia a true en producción
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  );
+  sl.registerLazySingleton<Dio>(() => dio);
 
   //?Database
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
@@ -70,6 +57,9 @@ Future<void> initDependencies() async {
   );
   //remote
   sl.registerLazySingleton<AuthRemoteServices>(() => AuthRemoteServices());
+  sl.registerLazySingleton<StrapiServices>(
+    () => StrapiServices(dio: sl<Dio>()),
+  );
 
   //Repository
   sl.registerLazySingleton<AuthRepository>(
@@ -77,6 +67,7 @@ Future<void> initDependencies() async {
       local: sl<AuthLocalServices>(),
       remote: sl<AuthRemoteServices>(),
       localDb: sl<AuthLocalDbDataSource>(),
+      strapiServices: sl<StrapiServices>(),
     ),
   );
 

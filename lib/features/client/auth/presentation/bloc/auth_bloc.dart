@@ -45,24 +45,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final creds = await _authRepository.loginWithGoogle();
 
       // debugPrint('Credenciales Google: ${creds.toString()}');
-      await Future.delayed(Duration(seconds: 10));
+      // await Future.delayed(Duration(seconds: 10));
       if (creds.token.isEmpty) {
         throw Exception('No se pudieron obtener las credenciales de Google');
       }
-      if (creds.photoUrl.isEmpty || creds.username.isEmpty) {
+      final authenticatedCreds = await _authRepository
+          .loginOrRegisterWithGoogle(creds);
+
+      if (authenticatedCreds.photoUrl.isEmpty ||
+          authenticatedCreds.username.isEmpty) {
         _prefs.setBool(StaticVariables.needsProfileComplete, true);
         emit(
           state.copyWith(
-            email: creds.email,
-            password: creds.token,
-            credentialsGoogle: creds,
+            email: authenticatedCreds.email,
+            password: authenticatedCreds.token,
+            credentialsGoogle: authenticatedCreds,
             loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
           ),
         );
         return;
       }
-      //todo: aqui es donde se debe llamar al login en el backend con las credenciales de google
-      emit(state.copyWith(loginForm: FormSubmitSuccesfull()));
+      emit(
+        state.copyWith(
+          email: authenticatedCreds.email,
+          password: authenticatedCreds.token,
+          credentialsGoogle: authenticatedCreds,
+          loginForm: FormSubmitSuccesfull(
+            message: 'Bienvenido ${authenticatedCreds.firstName}',
+          ),
+        ),
+      );
     } catch (e) {
       debugPrint('Error en Google Sign-In: $e');
       emit(state.copyWith(loginForm: FormSubmitFailed(e.toString())));

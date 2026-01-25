@@ -1,1 +1,2 @@
-export 'package:auronix_app/features/client/auth/infraestructure/models/interfaces/authentication_credentials.dart';
+export 'interfaces/authentication_credentials.dart';
+export 'response/strapi_user_response.dart';

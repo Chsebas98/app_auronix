@@ -4,6 +4,7 @@ abstract class AuthRepository {
   //?Local
   Future<void> setRemember(bool value);
   Future<bool> getRemember();
+
   //?Remote
   Future<AuthenticationCredentials> login({
     required String email,
@@ -14,6 +15,11 @@ abstract class AuthRepository {
   });
 
   Future<AuthenticationCredentials> loginWithGoogle();
+
+  /// NUEVO: Login/Registro con Google + Strapi
+  Future<AuthenticationCredentials> loginOrRegisterWithGoogle(
+    AuthenticationCredentials googleCreds,
+  );
 
   Future<AuthenticationCredentials?> getSavedSession();
 
