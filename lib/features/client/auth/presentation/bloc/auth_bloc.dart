@@ -49,29 +49,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (creds.token.isEmpty) {
         throw Exception('No se pudieron obtener las credenciales de Google');
       }
-      final authenticatedCreds = await _authRepository
-          .loginOrRegisterWithGoogle(creds);
+      // final authenticatedCreds = await _authRepository
+      //     .loginOrRegisterWithGoogle(creds);
 
-      if (authenticatedCreds.photoUrl.isEmpty ||
-          authenticatedCreds.username.isEmpty) {
-        _prefs.setBool(StaticVariables.needsProfileComplete, true);
-        emit(
-          state.copyWith(
-            email: authenticatedCreds.email,
-            password: authenticatedCreds.token,
-            credentialsGoogle: authenticatedCreds,
-            loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
-          ),
-        );
-        return;
-      }
+      // if (authenticatedCreds.photoUrl.isEmpty ||
+      //     authenticatedCreds.username.isEmpty) {
+      //   _prefs.setBool(StaticVariables.needsProfileComplete, true);
+      //   emit(
+      //     state.copyWith(
+      //       email: authenticatedCreds.email,
+      //       password: authenticatedCreds.token,
+      //       credentialsGoogle: authenticatedCreds,
+      //       loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
+      //     ),
+      //   );
+      //   return;
+      // }
       emit(
         state.copyWith(
-          email: authenticatedCreds.email,
-          password: authenticatedCreds.token,
-          credentialsGoogle: authenticatedCreds,
+          email: creds.email,
+          password: creds.token,
+          credentialsGoogle: creds,
           loginForm: FormSubmitSuccesfull(
-            message: 'Bienvenido ${authenticatedCreds.firstName}',
+            message: 'Bienvenido ${creds.firstName}',
           ),
         ),
       );

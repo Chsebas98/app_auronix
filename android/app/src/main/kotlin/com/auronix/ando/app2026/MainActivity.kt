@@ -1,4 +1,4 @@
-package com.package.appauronix2026
+package com.auronix.ando.app2026
 
 import io.flutter.embedding.android.FlutterActivity
 

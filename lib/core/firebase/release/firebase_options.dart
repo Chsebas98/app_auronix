@@ -17,7 +17,10 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -46,30 +49,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDoMGjbMl3fFdZ0g6C2SnQiRtwj5KbdR7s',
-    appId: '1:1007239374066:web:c6295cc1b98a9e8ea01c6b',
-    messagingSenderId: '1007239374066',
-    projectId: 'app-ando',
-    authDomain: 'app-ando.firebaseapp.com',
-    storageBucket: 'app-ando.firebasestorage.app',
-    measurementId: 'G-N8DYT22CZM',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAf-tp5-opoXJSADXkBeB31DMBdqRyEb0U',
-    appId: '1:364283556136:android:9c8f501a3997e22a9ce01d',
-    messagingSenderId: '364283556136',
-    projectId: 'app-ando-auronix',
-    storageBucket: 'app-ando-auronix.firebasestorage.app',
+    apiKey: 'AIzaSyCq3scr6WWIrCM5YbxBFYXSCB3Xh8olJ20',
+    appId: '1:820427140460:android:18499d87f2a97710d31749',
+    messagingSenderId: '820427140460',
+    projectId: 'auronix-ando-prod',
+    storageBucket: 'auronix-ando-prod.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAxhwfxMh09ifEVCiPoa5rfUpMppjDx8Qo',
-    appId: '1:364283556136:ios:c5604bdaece7ba829ce01d',
-    messagingSenderId: '364283556136',
-    projectId: 'app-ando-auronix',
-    storageBucket: 'app-ando-auronix.firebasestorage.app',
-    iosBundleId: 'com.package.appauronix2026',
+    apiKey: 'AIzaSyAcSBo1CjYO7InCZr5nvPBly3ndL4II4Ho',
+    appId: '1:820427140460:ios:bddda4bc37444c8ed31749',
+    messagingSenderId: '820427140460',
+    projectId: 'auronix-ando-prod',
+    storageBucket: 'auronix-ando-prod.firebasestorage.app',
+    iosBundleId: 'com.auronix.ando.app2026',
   );
 }

@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart'
 ///
 /// Example:
 /// ```dart
-/// import 'firebase_options_dev.dart';
+/// import 'firebase_options.dart';
 /// // ...
 /// await Firebase.initializeApp(
 ///   options: DefaultFirebaseOptions.currentPlatform,
@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCqUwJ2ttUgVyUbg_iIay2nz6CmK-yYENc',
-    appId: '1:115390315336:android:00bb318f505e35fa00517d',
-    messagingSenderId: '115390315336',
-    projectId: 'dev-app-ando-auronix',
-    storageBucket: 'dev-app-ando-auronix.firebasestorage.app',
+    apiKey: 'AIzaSyB_g_QP2Qid50k0-_CWa_MpnXlp8hNbtnI',
+    appId: '1:451995583792:android:ad35c975b753e8f3fff4f5',
+    messagingSenderId: '451995583792',
+    projectId: 'auronix-ando-dev',
+    storageBucket: 'auronix-ando-dev.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCcIYTnCTtutyiwEWdqdHBw3UrJAdg6lPQ',
-    appId: '1:115390315336:ios:6a146391d09e825800517d',
-    messagingSenderId: '115390315336',
-    projectId: 'dev-app-ando-auronix',
-    storageBucket: 'dev-app-ando-auronix.firebasestorage.app',
-    iosBundleId: 'com.package.appauronix2026',
+    apiKey: 'AIzaSyDzoataLcx3kB2V63CywUvPzluGrHzpK8g',
+    appId: '1:451995583792:ios:b7a5aca248a71abbfff4f5',
+    messagingSenderId: '451995583792',
+    projectId: 'auronix-ando-dev',
+    storageBucket: 'auronix-ando-dev.firebasestorage.app',
+    iosBundleId: 'com.auronix.ando.app2026',
   );
 }
