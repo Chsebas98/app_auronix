@@ -9,10 +9,17 @@ abstract class AuthRepository {
   Future<AuthenticationCredentials> login({
     required String email,
     required String password,
+    AuthenticationCredentials isGoogle =
+        const AuthenticationCredentials.empty(),
     bool rememberMe = false,
   });
 
-  Future<void> loginWithGoogle();
+  Future<AuthenticationCredentials> loginWithGoogle();
+
+  /// NUEVO: Login/Registro con Google + Strapi
+  Future<AuthenticationCredentials> loginOrRegisterWithGoogle(
+    AuthenticationCredentials googleCreds,
+  );
 
   Future<AuthenticationCredentials?> getSavedSession();
 

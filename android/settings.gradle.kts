@@ -26,4 +26,20 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.1.0" apply false
 }
 
+// Cargar secrets.properties
+val secretsPropertiesFile = File(rootProject.projectDir, "secrets.properties")
+val secretsProperties = java.util.Properties()
+
+if (secretsPropertiesFile.exists()) {
+    secretsPropertiesFile.inputStream().use { stream ->
+        secretsProperties.load(stream)
+    }
+}
+
+// Hacer disponibles las propiedades
+secretsProperties.forEach { key, value ->
+    gradle.extra.set(key.toString(), value)
+}
+
+
 include(":app")

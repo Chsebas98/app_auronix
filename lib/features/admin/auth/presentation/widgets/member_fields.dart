@@ -32,7 +32,7 @@ class MemberFields extends StatelessWidget {
               textCapitalization: TextCapitalization.characters,
               textInputAction: TextInputAction.next,
               validator: (value) =>
-                  Helpers.getMessageFormValidation(state.isValidUsername),
+                  FormsHelpers.getMessageFormValidation(state.isValidUsername),
               onChanged: (value) => context.read<MemberBloc>().add(
                 MemberChangeCiPassportEvent(ciPassport: value.toUpperCase()),
               ),
@@ -53,7 +53,7 @@ class MemberFields extends StatelessWidget {
               allowSpecialCharacters: true,
               textInputAction: TextInputAction.done,
               validator: (value) =>
-                  Helpers.getMessageFormValidation(state.isValidLoginPsw),
+                  FormsHelpers.getMessageFormValidation(state.isValidLoginPsw),
               onChanged: (value) =>
                   context.read<AuthBloc>().add(ChangePasswordEvent(psw: value)),
             ),

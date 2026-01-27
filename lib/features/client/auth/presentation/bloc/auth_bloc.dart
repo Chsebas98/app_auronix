@@ -1,17 +1,20 @@
 import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
+import 'package:auronix_app/features/client/client.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
   AuthBloc(this._authRepository) : super(AuthState()) {
     on<InitRememberEvent>(_onInitRememberEvent);
     on<GoogleSignInRequestedEvent>(_onGoogleSignInRequestedEvent);
@@ -37,11 +40,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      await _authRepository.loginWithGoogle();
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
+      emit(state.copyWith(loginForm: FormSubmitProgress()));
+
+      final creds = await _authRepository.loginWithGoogle();
+
+      // debugPrint('Credenciales Google: ${creds.toString()}');
+      // await Future.delayed(Duration(seconds: 10));
+      if (creds.token.isEmpty) {
+        throw Exception('No se pudieron obtener las credenciales de Google');
       }
+      // final authenticatedCreds = await _authRepository
+      //     .loginOrRegisterWithGoogle(creds);
+
+      // if (authenticatedCreds.photoUrl.isEmpty ||
+      //     authenticatedCreds.username.isEmpty) {
+      //   _prefs.setBool(StaticVariables.needsProfileComplete, true);
+      //   emit(
+      //     state.copyWith(
+      //       email: authenticatedCreds.email,
+      //       password: authenticatedCreds.token,
+      //       credentialsGoogle: authenticatedCreds,
+      //       loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
+      //     ),
+      //   );
+      //   return;
+      // }
+      emit(
+        state.copyWith(
+          email: creds.email,
+          password: creds.token,
+          credentialsGoogle: creds,
+          loginForm: FormSubmitSuccesfull(
+            message: 'Bienvenido ${creds.firstName}',
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error en Google Sign-In: $e');
+      emit(state.copyWith(loginForm: FormSubmitFailed(e.toString())));
     }
   }
 
@@ -72,7 +108,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ChangePasswordEvent event,
     Emitter<AuthState> emit,
   ) {
-    debugPrint(event.psw);
+    // debugPrint(event.psw);
     emit(state.copyWith(password: event.psw));
   }
 

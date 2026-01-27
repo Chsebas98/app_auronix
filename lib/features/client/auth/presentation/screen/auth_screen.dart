@@ -1,5 +1,6 @@
 import 'package:auronix_app/app/app.dart';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
@@ -40,6 +41,7 @@ class _AuthScreenInit extends StatelessWidget {
       child: Scaffold(
         backgroundColor: theme.primaryColor,
         appBar: AppbarDefault(
+          hasBackButton: true,
           goTo: () => AppRouter.go(Routes.onBoarding),
           content: Row(
             mainAxisSize: MainAxisSize.min,
@@ -134,6 +136,14 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        if (state.completeRegisterForm is FormSubmitProgress ||
+            state.loginForm is FormSubmitProgress) {
+          rootMessengerKey.currentState?.hideCurrentSnackBar();
+          context.read<DialogCubit>().showLoading();
+        } else {
+          context.read<DialogCubit>().hideTop();
+        }
+
         if (state.registerForm is FormSubmitSuccesfull && !_isSnackOpen) {
           _isSnackOpen = true;
           _showToastValidation(context);
@@ -141,6 +151,26 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
         }
         if (state.showRegisterCompleteForm) {
           _showRegisterCompleteForm(context);
+        }
+
+        final status = state.loginForm;
+        if (status is FormSubmitFailed) {
+          context.read<DialogCubit>().showConfirm(
+            title: 'Error al iniciar sesión',
+            message:
+                'No podemos iniciar sesión con las credenciales proporcionadas. '
+                'Por favor, verifica tu correo y contraseña e intenta nuevamente.',
+          );
+        }
+
+        if (status is FormSubmitSuccesfull) {
+          context.read<SessionBloc>().add(
+            LoginUserEvent(
+              email: state.email,
+              password: state.password,
+              isGoogle: state.credentialsGoogle,
+            ),
+          );
         }
 
         if (state.completeRegisterForm is FormSubmitSuccesfull) {

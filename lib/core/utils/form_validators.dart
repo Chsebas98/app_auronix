@@ -1,4 +1,4 @@
-import 'package:auronix_app/core/interfaces/interfaces.dart';
+import 'package:auronix_app/core/models/interfaces/interfaces.dart';
 
 class FormValidators {
   static ValidationFieldResult validateLoginEmail(String mail) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/features/features.dart';
@@ -22,10 +24,14 @@ class AppRouter {
   static late GoRouter _router;
   static GoRouter get instance => _router;
 
-  static void initialize(SessionBloc sessionBloc) {
+  static void initialize(
+    SessionBloc sessionBloc,
+    GlobalKey<NavigatorState> rootNavKey,
+  ) {
     _router = GoRouter(
+      navigatorKey: rootNavKey,
       initialLocation: Routes.onBoarding,
-      refreshListenable: AuthChangeNotifier(sessionBloc),
+      refreshListenable: GoRouterRefreshBloc(sessionBloc.stream),
       // errorBuilder: (context, state) => const NotFoundScreen(),
       redirect: (context, state) {
         // final currentLocation = state.uri.toString();
@@ -35,38 +41,32 @@ class AppRouter {
         final isPublic =
             _publicRoutes.contains(currentLocation) ||
             _publicPrefixes.any((p) {
-              debugPrint("QUE ES P: $p");
+              // debugPrint("QUE ES P: $p");
               return currentLocation.contains(p);
             });
 
-        debugPrint(
-          'Router redirect - Ruta actual: $currentLocation, Session state: ${sessionState.runtimeType}',
-        );
+        // debugPrint('Router redirect - Ruta actual: $currentLocation, Session state: ${sessionState.runtimeType}',);
 
         if (sessionState is SessionUnauthenticated ||
             sessionState is SessionTokenExpired) {
           if (sessionState is SessionTokenExpired) {
-            debugPrint(
-              'Router detecto State AuthTokenExpired, message: ${sessionState.message}',
-            );
+            // debugPrint('Router detecto State AuthTokenExpired, message: ${sessionState.message}',);
             return Routes.sessionExpired;
           }
           if (!isPublic) {
-            debugPrint('Redirect a /session_expired from $currentLocation');
+            // debugPrint('Redirect a /session_expired from $currentLocation');
             return Routes.auth;
           }
-          debugPrint('Already on public route');
+          // debugPrint('Already on public route');
           return null;
         }
 
         if (sessionState is SessionAuthenticated && isPublic) {
-          debugPrint(
-            'User Autenticado, redirect to /summary from $currentLocation',
-          );
+          // debugPrint('User Autenticado, redirect to /summary from $currentLocation',);
           return Routes.home;
         }
 
-        debugPrint('No redirect needed');
+        // debugPrint('No redirect needed');
         return null;
       },
       routes: [
@@ -170,12 +170,26 @@ class AppRouter {
   }
 }
 
-class AuthChangeNotifier extends ChangeNotifier {
-  final SessionBloc _sessionCubit;
+class GoRouterRefreshBloc extends ChangeNotifier {
+  GoRouterRefreshBloc(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
 
-  AuthChangeNotifier(this._sessionCubit) {
-    _sessionCubit.stream.listen((_) {
-      notifyListeners();
-    });
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }
+
+// class AuthChangeNotifier extends ChangeNotifier {
+//   final SessionBloc _sessionCubit;
+
+//   AuthChangeNotifier(this._sessionCubit) {
+//     _sessionCubit.stream.listen((_) {
+//       notifyListeners();
+//     });
+//   }
+// }

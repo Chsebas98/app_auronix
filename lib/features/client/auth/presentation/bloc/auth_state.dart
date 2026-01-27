@@ -9,6 +9,7 @@ class AuthState extends Equatable {
     this.registerForm = const InitialFormSubmitStatus(),
     this.completeRegisterForm = const InitialFormSubmitStatus(),
     this.loginForm = const InitialFormSubmitStatus(),
+    this.credentialsGoogle = const AuthenticationCredentials.empty(),
     //register
     this.showRegisterCompleteForm = false,
   });
@@ -21,6 +22,7 @@ class AuthState extends Equatable {
   final FormSubmitStatus registerForm;
   final FormSubmitStatus completeRegisterForm;
   final FormSubmitStatus loginForm;
+  final AuthenticationCredentials credentialsGoogle;
 
   //register
   final bool showRegisterCompleteForm;
@@ -46,6 +48,7 @@ class AuthState extends Equatable {
     FormSubmitStatus? registerForm,
     FormSubmitStatus? completeRegisterForm,
     FormSubmitStatus? loginForm,
+    AuthenticationCredentials? credentialsGoogle,
     //register
     bool? showRegisterCompleteForm,
   }) {
@@ -57,6 +60,7 @@ class AuthState extends Equatable {
       registerForm: registerForm ?? this.registerForm,
       completeRegisterForm: completeRegisterForm ?? this.completeRegisterForm,
       loginForm: loginForm ?? this.loginForm,
+      credentialsGoogle: credentialsGoogle ?? this.credentialsGoogle,
       //register
       showRegisterCompleteForm:
           showRegisterCompleteForm ?? this.showRegisterCompleteForm,
@@ -72,6 +76,7 @@ class AuthState extends Equatable {
     registerForm,
     completeRegisterForm,
     loginForm,
+    credentialsGoogle,
     //register
     showRegisterCompleteForm,
   ];

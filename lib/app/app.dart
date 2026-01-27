@@ -1,8 +1,10 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
+import 'package:auronix_app/app/handlers/dialog_handler.dart';
 import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/repositories/auth_repository.dart';
+import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,20 +19,21 @@ class AppAuronixMain extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => GlobalCubit()),
-        BlocProvider(create: (context) => AppLifeCycleCubit()),
-        BlocProvider(create: (context) => ThemeCubit()),
-        BlocProvider(create: (context) => SessionBloc(sl<AuthRepository>())),
+        BlocProvider.value(value: sl<GlobalCubit>()),
+        BlocProvider.value(value: sl<AppLifeCycleCubit>()),
+        BlocProvider.value(value: sl<ThemeCubit>()),
+        BlocProvider.value(value: sl<SessionBloc>()),
+        BlocProvider.value(value: sl<DialogCubit>()),
+        BlocProvider.value(value: sl<PermissionCubit>()),
+        BlocProvider.value(value: sl<BottomNavCubit>()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(390, 844),
         minTextAdapt: true,
         splitScreenMode: true,
         ensureScreenSize: true,
-        builder: (context, child) => Builder(
+        builder: (context, _) => Builder(
           builder: (context) {
-            final sessionCubit = context.read<SessionBloc>();
-            AppRouter.initialize(sessionCubit);
             return BlocListener<AppLifeCycleCubit, AppLifecycleState>(
               listener: (context, state) async {
                 switch (state) {
@@ -55,8 +58,8 @@ class AppAuronixMain extends StatelessWidget {
                       context,
                     ).copyWith(textScaler: TextScaler.noScaling),
                     child: MaterialApp.router(
-                      debugShowCheckedModeBanner: false,
                       // debugShowMaterialGrid: true,
+                      debugShowCheckedModeBanner: false,
                       scaffoldMessengerKey: rootMessengerKey,
                       routerConfig: AppRouter.instance,
                       theme: AppTheme.lightTheme,
@@ -65,6 +68,13 @@ class AppAuronixMain extends StatelessWidget {
                       localizationsDelegates:
                           AppLocalizations.localizationsDelegates,
                       supportedLocales: AppLocalizations.supportedLocales,
+                      builder: (context, child) {
+                        return DialogHandler(
+                          navigatorKey:
+                              AppRouter.instance.routerDelegate.navigatorKey,
+                          child: child ?? SizedBox.shrink(),
+                        );
+                      },
                     ),
                   );
                 },
