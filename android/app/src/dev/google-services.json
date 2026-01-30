@@ -12,7 +12,20 @@
           "package_name": "com.auronix.ando.app2026.dev"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "451995583792-t0l3hd95g584pvvfdoo3sgt1tvddg8gv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.auronix.ando.app2026.dev",
+            "certificate_hash": "71fe8aeeaaf35fc870151c5a9ba7c2780a3c4cca"
+          }
+        },
+        {
+          "client_id": "451995583792-urgesf9bm8hfi60vvvvaehibft822usp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_g_QP2Qid50k0-_CWa_MpnXlp8hNbtnI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "451995583792-q3pv74c2a3m5jfj49aads8kb9nulqq2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "451995583792-a1tnnkps3u02n742r04dqpjqgfft58bc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.auronix.ando.app2026.dev"
+              }
+            }
+          ]
         }
       }
     }

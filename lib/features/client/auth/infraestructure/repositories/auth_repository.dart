@@ -1,3 +1,4 @@
+import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/features.dart';
 
 abstract class AuthRepository {
@@ -17,7 +18,7 @@ abstract class AuthRepository {
   Future<AuthenticationCredentials> loginWithGoogle();
 
   /// NUEVO: Login/Registro con Google + Strapi
-  Future<AuthenticationCredentials> loginOrRegisterWithGoogle(
+  Future<ServiceResponse> loginOrRegisterWithGoogle(
     AuthenticationCredentials googleCreds,
   );
 

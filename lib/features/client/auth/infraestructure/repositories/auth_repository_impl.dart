@@ -81,7 +81,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final googleAccount = await _googleSignIn.authenticate();
     final GoogleSignInAuthentication googleAuth = googleAccount.authentication;
-
+    debugPrintStack(label: 'Google Auth: ${googleAuth.idToken}');
     if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
       throw GoogleSignInException(
         code: GoogleSignInExceptionCode.unknownError,
@@ -113,83 +113,98 @@ class AuthRepositoryImpl implements AuthRepository {
 
   /// NUEVO: Login o Registro con Google + Sincronización con Strapi
   @override
-  Future<AuthenticationCredentials> loginOrRegisterWithGoogle(
+  Future<ServiceResponse> loginOrRegisterWithGoogle(
     AuthenticationCredentials googleCreds,
   ) async {
     try {
       debugPrint('🔐 Iniciando login/registro con Google + Strapi');
       debugPrint('📧 Email: ${googleCreds.email}');
 
-      // 1. Buscar si el usuario existe en Strapi
-      final existingUser = await strapiServices.findUserByEmail(
-        googleCreds.email,
-      );
+      // 1. Llamar al endpoint de Google Login en Strapi
+      final strapiResponse = await strapiServices.googleLogin(googleCreds);
 
-      StrapiUserResponse strapiUser;
+      debugPrint('📦 Respuesta de Strapi: $strapiResponse');
 
-      if (existingUser != null) {
-        // 2a. Usuario EXISTE: Actualizar inicio_google y token
-        debugPrint('👤 Usuario existente, actualizando...');
-
-        strapiUser = await strapiServices.updateUser(
-          documentId: existingUser.documentId,
-          inicioGoogle: true,
-          tokenAccess: googleCreds.token,
-          photoUrl: googleCreds.photoUrl.isNotEmpty
-              ? googleCreds.photoUrl
-              : null,
-        );
-      } else {
-        // 2b. Usuario NO EXISTE: Crear nuevo
-        debugPrint('🆕 Usuario nuevo, creando en Strapi...');
-
-        // Generar username único del email
-        final username = googleCreds.email.split('@')[0];
-
-        strapiUser = await strapiServices.createUser(
-          email: googleCreds.email,
-          username: username,
-          nombre1: googleCreds.firstName,
-          nombre2: googleCreds.secondName.isNotEmpty
-              ? googleCreds.secondName
-              : null,
-          ape1: googleCreds.lastName.isNotEmpty ? googleCreds.lastName : null,
-          ape2: googleCreds.secondlastName.isNotEmpty
-              ? googleCreds.secondlastName
-              : null,
-          photoUrl: googleCreds.photoUrl.isNotEmpty
-              ? googleCreds.photoUrl
-              : null,
-          tokenAccess: googleCreds.token,
-          roleId: 2, // ROL_CLIENT - ajusta según tu catálogo
+      // 2. Verificar si la respuesta es exitosa
+      if (!strapiResponse['response']) {
+        debugPrint('❌ Error desde Strapi: ${strapiResponse['message']}');
+        return ServiceResponse.error(
+          message: strapiResponse['message'],
+          errorDetail: strapiResponse['errorDetail'],
+          statusCode: strapiResponse['statusCode'],
         );
       }
 
-      // 3. Convertir respuesta de Strapi a AuthenticationCredentials
-      final authCreds = strapiUser.toAuthCredentials(
-        googleToken: googleCreds.token,
-      );
+      // 3. Extraer datos del resultado
+      final result = strapiResponse['result'] as Map<String, dynamic>;
+      final jwt = result['jwt'] as String?;
+      final userData = result['user'] as Map<String, dynamic>?;
+      final isNewUser = result['isNewUser'] as bool? ?? false;
 
-      // 4. Guardar en base de datos local
-      await localDb.saveUser(authCreds);
-      await local.saveToken(authCreds.token);
-      await local.setRememberMe(true);
+      if (jwt == null || userData == null) {
+        debugPrint('JWT o datos de usuario no encontrados en respuesta');
+        return ServiceResponse.error(
+          message: 'Respuesta inválida del servidor',
+          errorDetail: 'JWT o datos de usuario faltantes',
+          statusCode: 500,
+        );
+      }
+
+      debugPrint(
+        isNewUser
+            ? '🆕 Usuario nuevo registrado: ${userData['email']}'
+            : '👤 Usuario existente: ${userData['email']}',
+      );
+      debugPrint('🔑 JWT recibido: ${jwt.substring(0, 20)}...');
+      debugPrint('👤 Username: ${userData['username']}');
+      debugPrint('🎭 Rol: ${userData['role']?['nombre_catalogo']}');
+
+      // 4. Guardar en base de datos local (descomentar cuando esté listo)
+      // await localDb.saveUser(userData);
+      // await local.saveToken(jwt);
+      // await local.setRememberMe(true);
 
       debugPrint('✅ Login/Registro completado exitosamente');
-      debugPrint('👤 Usuario: ${authCreds.firstName} ${authCreds.lastName}');
-      debugPrint('🎭 Rol: ${authCreds.role}');
-      debugPrint('🔑 Document ID: ${strapiUser.documentId}');
 
-      return authCreds;
-    } on StrapiException catch (e) {
-      debugPrint('❌ Error de Strapi: $e');
-      throw Exception('Error al sincronizar con el servidor: ${e.message}');
-    } on TimeoutException catch (e) {
-      debugPrint('⏱️ Timeout: $e');
-      throw Exception('El servidor no responde. Verifica tu conexión.');
-    } catch (e) {
-      debugPrint('❌ Error en loginOrRegisterWithGoogle: $e');
-      rethrow;
+      // 5. Retornar respuesta exitosa
+      return ServiceResponse.success(
+        message: isNewUser
+            ? 'Usuario registrado exitosamente'
+            : 'Inicio de sesión exitoso',
+        result: {'jwt': jwt, 'user': userData, 'isNewUser': isNewUser},
+        statusCode: strapiResponse['statusCode'],
+      );
+    } on DioException catch (e) {
+      debugPrint('❌ Error DioException: ${e.message}');
+      debugPrint('📍 Type: ${e.type}');
+      debugPrint('�� Response: ${e.response?.data}');
+
+      // Intentar parsear error del backend
+      if (e.response?.data != null && e.response!.data is Map) {
+        final errorData = e.response!.data as Map<String, dynamic>;
+        return ServiceResponse.error(
+          message:
+              errorData['message'] ?? 'Error de comunicación con el servidor',
+          errorDetail:
+              errorData['errorDetail'] ?? e.message ?? 'Error desconocido',
+          statusCode: e.response?.statusCode ?? 500,
+        );
+      }
+
+      return ServiceResponse.error(
+        message: 'Error de comunicación con el servidor',
+        errorDetail: e.message ?? 'Sin conexión',
+        statusCode: e.response?.statusCode ?? 500,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error inesperado en loginOrRegisterWithGoogle: $e');
+      debugPrint('📍 StackTrace: $stackTrace');
+
+      return ServiceResponse.error(
+        message: 'Error inesperado al procesar login',
+        errorDetail: e.toString(),
+        statusCode: 500,
+      );
     }
   }
 
