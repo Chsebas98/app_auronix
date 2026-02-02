@@ -90,7 +90,8 @@ class StrapiUserResponse {
   /// Convierte StrapiUserResponse a AuthenticationCredentials
   AuthenticationCredentials toAuthCredentials({String? googleToken}) {
     return AuthenticationCredentials(
-      token: googleToken ?? tokenAccess ?? '',
+      tokenRefresh: '',
+      tokenAccess: googleToken ?? tokenAccess ?? '',
       username: username,
       firstName: nombre1,
       secondName: nombre2 ?? '',

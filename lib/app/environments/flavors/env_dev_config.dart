@@ -4,7 +4,8 @@ import 'package:encrypt/encrypt.dart';
 
 class EnvDevConfig extends EnvBaseConfig {
   @override
-  String get apiBaseUrl => 'http://localhost:1337/api';
+  // String get apiBaseUrl => 'http://localhost:1337/api'; //localhost
+  String get apiBaseUrl => 'http://192.168.100.5:1337/api'; //dispositivo fisico
 
   @override
   String get tokenKey =>

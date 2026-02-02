@@ -52,7 +52,8 @@ class AuthRepositoryImpl implements AuthRepository {
       creds = isGoogle;
     } else {
       creds = AuthenticationCredentials(
-        token: response['token'] ?? 'hola',
+        tokenRefresh: '',
+        tokenAccess: response['token'] ?? 'hola',
         firstName: 'Sebas',
         lastName: 'Soberon',
         role: Roles.rolUser,
@@ -94,7 +95,8 @@ class AuthRepositoryImpl implements AuthRepository {
     );
 
     final authModel = AuthenticationCredentials(
-      token: googleAuth.idToken!,
+      tokenRefresh: '',
+      tokenAccess: googleAuth.idToken!,
       role: Roles.rolUser,
       username: '',
       firstName: firstName,
@@ -111,7 +113,6 @@ class AuthRepositoryImpl implements AuthRepository {
     return authModel;
   }
 
-  /// NUEVO: Login o Registro con Google + Sincronización con Strapi
   @override
   Future<ServiceResponse> loginOrRegisterWithGoogle(
     AuthenticationCredentials googleCreds,
@@ -120,14 +121,9 @@ class AuthRepositoryImpl implements AuthRepository {
       debugPrint('🔐 Iniciando login/registro con Google + Strapi');
       debugPrint('📧 Email: ${googleCreds.email}');
 
-      // 1. Llamar al endpoint de Google Login en Strapi
       final strapiResponse = await strapiServices.googleLogin(googleCreds);
 
-      debugPrint('📦 Respuesta de Strapi: $strapiResponse');
-
-      // 2. Verificar si la respuesta es exitosa
       if (!strapiResponse['response']) {
-        debugPrint('❌ Error desde Strapi: ${strapiResponse['message']}');
         return ServiceResponse.error(
           message: strapiResponse['message'],
           errorDetail: strapiResponse['errorDetail'],
@@ -135,73 +131,54 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // 3. Extraer datos del resultado
       final result = strapiResponse['result'] as Map<String, dynamic>;
-      final jwt = result['jwt'] as String?;
+
+      // �� EXTRAER AMBOS TOKENS
+      final tokenAccess = result['token_access'] as String?;
+      final tokenRefresh = result['token_refresh'] as String?;
       final userData = result['user'] as Map<String, dynamic>?;
       final isNewUser = result['isNewUser'] as bool? ?? false;
 
-      if (jwt == null || userData == null) {
-        debugPrint('JWT o datos de usuario no encontrados en respuesta');
+      if (tokenAccess == null || tokenRefresh == null || userData == null) {
         return ServiceResponse.error(
           message: 'Respuesta inválida del servidor',
-          errorDetail: 'JWT o datos de usuario faltantes',
+          errorDetail: 'Tokens o datos de usuario faltantes',
           statusCode: 500,
         );
       }
 
-      debugPrint(
-        isNewUser
-            ? '🆕 Usuario nuevo registrado: ${userData['email']}'
-            : '👤 Usuario existente: ${userData['email']}',
+      // ✅ CREAR CREDENTIALS CON AMBOS TOKENS
+      final creds = googleCreds.copyWith(
+        tokenAccess: tokenAccess,
+        tokenRefresh: tokenRefresh,
+        username: userData['username'] as String,
+        // ... otros campos del userData
       );
-      debugPrint('🔑 JWT recibido: ${jwt.substring(0, 20)}...');
-      debugPrint('👤 Username: ${userData['username']}');
-      debugPrint('🎭 Rol: ${userData['role']?['nombre_catalogo']}');
 
-      // 4. Guardar en base de datos local (descomentar cuando esté listo)
-      // await localDb.saveUser(userData);
-      // await local.saveToken(jwt);
-      // await local.setRememberMe(true);
+      // ✅ GUARDAR EN BD LOCAL
+      await localDb.saveUser(creds);
+      await local.setRememberMe(true);
 
-      debugPrint('✅ Login/Registro completado exitosamente');
+      debugPrint('✅ Login/Registro completado');
+      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
+      debugPrint('🔄 Refresh Token: ${tokenRefresh.substring(0, 20)}...');
 
-      // 5. Retornar respuesta exitosa
       return ServiceResponse.success(
         message: isNewUser
             ? 'Usuario registrado exitosamente'
             : 'Inicio de sesión exitoso',
-        result: {'jwt': jwt, 'user': userData, 'isNewUser': isNewUser},
+        result: {
+          'token_access': tokenAccess,
+          'token_refresh': tokenRefresh,
+          'user': userData,
+          'isNewUser': isNewUser,
+        },
         statusCode: strapiResponse['statusCode'],
       );
-    } on DioException catch (e) {
-      debugPrint('❌ Error DioException: ${e.message}');
-      debugPrint('📍 Type: ${e.type}');
-      debugPrint('�� Response: ${e.response?.data}');
-
-      // Intentar parsear error del backend
-      if (e.response?.data != null && e.response!.data is Map) {
-        final errorData = e.response!.data as Map<String, dynamic>;
-        return ServiceResponse.error(
-          message:
-              errorData['message'] ?? 'Error de comunicación con el servidor',
-          errorDetail:
-              errorData['errorDetail'] ?? e.message ?? 'Error desconocido',
-          statusCode: e.response?.statusCode ?? 500,
-        );
-      }
-
+    } catch (e, _) {
+      debugPrint('❌ Error en loginOrRegisterWithGoogle: $e');
       return ServiceResponse.error(
-        message: 'Error de comunicación con el servidor',
-        errorDetail: e.message ?? 'Sin conexión',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e, stackTrace) {
-      debugPrint('❌ Error inesperado en loginOrRegisterWithGoogle: $e');
-      debugPrint('📍 StackTrace: $stackTrace');
-
-      return ServiceResponse.error(
-        message: 'Error inesperado al procesar login',
+        message: 'Error inesperado',
         errorDetail: e.toString(),
         statusCode: 500,
       );

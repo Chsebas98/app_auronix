@@ -1,2 +1,3 @@
-export 'package:auronix_app/app/theme/app_colors.dart';
-export 'package:auronix_app/app/theme/app_theme.dart';
+export 'app_colors.dart';
+export 'app_theme.dart';
+export 'theme_extensions.dart';

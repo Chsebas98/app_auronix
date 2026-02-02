@@ -46,7 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       // debugPrint('Credenciales Google: ${creds.toString()}');
       // await Future.delayed(Duration(seconds: 10));
-      if (creds.token.isEmpty) {
+      if (creds.tokenAccess.isEmpty) {
         throw Exception('No se pudieron obtener las credenciales de Google');
       }
       final response = await _authRepository.loginOrRegisterWithGoogle(creds);
@@ -64,7 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(
           state.copyWith(
             email: creds.email,
-            password: creds.token,
+            password: creds.tokenAccess,
             credentialsGoogle: creds,
             loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
           ),
@@ -74,7 +74,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         state.copyWith(
           email: creds.email,
-          password: creds.token,
+          password: creds.tokenAccess,
           credentialsGoogle: creds,
           loginForm: FormSubmitSuccesfull(
             message: 'Bienvenido ${creds.firstName}',

@@ -1,6 +1,7 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
+import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart'; // ✅ NUEVO
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/features/client/auth/infraestructure/data/remote/strapi_services.dart';
@@ -17,7 +18,7 @@ import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
-  //?GLobales
+  //?Globales
   sl.registerFactory<GlobalCubit>(() => GlobalCubit());
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   sl.registerFactory<AppLifeCycleCubit>(() => AppLifeCycleCubit());
@@ -37,18 +38,31 @@ Future<void> initDependencies() async {
     ),
   );
 
-  final dio = await DioClient.getInstance(
-    enableSSLPinning: false, // Cambia a true en producción
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
-  );
-  sl.registerLazySingleton<Dio>(() => dio);
-
-  //?Database
+  //?Database (MOVER ANTES DE DIO)
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
   sl.registerLazySingleton<AuthLocalDbDataSource>(
     () => AuthLocalDbDataSource(sl<AppDatabase>()),
   );
+
+  // ✅ 1. Crear Dio SIN AuthInterceptor primero
+  final dioBasic = await DioClient.getInstance(
+    enableSSLPinning: false,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  );
+
+  // ✅ 2. Crear StrapiServices con Dio básico
+  final strapiServices = StrapiServices(dio: dioBasic);
+  sl.registerLazySingleton<StrapiServices>(() => strapiServices);
+
+  // ✅ 3. Agregar AuthInterceptor DESPUÉS
+  dioBasic.interceptors.insert(
+    2, // Después de Cache, antes de Retry
+    AuthInterceptor(db: sl<AppDatabase>(), strapiServices: strapiServices),
+  );
+
+  // ✅ 4. Registrar Dio configurado
+  sl.registerLazySingleton<Dio>(() => dioBasic);
 
   //?auth
   //local
@@ -57,9 +71,6 @@ Future<void> initDependencies() async {
   );
   //remote
   sl.registerLazySingleton<AuthRemoteServices>(() => AuthRemoteServices());
-  sl.registerLazySingleton<StrapiServices>(
-    () => StrapiServices(dio: sl<Dio>()),
-  );
 
   //Repository
   sl.registerLazySingleton<AuthRepository>(

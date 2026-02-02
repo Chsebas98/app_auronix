@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:auronix_app/core/core.dart';
 
 class AuthenticationCredentials {
-  final String token;
+  final String tokenAccess;
+  final String tokenRefresh;
   final Roles role;
   final String username;
   final String firstName;
@@ -15,7 +16,8 @@ class AuthenticationCredentials {
   final bool isGoogleUser;
 
   const AuthenticationCredentials({
-    required this.token,
+    required this.tokenAccess,
+    required this.tokenRefresh,
     required this.role,
     required this.username,
     required this.firstName,
@@ -28,7 +30,8 @@ class AuthenticationCredentials {
   });
 
   const AuthenticationCredentials.empty()
-    : token = '',
+    : tokenAccess = '',
+      tokenRefresh = '',
       role = Roles.rolUser,
       username = '',
       firstName = '',
@@ -41,7 +44,8 @@ class AuthenticationCredentials {
 
   factory AuthenticationCredentials.fromJson(Map<String, dynamic> json) {
     return AuthenticationCredentials(
-      token: json['token'] ?? '',
+      tokenAccess: json['tokenAccess'] ?? '',
+      tokenRefresh: json['tokenRefresh'] ?? '',
       role: Roles.values.firstWhere(
         (role) => role.name == (json['role'] ?? 'rolUser'),
         orElse: () => Roles.rolUser,
@@ -58,7 +62,8 @@ class AuthenticationCredentials {
   }
 
   AuthenticationCredentials copyWith({
-    String? token,
+    String? tokenAccess,
+    String? tokenRefresh,
     Roles? role,
     String? username,
     String? firstName,
@@ -70,7 +75,8 @@ class AuthenticationCredentials {
     bool? isGoogleUser,
   }) {
     return AuthenticationCredentials(
-      token: token ?? this.token,
+      tokenAccess: tokenAccess ?? this.tokenAccess,
+      tokenRefresh: tokenRefresh ?? this.tokenRefresh,
       role: role ?? this.role,
       username: username ?? this.username,
       firstName: firstName ?? this.firstName,
@@ -84,7 +90,8 @@ class AuthenticationCredentials {
   }
 
   Map<String, dynamic> toJson({bool includeToken = true}) => {
-    'token': token,
+    'tokenAccess': tokenAccess,
+    'tokenRefresh': tokenRefresh,
     'role': role.name,
     'username': username,
     'firstName': firstName,
@@ -98,7 +105,8 @@ class AuthenticationCredentials {
 
   Map<String, dynamic> toSafeJson({String mask = '***'}) => {
     ...toJson(),
-    'token': mask,
+    'tokenAccess': mask,
+    'tokenRefresh': mask,
   };
 
   /// Para debug explícito (incluye token)

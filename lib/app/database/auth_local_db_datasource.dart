@@ -7,10 +7,12 @@ class AuthLocalDbDataSource {
   final AppDatabase _db;
   AuthLocalDbDataSource(this._db);
 
+  /// Guardar usuario completo (login/registro inicial)
   Future<void> saveUser(AuthenticationCredentials creds) {
     return _db.upsertUserMap({
-      DbConstants.colToken: creds.token,
-      DbConstants.colRole: creds.role.name, // o creds.role.toString()
+      DbConstants.colTokenAccess: creds.tokenAccess,
+      DbConstants.colTokenRefresh: creds.tokenRefresh,
+      DbConstants.colRole: creds.role.name,
       DbConstants.colUsername: creds.username,
       DbConstants.colFirstName: creds.firstName,
       DbConstants.colSecondName:
@@ -22,15 +24,36 @@ class AuthLocalDbDataSource {
       DbConstants.colEmail: creds.email,
       DbConstants.colPhotoUrl: creds.photoUrl,
       DbConstants.colIsGoogleUser: creds.isGoogleUser ? 1 : 0,
+      DbConstants.colTokenExpiresAt: DateTime.now()
+          .add(const Duration(hours: 1))
+          .millisecondsSinceEpoch,
     });
   }
+
+  /// ✅ NUEVO: Actualizar solo tokens (después de refresh)
+  Future<void> updateTokens({
+    required String tokenAccess,
+    required String tokenRefresh,
+  }) {
+    return _db.updateTokens(
+      tokenAccess: tokenAccess,
+      tokenRefresh: tokenRefresh,
+    );
+  }
+
+  /// ✅ NUEVO: Obtener access token
+  Future<String?> getAccessToken() => _db.getAccessToken();
+
+  /// ✅ NUEVO: Obtener refresh token
+  Future<String?> getRefreshToken() => _db.getRefreshToken();
 
   Future<AuthenticationCredentials?> readUser() async {
     final row = await _db.getUserMap();
     if (row == null) return null;
 
     return AuthenticationCredentials(
-      token: (row[DbConstants.colToken] as String),
+      tokenAccess: (row[DbConstants.colTokenAccess] as String),
+      tokenRefresh: (row[DbConstants.colTokenRefresh] as String?) ?? '',
       role: Roles.values.byName(row[DbConstants.colRole] as String),
       username: (row[DbConstants.colUsername] as String?) ?? '',
       firstName: (row[DbConstants.colFirstName] as String),

@@ -27,7 +27,7 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
   ) async {
     final res = await _homeClientRepository.fetchDataProfile();
     debugPrint('Data Profile fetched: $res');
-    await _prefs.setString(StaticVariables.tokenKey, res.token);
+    await _prefs.setString(StaticVariables.tokenKey, res.tokenAccess);
     final needComplete =
         await _prefs.getBool(StaticVariables.needsProfileComplete) ?? false;
     if (needComplete) {
