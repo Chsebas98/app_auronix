@@ -1,20 +1,20 @@
 import 'package:auronix_app/app/database/app_database.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/remote/strapi_services.dart';
+import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 /// Interceptor para manejo automático de autenticación y refresh de tokens
 class AuthInterceptor extends Interceptor {
   final AppDatabase _db;
-  final StrapiServices _strapiServices;
+  final AuthenticationService _authenticationService;
   bool _isRefreshing = false;
   final List<RequestOptions> _requestsQueue = [];
 
   AuthInterceptor({
     required AppDatabase db,
-    required StrapiServices strapiServices,
+    required AuthenticationService authenticationService,
   }) : _db = db,
-       _strapiServices = strapiServices;
+       _authenticationService = authenticationService;
 
   @override
   Future<void> onRequest(
@@ -77,7 +77,7 @@ class AuthInterceptor extends Interceptor {
       }
 
       // Llamar a refresh endpoint
-      final response = await _strapiServices.refreshToken(refreshToken);
+      final response = await _authenticationService.refreshToken(refreshToken);
 
       if (!response['response']) {
         debugPrint('❌ Refresh falló: ${response['message']}');

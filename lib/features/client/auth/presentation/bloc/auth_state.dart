@@ -2,6 +2,7 @@ part of 'auth_bloc.dart';
 
 class AuthState extends Equatable {
   const AuthState({
+    this.dialogRequest = const DialogRequest.empty(),
     this.showRegisterForm = false,
     this.email = '',
     this.password = '',
@@ -9,10 +10,13 @@ class AuthState extends Equatable {
     this.registerForm = const InitialFormSubmitStatus(),
     this.completeRegisterForm = const InitialFormSubmitStatus(),
     this.loginForm = const InitialFormSubmitStatus(),
-    this.credentialsGoogle = const AuthenticationCredentials.empty(),
+    this.credentialsLogin = const AuthenticationCredentials.empty(),
     //register
     this.showRegisterCompleteForm = false,
   });
+
+  //generales
+  final DialogRequest dialogRequest;
 
   //auth
   final bool showRegisterForm;
@@ -22,7 +26,7 @@ class AuthState extends Equatable {
   final FormSubmitStatus registerForm;
   final FormSubmitStatus completeRegisterForm;
   final FormSubmitStatus loginForm;
-  final AuthenticationCredentials credentialsGoogle;
+  final AuthenticationCredentials credentialsLogin;
 
   //register
   final bool showRegisterCompleteForm;
@@ -41,6 +45,7 @@ class AuthState extends Equatable {
       FormValidators.validateRegisterPassword(password);
 
   AuthState copyWith({
+    DialogRequest? dialogRequest,
     bool? showRegisterForm,
     String? email,
     String? password,
@@ -48,11 +53,12 @@ class AuthState extends Equatable {
     FormSubmitStatus? registerForm,
     FormSubmitStatus? completeRegisterForm,
     FormSubmitStatus? loginForm,
-    AuthenticationCredentials? credentialsGoogle,
+    AuthenticationCredentials? credentialsLogin,
     //register
     bool? showRegisterCompleteForm,
   }) {
     return AuthState(
+      dialogRequest: dialogRequest ?? this.dialogRequest,
       showRegisterForm: showRegisterForm ?? this.showRegisterForm,
       email: email ?? this.email,
       password: password ?? this.password,
@@ -60,7 +66,7 @@ class AuthState extends Equatable {
       registerForm: registerForm ?? this.registerForm,
       completeRegisterForm: completeRegisterForm ?? this.completeRegisterForm,
       loginForm: loginForm ?? this.loginForm,
-      credentialsGoogle: credentialsGoogle ?? this.credentialsGoogle,
+      credentialsLogin: credentialsLogin ?? this.credentialsLogin,
       //register
       showRegisterCompleteForm:
           showRegisterCompleteForm ?? this.showRegisterCompleteForm,
@@ -69,6 +75,7 @@ class AuthState extends Equatable {
 
   @override
   List<Object> get props => [
+    dialogRequest,
     showRegisterForm,
     email,
     password,
@@ -76,7 +83,7 @@ class AuthState extends Equatable {
     registerForm,
     completeRegisterForm,
     loginForm,
-    credentialsGoogle,
+    credentialsLogin,
     //register
     showRegisterCompleteForm,
   ];

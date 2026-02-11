@@ -155,27 +155,26 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
 
         final status = state.loginForm;
         if (status is FormSubmitFailed) {
-          context.read<DialogCubit>().showConfirm(
-            title: 'Error al iniciar sesión',
-            message:
-                'No podemos iniciar sesión con las credenciales proporcionadas. '
-                'Por favor, verifica tu correo y contraseña e intenta nuevamente.',
-          );
+          context
+              .read<DialogCubit>()
+              .showConfirm(
+                title: state.dialogRequest.title,
+                message: state.dialogRequest.description,
+              )
+              .whenComplete(
+                () => context.read<AuthBloc>().add(ResetFormStateEvent()),
+              );
         }
 
         if (status is FormSubmitSuccesfull) {
           context.read<SessionBloc>().add(
-            LoginUserEvent(
-              email: state.email,
-              password: state.password,
-              isGoogle: state.credentialsGoogle,
-            ),
+            LoginUserEvent(dataUser: state.credentialsLogin),
           );
         }
 
         if (state.completeRegisterForm is FormSubmitSuccesfull) {
           context.read<SessionBloc>().add(
-            LoginUserEvent(email: state.email, password: state.password),
+            LoginUserEvent(dataUser: state.credentialsLogin),
           );
         }
       },

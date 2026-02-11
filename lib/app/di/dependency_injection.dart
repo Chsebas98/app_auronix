@@ -4,7 +4,7 @@ import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart'; // ✅ NUEVO
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/remote/strapi_services.dart';
+import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
 import 'package:auronix_app/features/client/home/domain/repository/home_client_repository.dart';
 import 'package:auronix_app/features/client/home/domain/repository/home_client_repository_impl.dart';
 import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
@@ -51,14 +51,17 @@ Future<void> initDependencies() async {
     receiveTimeout: const Duration(seconds: 30),
   );
 
-  // ✅ 2. Crear StrapiServices con Dio básico
-  final strapiServices = StrapiServices(dio: dioBasic);
-  sl.registerLazySingleton<StrapiServices>(() => strapiServices);
+  // ✅ 2. Crear AuthenticationService con Dio básico
+  final authenticationService = AuthenticationService(dio: dioBasic);
+  sl.registerLazySingleton<AuthenticationService>(() => authenticationService);
 
   // ✅ 3. Agregar AuthInterceptor DESPUÉS
   dioBasic.interceptors.insert(
     2, // Después de Cache, antes de Retry
-    AuthInterceptor(db: sl<AppDatabase>(), strapiServices: strapiServices),
+    AuthInterceptor(
+      db: sl<AppDatabase>(),
+      authenticationService: authenticationService,
+    ),
   );
 
   // ✅ 4. Registrar Dio configurado
@@ -69,16 +72,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AuthLocalServices>(
     () => AuthLocalServices(sl<RxSharedPreferences>()),
   );
-  //remote
-  sl.registerLazySingleton<AuthRemoteServices>(() => AuthRemoteServices());
 
   //Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       local: sl<AuthLocalServices>(),
-      remote: sl<AuthRemoteServices>(),
       localDb: sl<AuthLocalDbDataSource>(),
-      strapiServices: sl<StrapiServices>(),
+      authenticationService: sl<AuthenticationService>(),
     ),
   );
 

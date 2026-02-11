@@ -20,8 +20,8 @@ class RetryControlInterceptor extends Interceptor {
 
     if (useRetry) {
       // Configurar timeouts más cortos para retry
-      options.connectTimeout = const Duration(seconds: 15);
-      options.receiveTimeout = const Duration(seconds: 15);
+      options.connectTimeout = const Duration(seconds: 30);
+      options.receiveTimeout = const Duration(seconds: 30);
 
       final retries =
           options.extra[RequestExtras.retryCount] as int? ?? defaultRetries;

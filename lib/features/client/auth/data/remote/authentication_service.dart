@@ -4,12 +4,12 @@ import 'package:auronix_app/features/client/client.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-class StrapiServices {
+class AuthenticationService {
   static String _baseUrl = Environment().config!.apiBaseUrl;
 
   final Dio _dio;
 
-  StrapiServices({required Dio dio}) : _dio = dio;
+  AuthenticationService({required Dio dio}) : _dio = dio;
 
   /// Login/Registro con Google
   Future<Map<String, dynamic>> googleLogin(
@@ -17,7 +17,7 @@ class StrapiServices {
   ) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/tb-clients/google-login',
+        '$_baseUrl/auth/google-login',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
@@ -31,9 +31,25 @@ class StrapiServices {
       );
       debugPrint('✅ googleLogin response: ${response.data}');
       return response.data;
-    } catch (e) {
-      debugPrint('❌ Error en googleLogin: $e');
-      rethrow;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map<String, dynamic>;
+
+        return {
+          'response': false,
+          'statusCode': e.response?.statusCode ?? 0,
+          'message': data['message'] ?? 'Error de conexión',
+          'errorDetail':
+              data['errorDetail'] ?? e.message ?? 'Error desconocido',
+        };
+      }
+
+      return {
+        'response': false,
+        'statusCode': e.response?.statusCode ?? 0,
+        'message': 'Error de conexión',
+        'errorDetail': e.message ?? 'No se pudo conectar al servidor',
+      };
     }
   }
 
@@ -59,29 +75,44 @@ class StrapiServices {
     }
   }
 
-  /// ✅ NUEVO: Login con credenciales
-  Future<Map<String, dynamic>> login({
+  Future<Map<String, dynamic>> loginUser({
     required String email,
     required String password,
   }) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/tb-clients/login',
+        '$_baseUrl/auth/login',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
         data: {'email': email, 'password': password},
       );
+
       debugPrint('✅ login response: ${response.data}');
-      return response.data;
-    } catch (e) {
-      debugPrint('❌ Error en login: $e');
-      rethrow;
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map<String, dynamic>;
+
+        return {
+          'response': false,
+          'statusCode': e.response?.statusCode ?? 0,
+          'message': data['message'] ?? 'Error de conexión',
+          'errorDetail':
+              data['errorDetail'] ?? e.message ?? 'Error desconocido',
+        };
+      }
+
+      return {
+        'response': false,
+        'statusCode': e.response?.statusCode ?? 0,
+        'message': 'Error de conexión',
+        'errorDetail': e.message ?? 'No se pudo conectar al servidor',
+      };
     }
   }
 
-  /// ✅ NUEVO: Registro
   Future<Map<String, dynamic>> register({
     required String email,
     required String password,

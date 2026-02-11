@@ -1,24 +1,22 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/remote/strapi_services.dart';
+import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteServices remote;
   final AuthLocalServices local;
   final AuthLocalDbDataSource localDb;
-  final StrapiServices strapiServices; // NUEVO
+  final AuthenticationService authenticationService; // NUEVO
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   bool _googleInitialized = false;
 
   AuthRepositoryImpl({
-    required this.remote,
     required this.local,
     required this.localDb,
-    required this.strapiServices, // NUEVO
+    required this.authenticationService, // NUEVO
   });
 
   //?LOCAL
@@ -35,39 +33,84 @@ class AuthRepositoryImpl implements AuthRepository {
   //?REMOTAS
 
   @override
-  Future<AuthenticationCredentials> login({
+  Future<ServiceResponse> login({
     required String email,
     required String password,
     AuthenticationCredentials isGoogle =
         const AuthenticationCredentials.empty(),
     bool rememberMe = false,
   }) async {
-    final response = await remote.loginUser(email: email, password: password);
+    try {
+      debugPrint('🔐 Iniciando login con credenciales');
+      debugPrint('📧 Email: $email');
 
-    await local.saveToken(response['token'] ?? 'hola');
-    await local.setRememberMe(true);
-
-    AuthenticationCredentials creds;
-    if (isGoogle.username.isEmpty) {
-      creds = isGoogle;
-    } else {
-      creds = AuthenticationCredentials(
-        tokenRefresh: '',
-        tokenAccess: response['token'] ?? 'hola',
-        firstName: 'Sebas',
-        lastName: 'Soberon',
-        role: Roles.rolUser,
-        secondName: 'Charly',
-        secondlastName: 'Mateus',
-        username: 'Chsebas',
+      final response = await authenticationService.loginUser(
         email: email,
-        photoUrl: '',
+        password: password,
+      );
+
+      if (!response['response']) {
+        return ServiceResponse.error(
+          message: response['message'],
+          errorDetail: response['errorDetail'],
+          statusCode: response['statusCode'],
+        );
+      }
+
+      final result = response['result'] as Map<String, dynamic>;
+
+      // 🔑 EXTRAER AMBOS TOKENS
+      final tokenAccess = result['token_access'] as String?;
+      final tokenRefresh = result['token_refresh'] as String?;
+      final userData = result['user'] as Map<String, dynamic>?;
+
+      if (tokenAccess == null || tokenRefresh == null || userData == null) {
+        return ServiceResponse.error(
+          message: 'Respuesta inválida del servidor',
+          errorDetail: 'Tokens o datos de usuario faltantes',
+          statusCode: 500,
+        );
+      }
+
+      // ✅ CREAR CREDENTIALS CON DATOS DEL BACKEND
+      final creds = AuthenticationCredentials(
+        tokenAccess: tokenAccess,
+        tokenRefresh: tokenRefresh,
+        email: userData['email'] as String,
+        username: userData['username'] as String,
+        firstName: userData['nombre1'] as String? ?? '',
+        lastName: userData['ape1'] as String? ?? '',
+        secondName: userData['nombre2'] as String? ?? '',
+        secondlastName: userData['ape2'] as String? ?? '',
+        photoUrl: userData['photo_url'] as String? ?? '',
+        role: RoleHelpers.mapRole(userData['role']),
+      );
+
+      // ✅ GUARDAR EN BD LOCAL
+      await localDb.saveUser(creds);
+      await local.setRememberMe(rememberMe);
+
+      debugPrint('✅ Login completado');
+      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
+      debugPrint('🔄 Refresh Token: ${tokenRefresh.substring(0, 20)}...');
+
+      return ServiceResponse.success(
+        message: 'Inicio de sesión exitoso',
+        result: {
+          'token_access': tokenAccess,
+          'token_refresh': tokenRefresh,
+          'user': userData,
+        },
+        statusCode: response['statusCode'],
+      );
+    } catch (e, _) {
+      debugPrint('❌ Error en login: $e');
+      return ServiceResponse.error(
+        message: 'Error inesperado',
+        errorDetail: e.toString(),
+        statusCode: 500,
       );
     }
-
-    await localDb.saveUser(creds);
-
-    return creds;
   }
 
   Future<void> _ensureGoogleInitialized() async {
@@ -121,17 +164,17 @@ class AuthRepositoryImpl implements AuthRepository {
       debugPrint('🔐 Iniciando login/registro con Google + Strapi');
       debugPrint('📧 Email: ${googleCreds.email}');
 
-      final strapiResponse = await strapiServices.googleLogin(googleCreds);
+      final response = await authenticationService.googleLogin(googleCreds);
 
-      if (!strapiResponse['response']) {
+      if (!response['response']) {
         return ServiceResponse.error(
-          message: strapiResponse['message'],
-          errorDetail: strapiResponse['errorDetail'],
-          statusCode: strapiResponse['statusCode'],
+          message: response['message'],
+          errorDetail: response['errorDetail'],
+          statusCode: response['statusCode'],
         );
       }
 
-      final result = strapiResponse['result'] as Map<String, dynamic>;
+      final result = response['result'] as Map<String, dynamic>;
 
       // �� EXTRAER AMBOS TOKENS
       final tokenAccess = result['token_access'] as String?;
@@ -173,7 +216,7 @@ class AuthRepositoryImpl implements AuthRepository {
           'user': userData,
           'isNewUser': isNewUser,
         },
-        statusCode: strapiResponse['statusCode'],
+        statusCode: response['statusCode'],
       );
     } catch (e, _) {
       debugPrint('❌ Error en loginOrRegisterWithGoogle: $e');

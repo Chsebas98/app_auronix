@@ -33,12 +33,11 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) async {
     emit(SessionLoading());
     try {
-      final response = await _authRepository.login(
-        email: event.email,
-        password: event.password,
-        isGoogle: event.isGoogle,
-      );
-      emit(SessionAuthenticated(dataUser: response));
+      // Los tokens ya están guardados en AuthRepository
+      // Solo necesitas cargar el usuario de la BD local
+      final user = event.dataUser;
+
+      return emit(SessionAuthenticated(dataUser: user));
     } catch (e) {
       emit(SessionError(e.toString()));
     }

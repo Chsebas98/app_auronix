@@ -1,10 +1,9 @@
 export 'about/presentation/screens/about_screen.dart';
-export 'auth/infraestructure/data/local/auth_local_services.dart';
-export 'auth/infraestructure/data/remote/auth_remote_services.dart';
-export 'auth/infraestructure/models/interfaces/authentication_credentials.dart';
-export 'auth/infraestructure/models/models.dart';
-export 'auth/infraestructure/repositories/auth_repository.dart';
-export 'auth/infraestructure/repositories/auth_repository_impl.dart';
+export 'auth/data/local/auth_local_services.dart';
+export 'auth/domain/models/interfaces/authentication_credentials.dart';
+export 'auth/domain/models/models.dart';
+export 'auth/domain/repositories/auth_repository.dart';
+export 'auth/domain/repositories/auth_repository_impl.dart';
 export 'auth/presentation/bloc/auth_bloc.dart';
 export 'auth/presentation/screen/auth_screen.dart';
 export 'auth/presentation/widgets/client_login_form.dart';

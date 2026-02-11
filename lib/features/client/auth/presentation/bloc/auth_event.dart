@@ -9,6 +9,8 @@ sealed class AuthEvent extends Equatable {
 
 class InitRememberEvent extends AuthEvent {}
 
+class ResetFormStateEvent extends AuthEvent {}
+
 class ShowRegisterFormEvent extends AuthEvent {
   final bool showRegister;
   const ShowRegisterFormEvent({required this.showRegister});

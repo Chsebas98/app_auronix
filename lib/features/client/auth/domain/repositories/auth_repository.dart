@@ -7,7 +7,7 @@ abstract class AuthRepository {
   Future<bool> getRemember();
 
   //?Remote
-  Future<AuthenticationCredentials> login({
+  Future<ServiceResponse> login({
     required String email,
     required String password,
     AuthenticationCredentials isGoogle =
