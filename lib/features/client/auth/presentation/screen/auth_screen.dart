@@ -144,17 +144,9 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
           context.read<DialogCubit>().hideTop();
         }
 
-        if (state.registerForm is FormSubmitSuccesfull && !_isSnackOpen) {
-          _isSnackOpen = true;
-          _showToastValidation(context);
-          // debugPrint('Hio');
-        }
-        if (state.showRegisterCompleteForm) {
-          _showRegisterCompleteForm(context);
-        }
+        final statusRegister = state.completeRegisterForm;
 
-        final status = state.loginForm;
-        if (status is FormSubmitFailed) {
+        if (statusRegister is FormSubmitFailed) {
           context
               .read<DialogCubit>()
               .showConfirm(
@@ -166,7 +158,29 @@ class _AuthScreenControllerState extends State<_AuthScreenController> {
               );
         }
 
-        if (status is FormSubmitSuccesfull) {
+        if (statusRegister is FormSubmitSuccesfull && !_isSnackOpen) {
+          _isSnackOpen = true;
+          _showToastValidation(context);
+          // debugPrint('Hio');
+        }
+        if (state.showRegisterCompleteForm) {
+          _showRegisterCompleteForm(context);
+        }
+
+        final statusLogin = state.loginForm;
+        if (statusLogin is FormSubmitFailed) {
+          context
+              .read<DialogCubit>()
+              .showConfirm(
+                title: state.dialogRequest.title,
+                message: state.dialogRequest.description,
+              )
+              .whenComplete(
+                () => context.read<AuthBloc>().add(ResetFormStateEvent()),
+              );
+        }
+
+        if (statusLogin is FormSubmitSuccesfull) {
           context.read<SessionBloc>().add(
             LoginUserEvent(dataUser: state.credentialsLogin),
           );

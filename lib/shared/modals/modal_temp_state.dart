@@ -5,6 +5,7 @@ class ModalTempState extends Equatable {
     this.stringTemp1 = '',
     this.stringTemp2 = '',
     this.stringTemp3 = '',
+    this.stringTemp4 = '',
     this.boolTemp1 = false,
     this.boolTemp2 = false,
     this.boolTemp3 = false,
@@ -13,6 +14,7 @@ class ModalTempState extends Equatable {
   final String stringTemp1;
   final String stringTemp2;
   final String stringTemp3;
+  final String stringTemp4;
 
   final bool boolTemp1;
   final bool boolTemp2;
@@ -22,6 +24,7 @@ class ModalTempState extends Equatable {
     String? stringTemp1,
     String? stringTemp2,
     String? stringTemp3,
+    String? stringTemp4,
     bool? boolTemp1,
     bool? boolTemp2,
     bool? boolTemp3,
@@ -30,6 +33,7 @@ class ModalTempState extends Equatable {
       stringTemp1: stringTemp1 ?? this.stringTemp1,
       stringTemp2: stringTemp2 ?? this.stringTemp2,
       stringTemp3: stringTemp3 ?? this.stringTemp3,
+      stringTemp4: stringTemp4 ?? this.stringTemp4,
       boolTemp1: boolTemp1 ?? this.boolTemp1,
       boolTemp2: boolTemp2 ?? this.boolTemp2,
       boolTemp3: boolTemp3 ?? this.boolTemp3,
@@ -41,6 +45,7 @@ class ModalTempState extends Equatable {
     stringTemp1,
     stringTemp2,
     stringTemp3,
+    stringTemp4,
     boolTemp1,
     boolTemp2,
     boolTemp3,

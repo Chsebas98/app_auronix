@@ -1,6 +1,8 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -247,6 +249,117 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthenticationCredentials?> getSavedSession() {
     return localDb.readUser();
+  }
+
+  @override
+  Future<ServiceResponse> verifyRegister(
+    RegisterVerifyRequest registerData,
+  ) async {
+    try {
+      final response = await authenticationService.verifyRegister(
+        registerData: registerData,
+      );
+
+      if (!response['response']) {
+        return ServiceResponse.error(
+          message: response['message'],
+          errorDetail: response['errorDetail'],
+          statusCode: response['statusCode'],
+        );
+      }
+
+      return ServiceResponse.success(
+        message: response['message'] ?? 'Verificación exitosa',
+        statusCode: response['statusCode'],
+      );
+    } catch (e) {
+      debugPrint('❌ Error en verifyRegister: $e');
+      throw StrapiException(
+        'Error al verificar usuario',
+        details: e.toString(),
+      );
+    }
+  }
+
+  @override
+  Future<ServiceResponse> registerUser(RegisterRequest registerData) async {
+    try {
+      debugPrint('Iniciando registro de usuario');
+      final names = ResponseHelpers.parseFullName(registerData.nombre1);
+
+      final sendDataRegister = registerData.copyWithNames(
+        nombre1: names.firstName,
+        nombre2: names.secondName,
+        ape1: names.lastName,
+        ape2: names.secondLastName,
+      );
+
+      debugPrint('Datos a enviar para registro: $sendDataRegister');
+      final response = await authenticationService.register(
+        registerData: sendDataRegister,
+      );
+
+      if (!response['response']) {
+        return ServiceResponse.error(
+          message: response['message'],
+          errorDetail: response['errorDetail'],
+          statusCode: response['statusCode'],
+        );
+      }
+
+      final result = response['result'] as Map<String, dynamic>;
+
+      // 🔑 EXTRAER AMBOS TOKENS
+      final tokenAccess = result['token_access'] as String?;
+      final tokenRefresh = result['token_refresh'] as String?;
+      final userData = result['user'] as Map<String, dynamic>?;
+
+      if (tokenAccess == null || tokenRefresh == null || userData == null) {
+        return ServiceResponse.error(
+          message: 'Respuesta inválida del servidor',
+          errorDetail: 'Tokens o datos de usuario faltantes',
+          statusCode: 500,
+        );
+      }
+
+      // ✅ CREAR CREDENTIALS CON DATOS DEL BACKEND
+      final creds = AuthenticationCredentials(
+        tokenAccess: tokenAccess,
+        tokenRefresh: tokenRefresh,
+        email: userData['email'] as String,
+        username: userData['username'] as String,
+        firstName: userData['nombre1'] as String? ?? '',
+        lastName: userData['ape1'] as String? ?? '',
+        secondName: userData['nombre2'] as String? ?? '',
+        secondlastName: userData['ape2'] as String? ?? '',
+        photoUrl: userData['photo_url'] as String? ?? '',
+        role: RoleHelpers.mapRole(userData['role']),
+      );
+
+      // ✅ GUARDAR EN BD LOCAL
+      await localDb.saveUser(creds);
+      await local.setRememberMe(false);
+
+      debugPrint('✅ Login completado');
+      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
+      debugPrint('🔄 Refresh Token: ${tokenRefresh.substring(0, 20)}...');
+
+      return ServiceResponse.success(
+        message: 'Inicio de sesión exitoso',
+        result: {
+          'token_access': tokenAccess,
+          'token_refresh': tokenRefresh,
+          'user': userData,
+        },
+        statusCode: response['statusCode'],
+      );
+    } catch (e) {
+      debugPrint('❌ Error en registerUser: $e');
+      throw StrapiException(
+        'Error al registrar usuario',
+        details: e.toString(),
+      );
+    }
   }
 }
 

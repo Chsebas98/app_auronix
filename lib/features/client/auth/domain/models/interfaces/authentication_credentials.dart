@@ -8,9 +8,9 @@ class AuthenticationCredentials {
   final Roles role;
   final String username;
   final String firstName;
-  final dynamic secondName;
+  final String? secondName;
   final String lastName;
-  final String secondlastName;
+  final String? secondlastName;
   final String email;
   final String photoUrl;
   final bool isGoogleUser;

@@ -4,6 +4,8 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/domain/request/dialog_request.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:auronix_app/features/client/client.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -162,24 +164,55 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(state.copyWith(registerForm: FormSubmitProgress()));
-      await Future.delayed(Duration(seconds: 1));
-      final res = true;
+
+      final registerData = RegisterVerifyRequest(
+        email: event.email,
+        password: event.psw,
+        rol: event.rol,
+      );
+
+      final response = await _authRepository.verifyRegister(registerData);
+
+      debugPrint('Register response: $response');
       //todo:verificar usuario
-      if (res) {
-        emit(
-          state.copyWith(
-            registerForm: FormSubmitSuccesfull(),
-            showRegisterCompleteForm: true,
-          ),
+      if (!response.response) {
+        throw ErrorServiceException(
+          message: response.message,
+          errorDetail: response.errorDetail,
+          statusCode: response.statusCode,
         );
       }
-      // else {
-      //   emit(state.copyWith(registerForm: FormSubmitSuccesfull(),showRegisterCompleteForm: false));
-      // }
-    } catch (e) {
       emit(
         state.copyWith(
-          registerForm: FormSubmitFailed(e.toString()),
+          showRegisterCompleteForm: true,
+          registerForm: FormSubmitSuccesfull(message: response.message),
+        ),
+      );
+    } on ErrorServiceException catch (e) {
+      debugPrint('Error en Registro: ${e.message}');
+      final errorMessage = DialogRequest(
+        title: 'Error al registrar usuario',
+        description: e.message,
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          completeRegisterForm: FormSubmitFailed(e.message),
+          showRegisterCompleteForm: false,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error en Registro: $e');
+      final errorMessage = DialogRequest(
+        title: 'Error al registrar usuario',
+        description:
+            'No podemos registrar al usuario con las credenciales proporcionadas.'
+            'Por favor, verifica tu correo y contraseña e intenta nuevamente.',
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          completeRegisterForm: FormSubmitFailed(e.toString()),
           showRegisterCompleteForm: false,
         ),
       );
@@ -192,7 +225,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(state.copyWith(completeRegisterForm: FormSubmitProgress()));
-      await Future.delayed(Duration(seconds: 1));
+      final registerData = RegisterRequest(
+        email: event.email,
+        password: event.psw,
+        rol: event.rol,
+        nombre1: event.name,
+        username: '',
+        ape1: '',
+        ape2: '',
+        nombre2: '',
+      );
+
+      debugPrint("Data que mando al repository: $registerData");
+      final response = await _authRepository.registerUser(registerData);
+
+      debugPrint('Complete Register response: $response');
+      if (!response.response) {
+        throw ErrorServiceException(
+          message: response.message,
+          errorDetail: response.errorDetail,
+          statusCode: response.statusCode,
+        );
+      }
+
       emit(
         state.copyWith(
           showRegisterCompleteForm: false,

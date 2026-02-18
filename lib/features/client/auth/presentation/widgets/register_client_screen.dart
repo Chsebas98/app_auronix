@@ -67,7 +67,8 @@ class _RegisterClientScreenStructureState
                               name: state.stringTemp1,
                               email: authState.email,
                               gender: state.stringTemp2,
-                              psw: state.stringTemp3,
+                              phone: state.stringTemp3,
+                              psw: state.stringTemp4,
                             ),
                           );
 
@@ -102,6 +103,7 @@ class _RegisterClientScreenStructureState
                           hintText: 'Ingresa tu nombre',
                           labelText: 'Nombre',
                           border: InputBorder.none,
+                          counterText: '',
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                         ),
                         textInputAction: TextInputAction.next,
@@ -153,6 +155,7 @@ class _RegisterClientScreenStructureState
                         justNumbers: true,
                         maxLength: 10,
                         decoration: InputDecoration(
+                          counterText: '',
                           labelText: 'Número de celular',
                           hintText: 'Ingresa tu número de celular',
                           border: InputBorder.none,
@@ -165,7 +168,7 @@ class _RegisterClientScreenStructureState
                             ),
                         onChanged: (value) => context
                             .read<ModalTempCubit>()
-                            .stringTemp2ChangedEvent(value),
+                            .stringTemp3ChangedEvent(value),
                       ),
                       20.verticalSpace,
                       CustomTextFormField(
@@ -192,6 +195,7 @@ class _RegisterClientScreenStructureState
                         decoration: InputDecoration(
                           labelText: 'Confirmar contraseña',
                           hintText: 'Confirma tu contraseña',
+                          counterText: '',
                           border: InputBorder.none,
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                         ),
@@ -199,7 +203,7 @@ class _RegisterClientScreenStructureState
                         onChanged: (value) {
                           context
                               .read<ModalTempCubit>()
-                              .stringTemp2ChangedEvent(value);
+                              .stringTemp4ChangedEvent(value);
                           final isValid =
                               FormValidators.validateRegisterPassword(value);
                           context.read<ModalTempCubit>().boolTemp1ChangedEvent(
