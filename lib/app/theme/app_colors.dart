@@ -136,4 +136,19 @@ class AppShadowColors {
   // ==================== SHADOWS DARK MODE ====================
   static const darkSoft = Color(0x14222226);
   static const darkHard = Color(0x24222226);
+
+  // ==================== TRIP WIDGET COLORS ====================
+  // Para el gradiente del card de viaje
+  static const tripCardGradientStart = AppColors.third; // Yellow principal
+  static const tripCardGradientEnd =
+      AppColors.twelveth; // Amber (variación más oscura)
+
+  // Para overlays dentro del card
+  static const tripOverlayLight = AppColors.lightCard; // Blanco
+  static const tripOverlayDark = AppColors.darkCard; // Gris oscuro
+
+  // Para botones dentro del trip
+  static const tripCancelButton = AppColors.sevent; // Rojo
+  static const tripActionButtonLight = AppColors.lightDivider; // Gris claro
+  static const tripActionButtonDark = AppColors.gray800; // Gris oscuro
 }

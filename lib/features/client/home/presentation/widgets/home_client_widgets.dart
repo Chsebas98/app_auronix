@@ -14,3 +14,4 @@ export 'sections/quick_actions_widget.dart';
 export 'sections/recent_trips_section_widget.dart';
 export 'sections/section_header.dart';
 export 'sections/stats_section_widget.dart';
+export 'sections/current_trip_widget.dart';

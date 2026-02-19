@@ -25,3 +25,25 @@ class CompleteProfileEvent extends HomeClientEvent {
   @override
   List<Object> get props => [name, phone];
 }
+
+class CheckCurrentTripEvent extends HomeClientEvent {}
+
+class CancelTripEvent extends HomeClientEvent {
+  final String tripId;
+
+  const CancelTripEvent(this.tripId);
+
+  @override
+  List<Object> get props => [tripId];
+}
+
+class UpdateCurrentTripEvent extends HomeClientEvent {
+  final TripModel trip;
+
+  const UpdateCurrentTripEvent(this.trip);
+
+  @override
+  List<Object> get props => [trip];
+}
+
+class ClearCurrentTripEvent extends HomeClientEvent {}

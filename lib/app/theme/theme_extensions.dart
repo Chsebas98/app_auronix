@@ -32,4 +32,12 @@ extension AppColorsExtension on AppColors {
   static Color surfaceColor(BuildContext context) {
     return context.isLight ? AppColors.lightSurface : AppColors.darkSurface;
   }
+
+  static Color tripOverlay(BuildContext context) {
+    return context.isLight ? AppColors.lightCard : AppColors.darkCard;
+  }
+
+  static Color tripActionButton(BuildContext context) {
+    return context.isLight ? AppColors.lightCard : AppColors.twelveth;
+  }
 }

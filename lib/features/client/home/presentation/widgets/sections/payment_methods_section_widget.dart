@@ -53,7 +53,7 @@ class PaymentMethodsSectionWidget extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: OutlinedButton.icon(
             onPressed: () {
-              debugPrint('➕ Agregar método de pago');
+              debugPrint('Agregar método de pago');
             },
             icon: Icon(Icons.add, size: 20.r),
             label: const Text('Agregar Método de Pago'),

@@ -54,7 +54,7 @@ class CooperativasSectionWidget extends StatelessWidget {
             debugPrint('🏢 Ver todas las cooperativas');
           },
         ),
-        SizedBox(height: 12.h),
+        12.verticalSpace,
         SizedBox(
           height: 160.h,
           child: ListView.builder(

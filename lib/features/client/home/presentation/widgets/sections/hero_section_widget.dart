@@ -1,4 +1,5 @@
 import 'package:auronix_app/app/theme/app_colors.dart';
+import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +16,7 @@ class HeroSectionWidget extends StatelessWidget {
       builder: (context, state) {
         final user = state.dataProfile;
         final firstName = user.firstName.isNotEmpty
-            ? user.firstName
+            ? FormsHelpers.getTextTransform(user.firstName, capitalize: true)
             : 'Usuario';
 
         return Container(
