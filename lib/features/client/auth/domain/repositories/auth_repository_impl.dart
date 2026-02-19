@@ -1,4 +1,5 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
+import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
 import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
@@ -7,12 +8,14 @@ import 'package:auronix_app/features/features.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalServices local;
   final AuthLocalDbDataSource localDb;
   final AuthenticationService authenticationService; // NUEVO
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
   bool _googleInitialized = false;
 
   AuthRepositoryImpl({
@@ -230,25 +233,9 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<void> logout() async {
-    localDb.clear();
-    await local.clearSession();
-
-    // Cerrar sesión de Google si está iniciada
-    if (_googleInitialized) {
-      await _googleSignIn.signOut();
-    }
-  }
-
   Future<bool> hasSavedUser() async {
     final user = await localDb.readUser();
     return user != null;
-  }
-
-  @override
-  Future<AuthenticationCredentials?> getSavedSession() {
-    return localDb.readUser();
   }
 
   @override
@@ -360,6 +347,66 @@ class AuthRepositoryImpl implements AuthRepository {
         details: e.toString(),
       );
     }
+  }
+
+  @override
+  Future<AuthenticationCredentials?> getSavedSession() async {
+    try {
+      debugPrint('🔍 Obteniendo sesión guardada de SQLite...');
+
+      final user = await localDb.readUser();
+
+      if (user == null) {
+        debugPrint('No hay usuario guardado');
+        return null;
+      }
+
+      // Verificar que tenga token
+      if (user.tokenAccess.isEmpty) {
+        debugPrint('Usuario sin token, limpiando...');
+        await localDb.clear();
+        return null;
+      }
+
+      debugPrint('Usuario encontrado: ${user.username}');
+      return user;
+    } catch (e) {
+      debugPrint('Error al obtener sesión: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      debugPrint('🚪 Cerrando sesión...');
+      final user = await localDb.readUser();
+      // 1. Limpiar SQLite
+      await localDb.clear();
+
+      // 2. Limpiar SharedPreferences
+      await local.clearSession();
+      await _prefs.clear();
+
+      if (_googleInitialized) {
+        await _googleSignIn.signOut();
+      }
+      if (user != null) {
+        await authenticationService.closeSessionLogout(
+          user.email,
+          RoleHelpers.getMnemonicoByRole(user.role),
+        );
+      }
+      debugPrint('Sesión cerrada');
+    } catch (e) {
+      await localDb.clear();
+      await local.clearSession();
+      if (_googleInitialized) {
+        await _googleSignIn.signOut();
+      }
+    }
+
+    // Cerrar sesión de Google si está iniciada
   }
 }
 

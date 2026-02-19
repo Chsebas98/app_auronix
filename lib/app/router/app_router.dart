@@ -34,39 +34,55 @@ class AppRouter {
       refreshListenable: GoRouterRefreshBloc(sessionBloc.stream),
       // errorBuilder: (context, state) => const NotFoundScreen(),
       redirect: (context, state) {
-        // final currentLocation = state.uri.toString();
-        // final isLoginPage = currentLocation == '/login';
         final sessionState = sessionBloc.state;
         final currentLocation = state.uri.path;
+
         final isPublic =
             _publicRoutes.contains(currentLocation) ||
-            _publicPrefixes.any((p) {
-              // debugPrint("QUE ES P: $p");
-              return currentLocation.contains(p);
-            });
+            _publicPrefixes.any((p) => currentLocation.contains(p));
 
-        // debugPrint('Router redirect - Ruta actual: $currentLocation, Session state: ${sessionState.runtimeType}',);
+        debugPrint('Router redirect:');
+        debugPrint('Ruta: $currentLocation');
+        debugPrint('Estado: ${sessionState.runtimeType}');
 
-        if (sessionState is SessionUnauthenticated ||
-            sessionState is SessionTokenExpired) {
-          if (sessionState is SessionTokenExpired) {
-            // debugPrint('Router detecto State AuthTokenExpired, message: ${sessionState.message}',);
-            return Routes.sessionExpired;
-          }
-          if (!isPublic) {
-            // debugPrint('Redirect a /session_expired from $currentLocation');
-            return Routes.auth;
-          }
-          // debugPrint('Already on public route');
+        // Si está verificando sesión, dejar en la ruta actual
+        if (sessionState is SessionLoading) {
+          debugPrint('Loading... manteniendo ruta');
           return null;
         }
 
-        if (sessionState is SessionAuthenticated && isPublic) {
-          // debugPrint('User Autenticado, redirect to /summary from $currentLocation',);
-          return Routes.home;
+        // Si no hay sesión
+        if (sessionState is SessionUnauthenticated ||
+            sessionState is SessionTokenExpired) {
+          if (sessionState is SessionTokenExpired) {
+            debugPrint('Token expirado → /session_expired');
+            return Routes.sessionExpired;
+          }
+
+          if (!isPublic) {
+            debugPrint('No autenticado → /auth');
+            return Routes.auth;
+          }
+
+          // debugPrint('Ya en ruta pública');
+          return null;
         }
 
-        // debugPrint('No redirect needed');
+        //Si está autenticado y en ruta pública
+        if (sessionState is SessionAuthenticated) {
+          if (isPublic && currentLocation != Routes.onBoarding) {
+            debugPrint('Autenticado → /home');
+            return Routes.home;
+          }
+
+          // Si está en onBoarding, dejarlo ahí (para que vea la animación)
+          if (currentLocation == Routes.onBoarding) {
+            debugPrint('En onboarding, esperando acción del usuario');
+            return null;
+          }
+        }
+
+        debugPrint('Sin redirect');
         return null;
       },
       routes: [

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:auronix_app/features/features.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'session_event.dart';
@@ -18,11 +19,23 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     CheckLoggedUserEvent event,
     Emitter<SessionState> emit,
   ) async {
+    debugPrint('Verificando sesión guardada...');
     emit(SessionLoading());
-    final response = await _authRepository.getSavedSession();
-    if (response != null) {
-      emit(SessionAuthenticated(dataUser: response));
-    } else {
+
+    try {
+      final response = await _authRepository.getSavedSession();
+
+      if (response != null) {
+        debugPrint('Sesión encontrada: ${response.username}');
+        debugPrint('Email: ${response.email}');
+        debugPrint('Rol: ${response.role}');
+        emit(SessionAuthenticated(dataUser: response));
+      } else {
+        debugPrint('No hay sesión guardada');
+        emit(SessionUnauthenticated());
+      }
+    } catch (e) {
+      debugPrint('Error al verificar sesión: $e');
       emit(SessionUnauthenticated());
     }
   }

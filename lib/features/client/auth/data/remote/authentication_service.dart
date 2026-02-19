@@ -202,4 +202,41 @@ class AuthenticationService {
       };
     }
   }
+
+  Future<Map<String, dynamic>> closeSessionLogout(
+    String email,
+    String roleMnemonico,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/auth/logout',
+        options: Options(
+          contentType: 'application/json',
+          extra: RequestExtras.withRetry(retries: 2),
+        ),
+        data: {'email': email, 'role': roleMnemonico},
+      );
+      debugPrint('logout response: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map<String, dynamic>;
+
+        return {
+          'response': false,
+          'statusCode': e.response?.statusCode ?? 0,
+          'message': data['message'] ?? 'Error de conexión',
+          'errorDetail':
+              data['errorDetail'] ?? e.message ?? 'Error desconocido',
+        };
+      }
+
+      return {
+        'response': false,
+        'statusCode': e.response?.statusCode ?? 0,
+        'message': 'Error de conexión',
+        'errorDetail': e.message ?? 'No se pudo conectar al servidor',
+      };
+    }
+  }
 }
