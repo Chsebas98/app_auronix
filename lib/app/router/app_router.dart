@@ -181,8 +181,73 @@ class AppRouter {
     );
   }
 
+  // ========================================
+  // 🚀 MÉTODOS DE NAVEGACIÓN
+  // ========================================
+
+  /// Navegación limpia: Reemplaza toda la pila de navegación
+  /// Usa cuando: Cambias de sección principal (login → home, logout, etc.)
   static void go(String location, {Object? extra}) {
+    // debugPrint('GO → $location');
     _router.go(location, extra: extra);
+  }
+
+  /// Navegación apilada: Añade una nueva ruta sobre la actual
+  /// Usa cuando: Abres detalles, formularios, pantallas que permiten volver
+  /// Retorna un resultado opcional cuando se hace pop
+  static Future<T?> push<T>(String location, {Object? extra}) {
+    // debugPrint('PUSH → $location');
+    return _router.push<T>(location, extra: extra);
+  }
+
+  /// Reemplaza la ruta actual sin añadir a la pila
+  /// Usa cuando: Rediriges después de una acción (crear → detalle, loading → result)
+  /// El botón back NO volverá a la pantalla anterior
+  static Future<T?> replace<T>(String location, {Object? extra}) {
+    // debugPrint('REPLACE → $location');
+    return _router.replace<T>(location, extra: extra);
+  }
+
+  /// Volver a la pantalla anterior
+  /// Usa cuando: Cierras la pantalla actual
+  /// Opcionalmente puedes pasar un resultado
+  static void pop<T>([T? result]) {
+    // debugPrint('POP ${result != null ? "con resultado" : ""}');
+    if (_router.canPop()) {
+      _router.pop<T>(result);
+    } else {
+      debugPrint('No se puede hacer pop, navegando a home');
+      go(ClientRoutesPath.home);
+    }
+  }
+
+  /// Verifica si se puede hacer pop
+  static bool canPop() {
+    return _router.canPop();
+  }
+
+  /// Pop hasta llegar a cierta ruta
+  /// Usa cuando: Quieres volver a una ruta específica en la pila
+  static void popUntil(String location) {
+    // debugPrint('POP UNTIL → $location');
+    while (_router.canPop()) {
+      final currentLocation =
+          _router.routerDelegate.currentConfiguration.uri.path;
+      if (currentLocation == location) break;
+      _router.pop();
+    }
+  }
+
+  /// Navega y limpia toda la pila hasta la raíz
+  /// Usa cuando: Logout, finish flow completo
+  static void goAndClear(String location, {Object? extra}) {
+    // debugPrint('GO AND CLEAR → $location');
+    go(location, extra: extra);
+  }
+
+  /// Obtiene la ubicación actual
+  static String get currentLocation {
+    return _router.routerDelegate.currentConfiguration.uri.path;
   }
 }
 
@@ -199,13 +264,3 @@ class GoRouterRefreshBloc extends ChangeNotifier {
     super.dispose();
   }
 }
-
-// class AuthChangeNotifier extends ChangeNotifier {
-//   final SessionBloc _sessionCubit;
-
-//   AuthChangeNotifier(this._sessionCubit) {
-//     _sessionCubit.stream.listen((_) {
-//       notifyListeners();
-//     });
-//   }
-// }

@@ -1,6 +1,7 @@
 // client_routes.dart
 
 import 'package:auronix_app/core/models/interfaces/core_enums.dart';
+import 'package:auronix_app/features/client/features/trip/request-trip/presentation/request_trip_screen.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/features/messages/presentation/message_screen.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +54,49 @@ class ClientRoutes {
             builder: (context, state) {
               final rolMessage = state.extra as Roles?;
               return MessageScreen(role: rolMessage ?? Roles.rolUser);
+            },
+          ),
+          // Flujo de solicitar taxi
+          GoRoute(
+            name: 'selectDestination',
+            path: ClientRoutesPath.selectDestination,
+            builder: (context, state) {
+              return RequestTripScreen();
+            },
+          ),
+          GoRoute(
+            name: 'confirmTrip',
+            path: ClientRoutesPath.confirmTrip,
+            builder: (context, state) {
+              return ConfirmTripPage();
+            },
+          ),
+          GoRoute(
+            name: 'searchingDriver',
+            path: ClientRoutesPath.searchingDriver,
+            builder: (context, state) {
+              return SearchingDriverPage();
+            },
+          ),
+          GoRoute(
+            name: 'tripInProgress',
+            path: ClientRoutesPath.tripInProgress,
+            builder: (context, state) {
+              return TripInPorgressPage();
+            },
+          ),
+          GoRoute(
+            name: 'rateTrip',
+            path: ClientRoutesPath.rateTrip,
+            builder: (context, state) {
+              return RateTripPage();
+            },
+          ),
+          GoRoute(
+            name: 'tripCompleted',
+            path: ClientRoutesPath.tripCompleted,
+            builder: (context, state) {
+              return TripCompletedPage();
             },
           ),
         ],
