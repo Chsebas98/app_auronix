@@ -4,7 +4,6 @@ import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/handlers/dialog_handler.dart';
 import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
-import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';

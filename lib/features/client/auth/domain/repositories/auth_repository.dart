@@ -1,6 +1,4 @@
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:auronix_app/features/features.dart';
 
 abstract class AuthRepository {

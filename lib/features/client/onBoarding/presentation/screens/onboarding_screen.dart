@@ -2,6 +2,7 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/router/router.dart';
 
 import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/features/client/client.dart';
 import 'package:auronix_app/l10n/app_localizations.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:auronix_app/shared/shared.dart';
@@ -74,7 +75,7 @@ class _OnBoardingController extends StatelessWidget {
       listener: (context, state) {
         if (state is SessionAuthenticated) {
           debugPrint('Usuario autenticado → navegando a /home');
-          AppRouter.go(Routes.home);
+          AppRouter.go(ClientRoutesPath.home);
         } else if (state is SessionUnauthenticated) {
           debugPrint('Usuario no autenticado → navegando a /auth');
           AppRouter.go(Routes.auth);

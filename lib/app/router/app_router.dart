@@ -70,12 +70,18 @@ class AppRouter {
 
         //Si está autenticado y en ruta pública
         if (sessionState is SessionAuthenticated) {
-          if (isPublic && currentLocation != Routes.onBoarding) {
-            debugPrint('Autenticado → /home');
-            return Routes.home;
+          // No redirigir si ya está en allow-location
+          if (currentLocation == Routes.allowLocation) {
+            return null;
           }
 
-          // Si está en onBoarding, dejarlo ahí (para que vea la animación)
+          // Si está en rutas públicas y no es onBoarding
+          if (isPublic && currentLocation != Routes.onBoarding) {
+            debugPrint('Autenticado → /home');
+            return ClientRoutesPath.home;
+          }
+
+          // Si está en onBoarding, dejarlo ahí
           if (currentLocation == Routes.onBoarding) {
             debugPrint('En onboarding, esperando acción del usuario');
             return null;
@@ -131,13 +137,7 @@ class AppRouter {
         //     return SessionScreen();
         //   },
         // ),
-        GoRoute(
-          name: 'homeClient',
-          path: Routes.home,
-          builder: (context, state) {
-            return HomeScreen();
-          },
-        ),
+        ...ClientRoutes.routes(rootNavKey: rootNavKey),
         //Protegidas - Conductor
         GoRoute(
           name: 'loginMember',

@@ -1,9 +1,6 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';

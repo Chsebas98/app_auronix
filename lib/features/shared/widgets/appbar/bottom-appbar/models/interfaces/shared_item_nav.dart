@@ -50,12 +50,12 @@ List<NavItem> tabsForRole(Roles role) {
           cupertino: CupertinoIcons.creditcard_fill,
           material: Icons.payments_rounded,
         ),
-        NavItem(
-          tab: AppTab.mas,
-          label: 'Más',
-          cupertino: CupertinoIcons.ellipsis_circle,
-          material: Icons.more_horiz_rounded,
-        ),
+        // NavItem(
+        //   tab: AppTab.mas,
+        //   label: 'Más',
+        //   cupertino: CupertinoIcons.ellipsis_circle,
+        //   material: Icons.more_horiz_rounded,
+        // ),
       ];
 
     case Roles.rolGerente: // Gerente Cooperativa
@@ -84,12 +84,12 @@ List<NavItem> tabsForRole(Roles role) {
           cupertino: CupertinoIcons.person_2_fill,
           material: Icons.groups_rounded,
         ),
-        NavItem(
-          tab: AppTab.mas,
-          label: 'Más',
-          cupertino: CupertinoIcons.ellipsis_circle,
-          material: Icons.more_horiz_rounded,
-        ),
+        // NavItem(
+        //   tab: AppTab.mas,
+        //   label: 'Más',
+        //   cupertino: CupertinoIcons.ellipsis_circle,
+        //   material: Icons.more_horiz_rounded,
+        // ),
       ];
 
     case Roles.rolDriver: // Conductor
@@ -118,12 +118,12 @@ List<NavItem> tabsForRole(Roles role) {
           cupertino: CupertinoIcons.car_fill,
           material: Icons.car_rental_rounded,
         ),
-        NavItem(
-          tab: AppTab.mas,
-          label: 'Más',
-          cupertino: CupertinoIcons.ellipsis_circle,
-          material: Icons.more_horiz_rounded,
-        ),
+        // NavItem(
+        //   tab: AppTab.mas,
+        //   label: 'Más',
+        //   cupertino: CupertinoIcons.ellipsis_circle,
+        //   material: Icons.more_horiz_rounded,
+        // ),
       ];
 
     case Roles.rolMember: // Miembro temporal
@@ -152,12 +152,12 @@ List<NavItem> tabsForRole(Roles role) {
           cupertino: CupertinoIcons.money_dollar_circle_fill,
           material: Icons.savings_rounded,
         ),
-        NavItem(
-          tab: AppTab.mas,
-          label: 'Más',
-          cupertino: CupertinoIcons.ellipsis_circle,
-          material: Icons.more_horiz_rounded,
-        ),
+        // NavItem(
+        //   tab: AppTab.mas,
+        //   label: 'Más',
+        //   cupertino: CupertinoIcons.ellipsis_circle,
+        //   material: Icons.more_horiz_rounded,
+        // ),
       ];
 
     case Roles.rolUser: // Pasajero
@@ -168,12 +168,12 @@ List<NavItem> tabsForRole(Roles role) {
           cupertino: CupertinoIcons.house_fill,
           material: Icons.home_rounded,
         ),
-        NavItem(
-          tab: AppTab.guardados,
-          label: 'Guardados',
-          cupertino: CupertinoIcons.bookmark_fill,
-          material: Icons.bookmark_rounded,
-        ),
+        // NavItem(
+        //   tab: AppTab.viajes,
+        //   label: 'Viajes',
+        //   cupertino: CupertinoIcons.car_fill,
+        //   material: Icons.directions_car_rounded,
+        // ),
         NavItem(
           tab: AppTab.mensajes,
           label: 'Mensajes',
@@ -181,17 +181,23 @@ List<NavItem> tabsForRole(Roles role) {
           material: Icons.chat_bubble_rounded,
         ),
         NavItem(
-          tab: AppTab.cuenta,
-          label: 'Cuenta',
-          cupertino: CupertinoIcons.person_crop_circle,
-          material: Icons.person_rounded,
+          tab: AppTab.guardados,
+          label: 'Guardados',
+          cupertino: CupertinoIcons.bookmark_fill,
+          material: Icons.bookmark_rounded,
         ),
-        NavItem(
-          tab: AppTab.mas,
-          label: 'Más',
-          cupertino: CupertinoIcons.ellipsis_circle,
-          material: Icons.more_horiz_rounded,
-        ),
+        // NavItem(
+        //   tab: AppTab.cuenta,
+        //   label: 'Cuenta',
+        //   cupertino: CupertinoIcons.person_crop_circle,
+        //   material: Icons.person_rounded,
+        // ),
+        // NavItem(
+        //   tab: AppTab.mas,
+        //   label: 'Más',
+        //   cupertino: CupertinoIcons.ellipsis_circle,
+        //   material: Icons.more_horiz_rounded,
+        // ),
       ];
   }
 }

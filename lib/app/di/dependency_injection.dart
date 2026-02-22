@@ -4,10 +4,6 @@ import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart'; // ✅ NUEVO
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
-import 'package:auronix_app/features/client/home/domain/repository/home_client_repository.dart';
-import 'package:auronix_app/features/client/home/domain/repository/home_client_repository_impl.dart';
-import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/modals/modal_temp_cubit.dart';
 import 'package:dio/dio.dart';

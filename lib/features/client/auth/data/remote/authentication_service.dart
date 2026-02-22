@@ -1,7 +1,5 @@
 import 'package:auronix_app/app/core/network/types/request_extras.dart';
 import 'package:auronix_app/app/environments/environment.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:auronix_app/features/client/client.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';

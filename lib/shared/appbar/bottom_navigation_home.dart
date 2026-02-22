@@ -19,8 +19,6 @@ class BottomNavigationHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final items = tabsForRole(role);
-
-    // PRO: usa un color de “accent” consistente (amarillo taxi o el que tengas para highlight)
     final selectedColor = AppColors.third;
     final unselectedColor = theme.dividerColor;
 

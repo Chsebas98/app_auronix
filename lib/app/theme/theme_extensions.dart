@@ -19,6 +19,10 @@ extension AppColorsExtension on AppColors {
     return context.isLight ? AppColors.lightText : AppColors.darkText;
   }
 
+  static Color iconColor(BuildContext context) {
+    return context.isLight ? AppColors.secondary : AppColors.white;
+  }
+
   static Color textSecondaryColor(BuildContext context) {
     return context.isLight
         ? AppColors.lightTextSecondary
