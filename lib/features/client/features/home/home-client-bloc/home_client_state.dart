@@ -6,12 +6,16 @@ class HomeClientState extends Equatable {
     this.needCompleteProfile = false,
     this.completeProfileStatus = const InitialFormSubmitStatus(),
     this.currentTrip,
+    this.currentAddress = '',
+    this.isLoadingAddress = false,
   });
 
   final AuthenticationCredentials dataProfile;
   final bool needCompleteProfile;
   final FormSubmitStatus completeProfileStatus;
   final TripModel? currentTrip;
+  final String currentAddress;
+  final bool isLoadingAddress;
 
   HomeClientState copyWith({
     AuthenticationCredentials? dataProfile,
@@ -19,6 +23,8 @@ class HomeClientState extends Equatable {
     FormSubmitStatus? completeProfileStatus,
     TripModel? currentTrip,
     bool clearCurrentTrip = false,
+    String? currentAddress,
+    bool? isLoadingAddress,
   }) {
     return HomeClientState(
       dataProfile: dataProfile ?? this.dataProfile,
@@ -26,6 +32,8 @@ class HomeClientState extends Equatable {
       completeProfileStatus:
           completeProfileStatus ?? this.completeProfileStatus,
       currentTrip: clearCurrentTrip ? null : (currentTrip ?? this.currentTrip),
+      currentAddress: currentAddress ?? this.currentAddress,
+      isLoadingAddress: isLoadingAddress ?? this.isLoadingAddress,
     );
   }
 
@@ -35,5 +43,7 @@ class HomeClientState extends Equatable {
     needCompleteProfile,
     completeProfileStatus,
     currentTrip,
+    currentAddress,
+    isLoadingAddress,
   ];
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
@@ -7,6 +8,8 @@ import 'package:auronix_app/features/client/client.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 part 'home_client_event.dart';
@@ -22,6 +25,7 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
     on<CancelTripEvent>(_onCancelTripEvent);
     on<UpdateCurrentTripEvent>(_onUpdateCurrentTripEvent);
     on<ClearCurrentTripEvent>(_onClearCurrentTripEvent);
+    on<GetCurrentLocationEvent>(_onGetCurrentLocationEvent);
   }
 
   FutureOr<void> _onSetDataProfileEvent(
@@ -176,5 +180,141 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
 
     // Escenario 4: Sin viaje activo
     // return null;
+  }
+
+  FutureOr<void> _onGetCurrentLocationEvent(
+    GetCurrentLocationEvent event,
+    Emitter<HomeClientState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(isLoadingAddress: true));
+
+      debugPrint('🔍 Verificando servicios de ubicación...');
+
+      // Verificar si el servicio de ubicación está habilitado
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        debugPrint('❌ Servicio de ubicación desactivado');
+        emit(
+          state.copyWith(
+            currentAddress: 'Servicio de ubicación desactivado',
+            isLoadingAddress: false,
+          ),
+        );
+        return;
+      }
+
+      // Verificar permisos
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          debugPrint('❌ Permiso de ubicación denegado');
+          emit(
+            state.copyWith(
+              currentAddress: 'Permiso de ubicación denegado',
+              isLoadingAddress: false,
+            ),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        debugPrint('❌ Permiso de ubicación denegado permanentemente');
+        emit(
+          state.copyWith(
+            currentAddress: 'Permiso denegado permanentemente',
+            isLoadingAddress: false,
+          ),
+        );
+        return;
+      }
+
+      debugPrint('📍 Obteniendo posición actual...');
+
+      // Obtener posición actual
+      Position position;
+
+      if (Platform.isAndroid) {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: AndroidSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+            forceLocationManager:
+                false, // Usar FusedLocationProvider (más rápido)
+            timeLimit: Duration(seconds: 10), // Timeout
+          ),
+        );
+      } else if (Platform.isIOS) {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: AppleSettings(
+            accuracy: LocationAccuracy.high,
+            activityType: ActivityType.automotiveNavigation, // Para app de taxi
+            distanceFilter: 10,
+            pauseLocationUpdatesAutomatically: false,
+            showBackgroundLocationIndicator: true,
+          ),
+        );
+      } else {
+        // Fallback genérico
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        );
+      }
+
+      debugPrint('📍 Posición: ${position.latitude}, ${position.longitude}');
+
+      // Convertir coordenadas a dirección
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+
+        debugPrint('📍 Placemark: $place');
+
+        // Construir dirección legible
+        final street = place.street ?? '';
+        final locality = place.locality ?? '';
+        final subLocality = place.subLocality ?? '';
+
+        String address = '';
+        if (street.isNotEmpty) address += street;
+        if (subLocality.isNotEmpty) {
+          address += address.isEmpty ? subLocality : ', $subLocality';
+        }
+        if (locality.isNotEmpty) {
+          address += address.isEmpty ? locality : ', $locality';
+        }
+
+        if (address.isEmpty) address = 'Ubicación actual';
+
+        debugPrint('✅ Dirección obtenida: $address');
+
+        emit(state.copyWith(currentAddress: address, isLoadingAddress: false));
+      } else {
+        debugPrint('⚠️ No se obtuvieron placemarks');
+        emit(
+          state.copyWith(
+            currentAddress: 'No se pudo obtener la dirección',
+            isLoadingAddress: false,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error obteniendo ubicación: $e');
+      emit(
+        state.copyWith(
+          currentAddress: 'Error al obtener ubicación',
+          isLoadingAddress: false,
+        ),
+      );
+    }
   }
 }

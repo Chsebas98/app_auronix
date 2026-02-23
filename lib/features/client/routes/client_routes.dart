@@ -1,7 +1,6 @@
 // client_routes.dart
 
 import 'package:auronix_app/core/models/interfaces/core_enums.dart';
-import 'package:auronix_app/features/client/features/trip/request-trip/presentation/request_trip_screen.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/features/messages/presentation/message_screen.dart';
 import 'package:flutter/material.dart';
@@ -32,13 +31,6 @@ class ClientRoutes {
             path: ClientRoutesPath.profile,
             builder: (context, state) {
               return ProfileScreen();
-            },
-          ),
-          GoRoute(
-            name: 'GetTripsClient',
-            path: ClientRoutesPath.trips,
-            builder: (context, state) {
-              return GetTripScreen();
             },
           ),
           GoRoute(

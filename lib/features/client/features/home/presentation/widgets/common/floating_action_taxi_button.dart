@@ -1,4 +1,6 @@
+import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/app/theme/app_colors.dart';
+import 'package:auronix_app/features/client/client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -14,10 +16,7 @@ class FloatingActionTaxiButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(16.r),
       shadowColor: AppShadowColors.thirdHard,
       child: InkWell(
-        onTap: () {
-          // todo: Navegar a página de solicitud de taxi
-          debugPrint('🚕 Pedir Taxi');
-        },
+        onTap: () => AppRouter.push(ClientRoutesPath.selectDestination),
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           height: 64.h,

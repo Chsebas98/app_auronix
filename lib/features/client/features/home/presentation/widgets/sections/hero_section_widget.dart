@@ -5,8 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class HeroSectionWidget extends StatelessWidget {
+class HeroSectionWidget extends StatefulWidget {
   const HeroSectionWidget({super.key});
+
+  @override
+  State<HeroSectionWidget> createState() => _HeroSectionWidgetState();
+}
+
+class _HeroSectionWidgetState extends State<HeroSectionWidget> {
+  @override
+  void initState() {
+    super.initState();
+    // Obtener ubicación al iniciar
+    context.read<HomeClientBloc>().add(GetCurrentLocationEvent());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +30,11 @@ class HeroSectionWidget extends StatelessWidget {
         final firstName = user.firstName.isNotEmpty
             ? FormsHelpers.getTextTransform(user.firstName, capitalize: true)
             : 'Usuario';
+
+        // ✅ Obtener dirección del state
+        final address = state.currentAddress.isEmpty
+            ? 'Obteniendo ubicación...'
+            : state.currentAddress;
 
         return Container(
           decoration: BoxDecoration(
@@ -49,13 +66,15 @@ class HeroSectionWidget extends StatelessWidget {
                     color: AppColors.third,
                   ),
                   8.horizontalSpace,
-                  Text(
-                    '¡Hola, $firstName!',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: Text(
+                      '¡Hola, $firstName!',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -65,11 +84,24 @@ class HeroSectionWidget extends StatelessWidget {
               // Ubicación actual
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 18.r, color: AppColors.third),
+                  // ✅ Mostrar loading si está cargando
+                  state.isLoadingAddress
+                      ? SizedBox(
+                          width: 18.r,
+                          height: 18.r,
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(
+                          Icons.location_on,
+                          size: 18.r,
+                          color: AppColors.third,
+                        ),
                   6.horizontalSpace,
                   Expanded(
                     child: Text(
-                      'Av. Principal 123, Quito', // todo: GPS real
+                      address,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.fourth,
                       ),
@@ -78,9 +110,14 @@ class HeroSectionWidget extends StatelessWidget {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
-                      debugPrint('📍 Cambiar ubicación');
-                    },
+                    onPressed: state.isLoadingAddress
+                        ? null
+                        : () {
+                            debugPrint('📍 Actualizando ubicación');
+                            context.read<HomeClientBloc>().add(
+                              GetCurrentLocationEvent(),
+                            );
+                          },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.symmetric(
                         horizontal: 8.w,
@@ -92,7 +129,9 @@ class HeroSectionWidget extends StatelessWidget {
                     child: Text(
                       'Cambiar',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppColors.third,
+                        color: state.isLoadingAddress
+                            ? AppColors.fourth.withValues(alpha: 0.5)
+                            : AppColors.third,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -100,9 +139,8 @@ class HeroSectionWidget extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: 16.h),
+              16.verticalSpace,
 
-              // Buscador de destino
               // Buscador de destino
               Material(
                 elevation: 4,
@@ -113,13 +151,14 @@ class HeroSectionWidget extends StatelessWidget {
                 child: InkWell(
                   onTap: () {
                     debugPrint('🔍 Buscar destino');
+                    // TODO: Navegar a seleccionar destino
+                    // AppRouter.push(ClientRoutesPath.selectDestination);
                   },
                   borderRadius: BorderRadius.circular(12.r),
                   child: Container(
                     height: 56.h,
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
                     decoration: BoxDecoration(
-                      // ✅ Colores específicos
                       color: theme.brightness == Brightness.light
                           ? AppColors.lightInput
                           : AppColors.darkInput,
@@ -140,7 +179,7 @@ class HeroSectionWidget extends StatelessWidget {
                               ? AppColors.lightTextSecondary
                               : AppColors.darkTextSecondary,
                         ),
-                        SizedBox(width: 12.w),
+                        12.horizontalSpace,
                         Expanded(
                           child: Text(
                             '¿A dónde vas?',

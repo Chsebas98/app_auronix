@@ -1,9 +1,12 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
-import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart'; // ✅ NUEVO
+import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
+import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
+import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
+import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository_impl.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/modals/modal_temp_cubit.dart';
 import 'package:dio/dio.dart';
@@ -40,18 +43,18 @@ Future<void> initDependencies() async {
     () => AuthLocalDbDataSource(sl<AppDatabase>()),
   );
 
-  // ✅ 1. Crear Dio SIN AuthInterceptor primero
+  // Crear Dio SIN AuthInterceptor primero
   final dioBasic = await DioClient.getInstance(
     enableSSLPinning: false,
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
   );
 
-  // ✅ 2. Crear AuthenticationService con Dio básico
+  // Crear AuthenticationService con Dio básico
   final authenticationService = AuthenticationService(dio: dioBasic);
   sl.registerLazySingleton<AuthenticationService>(() => authenticationService);
 
-  // ✅ 3. Agregar AuthInterceptor DESPUÉS
+  // Agregar AuthInterceptor DESPUÉS
   dioBasic.interceptors.insert(
     2, // Después de Cache, antes de Retry
     AuthInterceptor(
@@ -60,7 +63,7 @@ Future<void> initDependencies() async {
     ),
   );
 
-  // ✅ 4. Registrar Dio configurado
+  // Registrar Dio configurado
   sl.registerLazySingleton<Dio>(() => dioBasic);
 
   //?auth
@@ -92,5 +95,17 @@ Future<void> initDependencies() async {
   sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));
   sl.registerFactory<HomeClientBloc>(
     () => HomeClientBloc(sl<HomeClientRepository>()),
+  );
+
+  //?Trip
+  sl.registerLazySingleton<GooglePlacesDatasource>(
+    () => GooglePlacesDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<TripRepository>(
+    () => TripRepositoryImpl(placesDataSource: sl<GooglePlacesDatasource>()),
+  );
+  sl.registerFactory<RequestTripBloc>(
+    () => RequestTripBloc(tripRepository: sl<TripRepository>()),
   );
 }

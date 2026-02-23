@@ -47,3 +47,5 @@ class UpdateCurrentTripEvent extends HomeClientEvent {
 }
 
 class ClearCurrentTripEvent extends HomeClientEvent {}
+
+class GetCurrentLocationEvent extends HomeClientEvent {}
