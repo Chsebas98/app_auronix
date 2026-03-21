@@ -15,9 +15,9 @@ class QuickActionsWidget extends StatelessWidget {
           subtitle: 'Elige el tipo de servicio que necesitas',
           icon: Icons.local_taxi_rounded,
         ),
-        SizedBox(height: 12.h),
+        12.verticalSpace,
         SizedBox(
-          height: 140.h,
+          height: 150.h,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 16.w),

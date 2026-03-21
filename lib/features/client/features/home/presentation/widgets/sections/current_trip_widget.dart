@@ -1,4 +1,5 @@
 import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/core/utils/helpers/responsive_helper.dart';
 import 'package:auronix_app/features/client/features/home/domain/models/interfaces/current_trip_model.dart';
 import 'package:auronix_app/features/client/features/home/domain/models/interfaces/current_trip_status.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,7 @@ class CurrentTripWidget extends StatelessWidget {
     }
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: ResponsiveHelper.contentPadding(context),
       child: _buildTripCard(context),
     );
   }

@@ -2,6 +2,7 @@ import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class TripRepositoryImpl implements TripRepository {
   final GooglePlacesDatasource _placesDataSource;
@@ -66,6 +67,54 @@ class TripRepositoryImpl implements TripRepository {
       debugPrint('❌ [Repository] Error obteniendo detalles: $e');
       return ServiceResponse.error(
         message: 'Error al obtener detalles del lugar',
+        errorDetail: e.toString(),
+        statusCode: 500,
+      );
+    }
+  }
+
+  @override
+  Future<ServiceResponse> getDirections({
+    required LatLng origin,
+    required LatLng destination,
+  }) async {
+    try {
+      debugPrint('🗺️  [Repository] Obteniendo ruta...');
+
+      final directions = await _placesDataSource.getDirections(
+        origin: origin,
+        destination: destination,
+      );
+
+      if (directions == null) {
+        return ServiceResponse.error(
+          message: 'No se pudo obtener la ruta',
+          statusCode: 404,
+        );
+      }
+
+      // Decodificar polyline
+      final polylineEncoded = directions['polyline'] as String;
+      final polylinePoints = _placesDataSource.decodePolyline(polylineEncoded);
+
+      debugPrint(
+        '✅ [Repository] Ruta obtenida: ${polylinePoints.length} puntos',
+      );
+
+      return ServiceResponse.success(
+        message: 'Ruta obtenida exitosamente',
+        result: {
+          ...directions,
+          'polylinePoints': polylinePoints
+              .map((point) => {'lat': point.latitude, 'lng': point.longitude})
+              .toList(),
+        },
+        statusCode: 200,
+      );
+    } catch (e) {
+      debugPrint('❌ [Repository] Error obteniendo ruta: $e');
+      return ServiceResponse.error(
+        message: 'Error al obtener la ruta',
         errorDetail: e.toString(),
         statusCode: 500,
       );

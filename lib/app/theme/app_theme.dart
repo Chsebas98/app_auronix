@@ -8,6 +8,7 @@ class AppTheme {
     primaryColorDark: AppColors.black,
     primaryColorLight: AppColors.primary,
     scaffoldBackgroundColor: AppColors.primary,
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: AppColors.third),
     dividerTheme: DividerThemeData(color: AppColors.eight, thickness: 1.h),
     checkboxTheme: CheckboxThemeData(
       checkColor: WidgetStatePropertyAll(AppColors.secondary),

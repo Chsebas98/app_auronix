@@ -9,6 +9,7 @@ import 'package:auronix_app/features/client/features/trip/domain/repository/trip
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class RequestTripScreen extends StatelessWidget {
   const RequestTripScreen({super.key});
@@ -18,25 +19,25 @@ class RequestTripScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) =>
           RequestTripBloc(tripRepository: sl<TripRepository>()),
-      child: _RequestTripController(),
+      child: _RequestTripView(),
     );
   }
 }
 
-class _RequestTripController extends StatefulWidget {
-  const _RequestTripController();
+class _RequestTripView extends StatefulWidget {
+  const _RequestTripView();
 
   @override
-  State<_RequestTripController> createState() => _RequestTripControllerState();
+  State<_RequestTripView> createState() => _RequestTripViewState();
 }
 
-class _RequestTripControllerState extends State<_RequestTripController> {
-  String? _selectedDestination;
-  double? _destinationLat;
-  double? _destinationLng;
+class _RequestTripViewState extends State<_RequestTripView> {
+  LatLng? _currentLocation;
 
   void _onConfirmTrip() {
-    if (_selectedDestination == null) {
+    final state = context.read<RequestTripBloc>().state;
+
+    if (state.selectedDestination == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Por favor selecciona un destino'),
@@ -46,7 +47,7 @@ class _RequestTripControllerState extends State<_RequestTripController> {
       return;
     }
 
-    debugPrint('🚕 Confirmando viaje a: $_selectedDestination');
+    debugPrint('🚕 Confirmando viaje a: ${state.selectedDestination!.name}');
     // TODO: Navegar a confirmar viaje
     // AppRouter.push(ClientRoutesPath.confirmTrip, extra: {...});
   }
@@ -57,158 +58,301 @@ class _RequestTripControllerState extends State<_RequestTripController> {
 
     return Scaffold(
       backgroundColor: theme.primaryColor,
-      body: Stack(
-        children: [
-          // Mapa de fondo
-          MapWidget(
-            destinationLat: _destinationLat,
-            destinationLng: _destinationLng,
-          ),
-
-          // Overlay superior con búsqueda
-          SafeArea(
-            child: Column(
+      body: BlocListener<RequestTripBloc, RequestTripState>(
+        listenWhen: (previous, current) =>
+            previous.selectedDestination != current.selectedDestination &&
+            current.selectedDestination != null,
+        listener: (context, state) {
+          // ✅ Cuando se selecciona destino Y tenemos ubicación, calcular ruta
+          if (_currentLocation != null) {
+            context.read<RequestTripBloc>().add(
+              CalculateRouteEvent(
+                origin: _currentLocation!,
+                destination: state.selectedDestination!,
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<RequestTripBloc, RequestTripState>(
+          builder: (context, state) {
+            return Stack(
               children: [
-                // Header con botón atrás y búsqueda
-                Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: context.isLight
-                            ? AppShadowColors.blackSoft
-                            : AppShadowColors.darkSoft,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      // Botón atrás
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => AppRouter.pop(),
-                            icon: Icon(
-                              Icons.arrow_back_ios_new_rounded,
-                              color: AppColorsExtension.iconColor(context),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Solicitar taxi',
-                              style: theme.textTheme.titleLarge,
-                            ),
-                          ),
-                        ],
-                      ),
+                // Mapa de fondo
+                MapWidget(
+                  destinationLat: state.selectedDestination?.lat,
+                  destinationLng: state.selectedDestination?.lng,
+                  polylinePoints: state.polylinePoints,
+                  onLocationReady: (location) {
+                    // ✅ Guardar ubicación cuando esté lista
+                    setState(() {
+                      _currentLocation = location;
+                    });
 
-                      8.verticalSpace,
-
-                      // Buscador de destino
-                      DestinationSearch(),
-                    ],
-                  ),
+                    // ✅ Si ya hay destino seleccionado, calcular ruta
+                    if (state.selectedDestination != null &&
+                        state.polylinePoints.isEmpty) {
+                      context.read<RequestTripBloc>().add(
+                        CalculateRouteEvent(
+                          origin: location,
+                          destination: state.selectedDestination!,
+                        ),
+                      );
+                    }
+                  },
                 ),
 
-                Spacer(),
-
-                // Botón confirmar viaje
-                if (_selectedDestination != null)
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20.r),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.isLight
-                              ? AppShadowColors.blackSoft
-                              : AppShadowColors.darkSoft,
-                          blurRadius: 12,
-                          offset: Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Destino seleccionado
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.third.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: Icon(
-                                Icons.location_on,
-                                color: AppColors.third,
-                                size: 20.r,
-                              ),
-                            ),
-                            12.horizontalSpace,
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Destino',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color:
-                                          AppColorsExtension.textSecondaryColor(
-                                            context,
-                                          ),
-                                    ),
-                                  ),
-                                  4.verticalSpace,
-                                  Text(
-                                    _selectedDestination!,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
+                // Overlay superior con búsqueda
+                SafeArea(
+                  child: Column(
+                    children: [
+                      // Header con botón atrás y búsqueda
+                      Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.isLight
+                                  ? AppShadowColors.blackSoft
+                                  : AppShadowColors.darkSoft,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
-
-                        16.verticalSpace,
-
-                        // Botón confirmar
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: _onConfirmTrip,
-                            style: FilledButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                        child: Column(
+                          children: [
+                            // Botón atrás
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () => AppRouter.pop(),
+                                  icon: Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    color: AppColorsExtension.iconColor(
+                                      context,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'Solicitar taxi',
+                                    style: theme.textTheme.titleLarge,
+                                  ),
+                                ),
+                              ],
                             ),
-                            child: Text(
-                              'Confirmar viaje',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
+
+                            8.verticalSpace,
+
+                            // Buscador de destino
+                            DestinationSearch(),
+                          ],
+                        ),
+                      ),
+
+                      Spacer(),
+
+                      // ✅ Loading mientras calcula ruta
+                      if (state.isCalculatingRoute)
+                        Container(
+                          margin: EdgeInsets.only(bottom: 16.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 12.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.third.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16.w,
+                                height: 16.h,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
+                                ),
                               ),
-                            ),
+                              12.horizontalSpace,
+                              Text(
+                                'Calculando ruta...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+
+                      // Botón confirmar viaje
+                      if (state.selectedDestination != null)
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20.r),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.isLight
+                                    ? AppShadowColors.blackSoft
+                                    : AppShadowColors.darkSoft,
+                                blurRadius: 12,
+                                offset: Offset(0, -4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Destino seleccionado
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(8.w),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.third.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: AppColors.third,
+                                      size: 20.r,
+                                    ),
+                                  ),
+                                  12.horizontalSpace,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Destino',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color:
+                                                    AppColorsExtension.textSecondaryColor(
+                                                      context,
+                                                    ),
+                                              ),
+                                        ),
+                                        4.verticalSpace,
+                                        Text(
+                                          state.selectedDestination!.name,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              // ✅ Mostrar distancia y duración
+                              if (state.distance != null &&
+                                  state.duration != null) ...[
+                                12.verticalSpace,
+                                Container(
+                                  padding: EdgeInsets.all(12.w),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.third.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.straighten,
+                                            color: AppColors.third,
+                                            size: 18.r,
+                                          ),
+                                          8.horizontalSpace,
+                                          Text(
+                                            state.distance!,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.third,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        width: 1,
+                                        height: 20.h,
+                                        color: AppColors.third.withOpacity(0.3),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time,
+                                            color: AppColors.third,
+                                            size: 18.r,
+                                          ),
+                                          8.horizontalSpace,
+                                          Text(
+                                            state.duration!,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.third,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+
+                              16.verticalSpace,
+
+                              // Botón confirmar
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: _onConfirmTrip,
+                                  style: FilledButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 16.h,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Confirmar viaje',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
+                ),
               ],
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

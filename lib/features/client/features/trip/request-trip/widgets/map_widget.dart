@@ -9,8 +9,16 @@ import 'package:geolocator/geolocator.dart';
 class MapWidget extends StatefulWidget {
   final double? destinationLat;
   final double? destinationLng;
+  final List<LatLng> polylinePoints;
+  final Function(LatLng)? onLocationReady;
 
-  const MapWidget({super.key, this.destinationLat, this.destinationLng});
+  const MapWidget({
+    super.key,
+    this.destinationLat,
+    this.destinationLng,
+    this.polylinePoints = const [],
+    this.onLocationReady,
+  });
 
   @override
   State<MapWidget> createState() => _MapWidgetState();
@@ -21,10 +29,7 @@ class _MapWidgetState extends State<MapWidget> {
   Position? _currentPosition;
   bool _isLoadingLocation = true;
 
-  // Marcadores
   final Set<Marker> _markers = {};
-
-  // Polyline (ruta)
   final Set<Polyline> _polylines = {};
 
   @override
@@ -37,10 +42,13 @@ class _MapWidgetState extends State<MapWidget> {
   void didUpdateWidget(MapWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Si cambió el destino, actualizar marcadores
     if (oldWidget.destinationLat != widget.destinationLat ||
         oldWidget.destinationLng != widget.destinationLng) {
       _updateMarkers();
+    }
+
+    if (oldWidget.polylinePoints.length != widget.polylinePoints.length) {
+      _updatePolylines();
     }
   }
 
@@ -48,7 +56,6 @@ class _MapWidgetState extends State<MapWidget> {
     try {
       setState(() => _isLoadingLocation = true);
 
-      // Verificar permisos
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
@@ -62,7 +69,6 @@ class _MapWidgetState extends State<MapWidget> {
         return;
       }
 
-      // Obtener posición actual
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
@@ -79,7 +85,6 @@ class _MapWidgetState extends State<MapWidget> {
         _isLoadingLocation = false;
       });
 
-      // Mover cámara a ubicación actual
       _mapController?.animateCamera(
         CameraUpdate.newLatLngZoom(
           LatLng(position.latitude, position.longitude),
@@ -88,6 +93,11 @@ class _MapWidgetState extends State<MapWidget> {
       );
 
       _updateMarkers();
+
+      // ✅ Notificar que la ubicación está lista
+      if (widget.onLocationReady != null) {
+        widget.onLocationReady!(LatLng(position.latitude, position.longitude));
+      }
     } catch (e) {
       debugPrint('❌ Error obteniendo ubicación: $e');
       setState(() => _isLoadingLocation = false);
@@ -97,7 +107,6 @@ class _MapWidgetState extends State<MapWidget> {
   void _updateMarkers() {
     _markers.clear();
 
-    // Marcador de origen (ubicación actual)
     if (_currentPosition != null) {
       _markers.add(
         Marker(
@@ -107,14 +116,13 @@ class _MapWidgetState extends State<MapWidget> {
             _currentPosition!.longitude,
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueYellow, // Color amarillo/dorado
+            BitmapDescriptor.hueYellow,
           ),
           infoWindow: InfoWindow(title: 'Tu ubicación', snippet: 'Origen'),
         ),
       );
     }
 
-    // Marcador de destino
     if (widget.destinationLat != null && widget.destinationLng != null) {
       _markers.add(
         Marker(
@@ -125,8 +133,36 @@ class _MapWidgetState extends State<MapWidget> {
         ),
       );
 
-      // Ajustar cámara para mostrar ambos puntos
       if (_currentPosition != null) {
+        _fitBounds();
+      }
+    }
+
+    setState(() {});
+  }
+
+  void _updatePolylines() {
+    _polylines.clear();
+
+    if (widget.polylinePoints.isNotEmpty) {
+      debugPrint(
+        '🗺️ Agregando polyline con ${widget.polylinePoints.length} puntos',
+      );
+
+      _polylines.add(
+        Polyline(
+          polylineId: PolylineId('route'),
+          points: widget.polylinePoints,
+          color: Color(0xFFFDB827), // Amarillo Auronix
+          width: 5,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          jointType: JointType.round,
+          geodesic: true,
+        ),
+      );
+
+      if (_mapController != null) {
         _fitBounds();
       }
     }
@@ -226,6 +262,7 @@ class _MapWidgetState extends State<MapWidget> {
       onMapCreated: (controller) {
         _mapController = controller;
         _updateMarkers();
+        _updatePolylines();
       },
       markers: _markers,
       polylines: _polylines,
@@ -234,7 +271,6 @@ class _MapWidgetState extends State<MapWidget> {
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
       compassEnabled: true,
-      // Estilo del mapa (puedes personalizarlo)
       mapType: MapType.normal,
     );
   }

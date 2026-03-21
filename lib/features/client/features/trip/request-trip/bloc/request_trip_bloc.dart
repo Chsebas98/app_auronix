@@ -7,6 +7,7 @@ import 'package:auronix_app/features/client/features/trip/domain/repository/trip
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 part 'request_trip_event.dart';
 part 'request_trip_state.dart';
@@ -20,6 +21,7 @@ class RequestTripBloc extends Bloc<RequestTripEvent, RequestTripState> {
     on<SearchDestinationEvent>(_onSearchDestination);
     on<SelectDestinationEvent>(_onSelectDestination);
     on<ClearSearchEvent>(_onClearSearch);
+    on<CalculateRouteEvent>(_onCalculateRoute);
   }
 
   FutureOr<void> _onSearchDestination(
@@ -109,5 +111,68 @@ class RequestTripBloc extends Bloc<RequestTripEvent, RequestTripState> {
         errorMessage: null,
       ),
     );
+  }
+
+  FutureOr<void> _onCalculateRoute(
+    CalculateRouteEvent event,
+    Emitter<RequestTripState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(isCalculatingRoute: true));
+
+      debugPrint('🗺️  [Bloc] Calculando ruta...');
+      debugPrint(
+        '   Origen: ${event.origin.latitude}, ${event.origin.longitude}',
+      );
+      debugPrint(
+        '   Destino: ${event.destination.lat}, ${event.destination.lng}',
+      );
+
+      final destination = LatLng(event.destination.lat, event.destination.lng);
+
+      final response = await _tripRepository.getDirections(
+        origin: event.origin,
+        destination: destination,
+      );
+
+      if (!response.response) {
+        debugPrint('❌ [Bloc] Error: ${response.message}');
+        emit(
+          state.copyWith(
+            isCalculatingRoute: false,
+            errorMessage: response.message,
+          ),
+        );
+        return;
+      }
+
+      final result = response.result as Map<String, dynamic>;
+      final polylinePointsJson = result['polylinePoints'] as List;
+      final polylinePoints = polylinePointsJson
+          .map((point) => LatLng(point['lat'], point['lng']))
+          .toList();
+
+      debugPrint('✅ [Bloc] Ruta calculada: ${polylinePoints.length} puntos');
+      debugPrint('   Distancia: ${result['distanceText']}');
+      debugPrint('   Duración: ${result['durationText']}');
+
+      emit(
+        state.copyWith(
+          polylinePoints: polylinePoints,
+          distance: result['distanceText'],
+          duration: result['durationText'],
+          isCalculatingRoute: false,
+          errorMessage: null,
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ [Bloc] Error calculando ruta: $e');
+      emit(
+        state.copyWith(
+          isCalculatingRoute: false,
+          errorMessage: 'Error al calcular la ruta',
+        ),
+      );
+    }
   }
 }

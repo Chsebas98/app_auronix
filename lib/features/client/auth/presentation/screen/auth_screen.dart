@@ -274,8 +274,9 @@ class _AuthScreenStructure extends StatelessWidget {
                               hasIcon: true,
                               icon: SvgPicture.asset(
                                 'assets/images/svg/iconGoogle.svg',
-                                width: 24.r,
-                                height: 24.r,
+                                width: 32.w,
+                                // height: 24.h,
+                                fit: BoxFit.fitWidth,
                               ),
                               desc: 'Iniciar sesión con Google',
                               action: () {

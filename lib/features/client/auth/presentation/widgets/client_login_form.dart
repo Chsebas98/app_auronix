@@ -30,7 +30,7 @@ class ClientLoginForm extends StatelessWidget {
                   onChanged: (value) =>
                       context.read<AuthBloc>().add(CheckedChangedEvent()),
                 ),
-                const SizedBox(width: 6),
+                6.horizontalSpace,
                 Text('Recuérdame', style: theme.textTheme.bodyMedium),
                 const Spacer(),
                 TextButton(

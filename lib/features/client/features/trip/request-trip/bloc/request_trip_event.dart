@@ -28,3 +28,13 @@ class SelectDestinationEvent extends RequestTripEvent {
 class ClearSearchEvent extends RequestTripEvent {
   const ClearSearchEvent();
 }
+
+class CalculateRouteEvent extends RequestTripEvent {
+  final LatLng origin;
+  final PlaceEntity destination;
+
+  const CalculateRouteEvent({required this.origin, required this.destination});
+
+  @override
+  List<Object?> get props => [origin, destination];
+}

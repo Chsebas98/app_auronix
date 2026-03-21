@@ -111,7 +111,7 @@ class _PlanDropdownState extends State<CustomInputSelect> {
             floatingLabelBehavior: FloatingLabelBehavior.auto,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 10.w,
-              vertical: 14.h,
+              // vertical: 14.h,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),

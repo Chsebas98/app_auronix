@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "451995583792-dkhsglq4cnpu0ki6orur1fdsq93uv9di.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.auronix.ando.app2026.dev",
+            "certificate_hash": "1f82a8e5660d5793318c6d51b260306e344374a3"
+          }
+        },
+        {
           "client_id": "451995583792-t0l3hd95g584pvvfdoo3sgt1tvddg8gv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

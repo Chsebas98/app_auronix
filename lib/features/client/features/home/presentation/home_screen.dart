@@ -97,6 +97,8 @@ class _HomeClientAuthenticatedStructure extends StatefulWidget {
 
 class _HomeClientAuthenticatedStructureState
     extends State<_HomeClientAuthenticatedStructure> {
+  bool _completeProfileOpenOnce = false;
+
   Future<void> _showCompleteProfileModal(BuildContext context) async {
     final bloc = context.read<HomeClientBloc>();
 
@@ -123,7 +125,8 @@ class _HomeClientAuthenticatedStructureState
       listenWhen: (prev, curr) =>
           prev.needCompleteProfile != curr.needCompleteProfile,
       listener: (context, state) {
-        if (state.needCompleteProfile) {
+        if (state.needCompleteProfile && !_completeProfileOpenOnce) {
+          _completeProfileOpenOnce = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             _showCompleteProfileModal(context);

@@ -243,7 +243,7 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
             distanceFilter: 10,
             forceLocationManager:
                 false, // Usar FusedLocationProvider (más rápido)
-            timeLimit: Duration(seconds: 10), // Timeout
+            timeLimit: Duration(seconds: 20), // Timeout
           ),
         );
       } else if (Platform.isIOS) {

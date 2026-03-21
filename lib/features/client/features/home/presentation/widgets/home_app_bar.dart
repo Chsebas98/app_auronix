@@ -27,8 +27,8 @@ class HomeAppBar extends StatelessWidget {
                 debugPrint('👤 Ver perfil');
               },
               child: Container(
-                width: 40.r,
-                height: 40.r,
+                width: 40,
+                height: 40,
                 margin: EdgeInsets.symmetric(vertical: 8.h),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -64,8 +64,8 @@ class HomeAppBar extends StatelessWidget {
                     right: 0,
                     top: 0,
                     child: Container(
-                      width: 8.r,
-                      height: 8.r,
+                      width: 8,
+                      height: 8,
                       decoration: const BoxDecoration(
                         color: AppColors.sevent,
                         shape: BoxShape.circle,
@@ -93,7 +93,7 @@ class HomeAppBar extends StatelessWidget {
               ),
             ),
 
-            SizedBox(width: 8.w),
+            8.horizontalSpace,
           ],
         );
       },

@@ -11,9 +11,10 @@
         <meta-data
             android:name="MAPBOX_ACCESS_TOKEN"
             android:value="@string/mapbox_access_token" />
+
             <meta-data
-      android:name="com.google.android.geo.API_KEY"
-      android:value="AIzaSyCZfwI-XHJFLLuSwsCxGTzBoTBIzM4yzH4"/>
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDr9pxI4hVai_BOExTzFKNNwaqnSDaXaK0"/>
     </application>
 
     
