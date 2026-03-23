@@ -2,6 +2,7 @@ part of 'auth_bloc.dart';
 
 class AuthState extends Equatable {
   const AuthState({
+    this.showLoginConductorForm = false,
     this.dialogRequest = const DialogRequest.empty(),
     this.showRegisterForm = false,
     this.email = '',
@@ -17,6 +18,7 @@ class AuthState extends Equatable {
 
   //generales
   final DialogRequest dialogRequest;
+  final bool showLoginConductorForm;
 
   //auth
   final bool showRegisterForm;
@@ -45,6 +47,7 @@ class AuthState extends Equatable {
       FormValidators.validateRegisterPassword(password);
 
   AuthState copyWith({
+    bool? showLoginConductorForm,
     DialogRequest? dialogRequest,
     bool? showRegisterForm,
     String? email,
@@ -58,6 +61,8 @@ class AuthState extends Equatable {
     bool? showRegisterCompleteForm,
   }) {
     return AuthState(
+      showLoginConductorForm:
+          showLoginConductorForm ?? this.showLoginConductorForm,
       dialogRequest: dialogRequest ?? this.dialogRequest,
       showRegisterForm: showRegisterForm ?? this.showRegisterForm,
       email: email ?? this.email,
@@ -75,6 +80,7 @@ class AuthState extends Equatable {
 
   @override
   List<Object> get props => [
+    showLoginConductorForm,
     dialogRequest,
     showRegisterForm,
     email,

@@ -162,7 +162,7 @@ class _RequestTripViewState extends State<_RequestTripView> {
                             vertical: 12.h,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.third.withOpacity(0.9),
+                            color: AppColors.third.withAlpha(230),
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: Row(
@@ -221,7 +221,7 @@ class _RequestTripViewState extends State<_RequestTripView> {
                                   Container(
                                     padding: EdgeInsets.all(8.w),
                                     decoration: BoxDecoration(
-                                      color: AppColors.third.withOpacity(0.2),
+                                      color: AppColors.third.withAlpha(51),
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
                                     child: Icon(
@@ -269,7 +269,7 @@ class _RequestTripViewState extends State<_RequestTripView> {
                                 Container(
                                   padding: EdgeInsets.all(12.w),
                                   decoration: BoxDecoration(
-                                    color: AppColors.third.withOpacity(0.1),
+                                    color: AppColors.third.withAlpha(26),
                                     borderRadius: BorderRadius.circular(8.r),
                                   ),
                                   child: Row(
@@ -297,7 +297,7 @@ class _RequestTripViewState extends State<_RequestTripView> {
                                       Container(
                                         width: 1,
                                         height: 20.h,
-                                        color: AppColors.third.withOpacity(0.3),
+                                        color: AppColors.third.withAlpha(77),
                                       ),
                                       Row(
                                         children: [

@@ -7,6 +7,8 @@ import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository_impl.dart';
+import 'package:auronix_app/features/conductor/auth/presentation/bloc/auth_conductor_bloc.dart';
+import 'package:auronix_app/features/conductor/home/presentation/bloc/home_conductor_bloc.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/modals/modal_temp_cubit.dart';
 import 'package:dio/dio.dart';
@@ -92,7 +94,10 @@ Future<void> initDependencies() async {
   sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
-  sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));
+  sl.registerFactory<AuthConductorBloc>(
+    () => AuthConductorBloc(sl<RxSharedPreferences>()),
+  );
+  sl.registerFactory<HomeConductorBloc>(() => HomeConductorBloc());
   sl.registerFactory<HomeClientBloc>(
     () => HomeClientBloc(sl<HomeClientRepository>()),
   );

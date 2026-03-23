@@ -1,16 +1,16 @@
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/features/conductor/auth/presentation/bloc/auth_conductor_bloc.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class MemberFields extends StatelessWidget {
-  const MemberFields({super.key});
+class ConductorFields extends StatelessWidget {
+  const ConductorFields({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MemberBloc, MemberState>(
+    return BlocBuilder<AuthConductorBloc, AuthConductorState>(
       builder: (context, state) {
         return Column(
           children: [
@@ -33,8 +33,8 @@ class MemberFields extends StatelessWidget {
               textInputAction: TextInputAction.next,
               validator: (value) =>
                   FormsHelpers.getMessageFormValidation(state.isValidUsername),
-              onChanged: (value) => context.read<MemberBloc>().add(
-                MemberChangeCiPassportEvent(ciPassport: value.toUpperCase()),
+              onChanged: (value) => context.read<AuthConductorBloc>().add(
+                ConductorChangeCiPassportEvent(ciPassport: value.toUpperCase()),
               ),
             ),
             20.verticalSpace,
@@ -54,8 +54,9 @@ class MemberFields extends StatelessWidget {
               textInputAction: TextInputAction.done,
               validator: (value) =>
                   FormsHelpers.getMessageFormValidation(state.isValidLoginPsw),
-              onChanged: (value) =>
-                  context.read<AuthBloc>().add(ChangePasswordEvent(psw: value)),
+              onChanged: (value) => context.read<AuthConductorBloc>().add(
+                ConductorChangePasswordEvent(psw: value),
+              ),
             ),
           ],
         );

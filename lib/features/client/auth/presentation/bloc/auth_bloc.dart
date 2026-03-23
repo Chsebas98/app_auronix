@@ -27,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterSubmitEvent>(_onRegisterSubmitEvent);
     on<CompleteRegisterSubmitEvent>(_onCompleteRegisterSubmitEvent);
     on<LoginSubmittedEvent>(_onLoginSubmittedEvent);
+    on<ConductorSignInRequestedEvent>(_onConductorSignInRequestedEvent);
   }
 
   FutureOr<void> _onInitRememberEvent(
@@ -324,5 +325,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
     }
+  }
+
+  FutureOr<void> _onConductorSignInRequestedEvent(
+    ConductorSignInRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(state.copyWith(showLoginConductorForm: !state.showLoginConductorForm));
   }
 }

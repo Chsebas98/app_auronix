@@ -81,3 +81,5 @@ class LoginSubmittedEvent extends AuthEvent {
 }
 
 class GoogleSignInRequestedEvent extends AuthEvent {}
+
+class ConductorSignInRequestedEvent extends AuthEvent {}

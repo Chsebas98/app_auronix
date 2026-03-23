@@ -1,7 +1,8 @@
-part of 'member_bloc.dart';
+part of 'auth_conductor_bloc.dart';
 
-class MemberState extends Equatable {
-  const MemberState({
+class AuthConductorState extends Equatable {
+  const AuthConductorState({
+    this.dialogRequest = const DialogRequest.empty(),
     this.showRegisterForm = false,
     this.ciPassport = '',
     this.password = '',
@@ -9,7 +10,7 @@ class MemberState extends Equatable {
     this.registerForm = const InitialFormSubmitStatus(),
     this.loginForm = const InitialFormSubmitStatus(),
   });
-
+  final DialogRequest dialogRequest;
   final bool showRegisterForm;
   final String ciPassport;
   final String password;
@@ -23,7 +24,8 @@ class MemberState extends Equatable {
   ValidationFieldResult get isValidLoginPsw =>
       FormValidators.validateLoginPassword(password);
 
-  MemberState copyWith({
+  AuthConductorState copyWith({
+    DialogRequest? dialogRequest,
     bool? showRegisterForm,
     String? ciPassport,
     String? password,
@@ -31,7 +33,8 @@ class MemberState extends Equatable {
     FormSubmitStatus? registerForm,
     FormSubmitStatus? loginForm,
   }) {
-    return MemberState(
+    return AuthConductorState(
+      dialogRequest: dialogRequest ?? this.dialogRequest,
       showRegisterForm: showRegisterForm ?? this.showRegisterForm,
       ciPassport: ciPassport ?? this.ciPassport,
       password: password ?? this.password,
@@ -43,6 +46,7 @@ class MemberState extends Equatable {
 
   @override
   List<Object> get props => [
+    dialogRequest,
     showRegisterForm,
     ciPassport,
     password,

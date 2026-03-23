@@ -5,6 +5,7 @@ import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/app/theme/theme.dart';
 import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/conductor/auth/presentation/pages/conductorLoginFormInline.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -218,85 +219,113 @@ class _AuthScreenStructure extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     20.verticalSpace,
-                    AutoSizeText(
-                      state.showRegisterForm
-                          ? 'Bienvenido a Ando'
-                          : 'Bienvenido de vuelta!',
-                      style: themeText.headlineMedium!.copyWith(
-                        fontWeight: FontWeight.w600,
+                    AnimatedSwitcher(
+                      duration: Duration(milliseconds: 300),
+                      child: AutoSizeText(
+                        _getTitle(state),
+                        style: themeText.headlineMedium!.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     10.verticalSpace,
                     AutoSizeText(
-                      state.showRegisterForm
-                          ? 'Debes iniciar sesión para continuar'
-                          : 'Ingresa a tu cuenta',
+                      _getSubtitle(state),
                       style: themeText.bodyMedium,
                     ),
                     40.verticalSpace,
 
-                    Form(
-                      key: state.showRegisterForm
-                          ? _authRegisterFormKey
-                          : _authLoginFormKey,
-                      child: Column(
+                    AnimatedSwitcher(
+                      duration: Duration(milliseconds: 400),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.1, 0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: _buildForm(context, state),
+                    ),
+                    if (!state.showLoginConductorForm) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          state.showRegisterForm
-                              ? ClientRegisterForm(
-                                  authRegisterFormKey: _authRegisterFormKey,
-                                )
-                              : ClientLoginForm(
-                                  authLoginFormKey: _authLoginFormKey,
-                                ),
-                          30.verticalSpace,
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Divider(
-                                  color: AppColors.eight,
-                                  thickness: 1.r,
-                                ),
-                              ),
-                              10.horizontalSpace,
-                              AutoSizeText(
-                                'O ingresa con',
-                                style: themeText.bodyMedium,
-                              ),
-                              10.horizontalSpace,
-                              Expanded(child: Divider(indent: 0, endIndent: 0)),
-                            ],
-                          ),
-                          30.verticalSpace,
-                          SizedBox(
-                            width: double.infinity,
-                            child: CustomOutlinedButton(
-                              hasIcon: true,
-                              icon: SvgPicture.asset(
-                                'assets/images/svg/iconGoogle.svg',
-                                width: 32.w,
-                                // height: 24.h,
-                                fit: BoxFit.fitWidth,
-                              ),
-                              desc: 'Iniciar sesión con Google',
-                              action: () {
-                                context.read<AuthBloc>().add(
-                                  GoogleSignInRequestedEvent(),
-                                );
-                              },
+                          const Expanded(
+                            child: Divider(
+                              color: AppColors.eight,
+                              thickness: 1,
                             ),
                           ),
-                          20.verticalSpace,
-                          SizedBox(
-                            width: double.infinity,
-                            child: CustomOutlinedButton(
-                              desc: 'Soy conductor',
-                              action: () => AppRouter.go(Routes.loginMember),
-                            ),
+                          const SizedBox(width: 10),
+                          AutoSizeText(
+                            'O ingresa con',
+                            style: themeText.bodyMedium,
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Divider(indent: 0, endIndent: 0),
                           ),
                         ],
                       ),
-                    ),
+
+                      30.verticalSpace,
+
+                      // Google Sign In
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomOutlinedButton(
+                          hasIcon: true,
+                          icon: SvgPicture.asset(
+                            'assets/images/svg/iconGoogle.svg',
+                            width: 32,
+                            fit: BoxFit.fitWidth,
+                          ),
+                          desc: 'Iniciar sesión con Google',
+                          action: () {
+                            context.read<AuthBloc>().add(
+                              GoogleSignInRequestedEvent(),
+                            );
+                          },
+                        ),
+                      ),
+
+                      20.verticalSpace,
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomOutlinedButton(
+                          desc: 'Soy conductor',
+                          action: () {
+                            context.read<AuthBloc>().add(
+                              ConductorSignInRequestedEvent(),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+
+                    if (state.showLoginConductorForm) ...[
+                      20.verticalSpace,
+                      TextButton.icon(
+                        onPressed: () {
+                          context.read<AuthBloc>().add(
+                            ConductorSignInRequestedEvent(),
+                          );
+                        },
+                        icon: Icon(Icons.arrow_back, color: AppColors.twelveth),
+                        label: Text(
+                          'Volver a inicio de sesión cliente',
+                          style: theme.textTheme.bodyMedium!.copyWith(
+                            color: AppColorsExtension.textColor(context),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 );
               },
@@ -304,6 +333,45 @@ class _AuthScreenStructure extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  String _getTitle(AuthState state) {
+    if (state.showLoginConductorForm) {
+      return 'Ingreso de Conductor';
+    }
+    return state.showRegisterForm
+        ? 'Bienvenido a Ando'
+        : 'Bienvenido de vuelta!';
+  }
+
+  String _getSubtitle(AuthState state) {
+    if (state.showLoginConductorForm) {
+      return 'Ingresa tus credenciales de conductor';
+    }
+    return state.showRegisterForm
+        ? 'Debes iniciar sesión para continuar'
+        : 'Ingresa a tu cuenta';
+  }
+
+  Widget _buildForm(BuildContext context, AuthState state) {
+    // Conductor Login
+    if (state.showLoginConductorForm) {
+      return ConductorLoginFormInline(key: const ValueKey('conductor_form'));
+    }
+
+    // Cliente Register
+    if (state.showRegisterForm) {
+      return ClientRegisterForm(
+        key: const ValueKey('register_form'),
+        authRegisterFormKey: _authRegisterFormKey,
+      );
+    }
+
+    // Cliente Login
+    return ClientLoginForm(
+      key: const ValueKey('login_form'),
+      authLoginFormKey: _authLoginFormKey,
     );
   }
 }

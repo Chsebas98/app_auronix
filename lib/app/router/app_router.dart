@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/router/router.dart';
+import 'package:auronix_app/features/conductor/routes/conductor_routes.dart';
+import 'package:auronix_app/features/conductor/routes/conductor_routes_path.dart';
 import 'package:auronix_app/features/features.dart';
 
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ final _publicRoutes = <String>{
   Routes.newVersion,
   Routes.root,
   Routes.sessionExpired,
+  ConductorRoutesPath.login,
 };
 
 final _publicPrefixes = <String>{'/recuperar-password'};
@@ -130,51 +133,13 @@ class AppRouter {
             return RootScreen();
           },
         ),
-        // GoRoute(
-        //   name: 'sesionExpired',
-        //   path: Routes.sessionExpired,
-        //   builder: (context, state) {
-        //     return SessionScreen();
-        //   },
-        // ),
+
         ...ClientRoutes.routes(rootNavKey: rootNavKey),
         //Protegidas - Conductor
-        GoRoute(
-          name: 'loginMember',
-          path: Routes.loginMember,
-          builder: (context, state) {
-            return MemberLogin();
-          },
-        ),
-        GoRoute(
-          name: 'registerMember',
-          path: Routes.registerMember,
-          builder: (context, state) {
-            return MemberLogin();
-          },
-        ),
+        ...ConductorRoutes.routes(rootNavKey: rootNavKey),
+
         //Protegidas - Socio
-        GoRoute(
-          name: 'loginConductor',
-          path: Routes.loginConductor,
-          builder: (context, state) {
-            return Container();
-          },
-        ),
-        GoRoute(
-          name: 'registerConductor',
-          path: Routes.register,
-          builder: (context, state) {
-            return Container();
-          },
-        ),
-        GoRoute(
-          name: 'homeConductor',
-          path: Routes.homeConductor,
-          builder: (context, state) {
-            return HomeScreen();
-          },
-        ),
+
         //Protegidas - Gerente
         //Protegidas - SuperAdming
       ],
