@@ -11,6 +11,14 @@ extension AppColorsExtension on AppColors {
     return context.isLight ? AppColors.lightCard : AppColors.darkCard;
   }
 
+  static Color buttonColor(BuildContext context) {
+    return context.isLight ? AppColors.third : AppColors.twelveth;
+  }
+
+  static Color borderPrimaryColor(BuildContext context) {
+    return context.isLight ? AppColors.twelveth : AppColors.third;
+  }
+
   static Color inputColor(BuildContext context) {
     return context.isLight ? AppColors.lightInput : AppColors.darkInput;
   }

@@ -24,7 +24,7 @@ class HomeAppBar extends StatelessWidget {
             padding: EdgeInsets.only(left: 12.w),
             child: GestureDetector(
               onTap: () {
-                debugPrint('👤 Ver perfil');
+                Scaffold.of(context).openDrawer();
               },
               child: Container(
                 width: 40,

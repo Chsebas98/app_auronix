@@ -60,6 +60,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     LoggoutUserEvent event,
     Emitter<SessionState> emit,
   ) async {
+    emit(SessionLoading());
     await _authRepository.logout();
     emit(SessionUnauthenticated());
   }

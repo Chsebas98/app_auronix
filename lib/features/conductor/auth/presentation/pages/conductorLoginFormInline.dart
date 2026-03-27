@@ -35,7 +35,6 @@ class _ConductorLoginFormInlineState extends State<ConductorLoginFormInline> {
           }
 
           if (state.loginForm is FormSubmitSuccesfull) {
-            // TODO: Guardar sesión de conductor
             AppRouter.go(ConductorRoutesPath.home);
           }
 
