@@ -17,7 +17,7 @@ class AuthenticationService {
   ) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/auth/google-login',
+        '$_baseUrl/auth/clients/google-login',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
@@ -59,7 +59,7 @@ class AuthenticationService {
       debugPrint('🔄 Llamando a refresh-token endpoint');
 
       final response = await _dio.post(
-        '$_baseUrl/auth/refresh-token',
+        '$_baseUrl/auth/clients/refresh-token',
         options: Options(
           contentType: 'application/json',
           // NO usar retry aquí para evitar loops
@@ -97,7 +97,7 @@ class AuthenticationService {
   }) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/auth/login',
+        '$_baseUrl/auth/clients/login',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
@@ -134,7 +134,7 @@ class AuthenticationService {
   }) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/auth/verify-register',
+        '$_baseUrl/auth/clients/verify-register',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
@@ -170,7 +170,7 @@ class AuthenticationService {
   }) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/auth/register',
+        '$_baseUrl/auth/clients/register',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),

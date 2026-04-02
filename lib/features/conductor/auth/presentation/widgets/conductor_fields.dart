@@ -16,10 +16,12 @@ class ConductorFields extends StatelessWidget {
           children: [
             CustomTextFormField(
               decoration: InputDecoration(
-                hintText: 'Ingresa tu username',
-                labelText: 'Username',
+                hintText: 'Ingresa tu cédula o pasaporte',
+                labelText: 'Cédula/Pasaporte',
                 border: InputBorder.none,
+                counterText: '',
               ),
+              maxLength: 20,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               obscureText: false,
               autocorrect: false,
@@ -43,7 +45,9 @@ class ConductorFields extends StatelessWidget {
                 hintText: 'Ingresa tu contraseña',
                 labelText: 'Contraseña',
                 border: InputBorder.none,
+                counterText: '',
               ),
+              maxLength: 20,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               autocorrect: false,
               hasShowHidePassword: true,

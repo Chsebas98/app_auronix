@@ -187,29 +187,36 @@ class FormValidators {
       );
     }
 
-    // Verifica longitud mínima de 8 caracteres
-    if (username.length < 8) {
-      return const ValidationFieldResult(
-        isValid: false,
-        message: "Por favor ingrese una cédula o pasaporte válido",
-      );
-    }
     // Verifica si es pasaporte
     final passportVerify = RegExp(r'[A-Za-z]');
     if (passportVerify.hasMatch(username)) {
+      // Verifica longitud mínima de 8 caracteres
+      if (username.length < 6) {
+        return const ValidationFieldResult(
+          isValid: false,
+          message: "Por favor ingrese un pasaporte válido",
+        );
+      }
       // Verifica longitud máxima de 10 caracteres
       if (username.length > 20) {
         return const ValidationFieldResult(
           isValid: false,
-          message: "Por favor ingrese una cédula o pasaporte válido",
+          message: "Por favor ingrese un pasaporte válido",
         );
       }
     } else {
+      // Verifica longitud mínima de 8 caracteres
+      if (username.length < 8) {
+        return const ValidationFieldResult(
+          isValid: false,
+          message: "Por favor ingrese una cédula válida",
+        );
+      }
       // Verifica longitud máxima de 10 caracteres
       if (username.length > 10) {
         return const ValidationFieldResult(
           isValid: false,
-          message: "Por favor ingrese una cédula o pasaporte válido",
+          message: "Por favor ingrese una cédula válida",
         );
       }
     }

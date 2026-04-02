@@ -96,7 +96,7 @@ class _ConductorLoginFormInlineState extends State<ConductorLoginFormInline> {
                           );
                         }
                       },
-                      child: const Text('Iniciar sesión como conductor'),
+                      child: Text('Iniciar sesión como conductor'),
                     ),
                   );
                 },

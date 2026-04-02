@@ -5,6 +5,7 @@ import 'package:auronix_app/app/core/bloc/domain/request/dialog_request.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 part 'auth_conductor_event.dart';
@@ -101,5 +102,9 @@ class AuthConductorBloc extends Bloc<AuthConductorEvent, AuthConductorState> {
   FutureOr<void> _onConductorLoginSubmittedEvent(
     ConductorLoginSubmittedEvent event,
     Emitter<AuthConductorState> emit,
-  ) {}
+  ) {
+    debugPrint(
+      "Login submitted with CI/Passport: ${event.ciPassport} and Password: ${event.psw}",
+    );
+  }
 }
