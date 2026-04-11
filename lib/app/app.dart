@@ -26,61 +26,64 @@ class AppAuronixMain extends StatelessWidget {
         BlocProvider.value(value: sl<DialogCubit>()),
         BlocProvider.value(value: sl<PermissionCubit>()),
         BlocProvider.value(value: sl<BottomNavCubit>()),
+        BlocProvider.value(value: sl<HomeClientBloc>()),
       ],
-      child: ScreenUtilInit(
-        designSize: const Size(390, 844),
-        minTextAdapt: true,
-        splitScreenMode: true,
-        ensureScreenSize: true,
-        builder: (context, _) => Builder(
-          builder: (context) {
-            return BlocListener<AppLifeCycleCubit, AppLifecycleState>(
-              listener: (context, state) async {
-                switch (state) {
-                  case AppLifecycleState.resumed:
-                    // Reanudar: refrescar sesión, validar token, etc.
-                    // await sessionCubit.onAppResumed();
-                    break;
+      child: Builder(
+        builder: (context) => ScreenUtilInit(
+          designSize: const Size(390, 844),
+          minTextAdapt: true,
+          splitScreenMode: true,
+          ensureScreenSize: true,
+          builder: (context, _) => Builder(
+            builder: (context) {
+              return BlocListener<AppLifeCycleCubit, AppLifecycleState>(
+                listener: (context, state) async {
+                  switch (state) {
+                    case AppLifecycleState.resumed:
+                      // Reanudar: refrescar sesión, validar token, etc.
+                      // await sessionCubit.onAppResumed();
+                      break;
 
-                  case AppLifecycleState.paused:
-                    // Pausa: marcar timestamp, pausar streams, etc.
-                    // sessionCubit.onAppPaused();
-                    break;
-                  case AppLifecycleState.inactive:
-                    break;
-                  default:
-                }
-              },
-              child: BlocBuilder<ThemeCubit, ThemeMode>(
-                builder: (context, themeMode) {
-                  return MediaQuery(
-                    data: MediaQuery.of(
-                      context,
-                    ).copyWith(textScaler: TextScaler.noScaling),
-                    child: MaterialApp.router(
-                      // debugShowMaterialGrid: true,
-                      debugShowCheckedModeBanner: false,
-                      scaffoldMessengerKey: rootMessengerKey,
-                      routerConfig: AppRouter.instance,
-                      theme: AppTheme.lightTheme,
-                      darkTheme: AppTheme.darkTheme,
-                      themeMode: themeMode,
-                      localizationsDelegates:
-                          AppLocalizations.localizationsDelegates,
-                      supportedLocales: AppLocalizations.supportedLocales,
-                      builder: (context, child) {
-                        return DialogHandler(
-                          navigatorKey:
-                              AppRouter.instance.routerDelegate.navigatorKey,
-                          child: child ?? SizedBox.shrink(),
-                        );
-                      },
-                    ),
-                  );
+                    case AppLifecycleState.paused:
+                      // Pausa: marcar timestamp, pausar streams, etc.
+                      // sessionCubit.onAppPaused();
+                      break;
+                    case AppLifecycleState.inactive:
+                      break;
+                    default:
+                  }
                 },
-              ),
-            );
-          },
+                child: BlocBuilder<ThemeCubit, ThemeMode>(
+                  builder: (context, themeMode) {
+                    return MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).copyWith(textScaler: TextScaler.noScaling),
+                      child: MaterialApp.router(
+                        // debugShowMaterialGrid: true,
+                        debugShowCheckedModeBanner: false,
+                        scaffoldMessengerKey: rootMessengerKey,
+                        routerConfig: AppRouter.instance,
+                        theme: AppTheme.lightTheme,
+                        darkTheme: AppTheme.darkTheme,
+                        themeMode: themeMode,
+                        localizationsDelegates:
+                            AppLocalizations.localizationsDelegates,
+                        supportedLocales: AppLocalizations.supportedLocales,
+                        builder: (context, child) {
+                          return DialogHandler(
+                            navigatorKey:
+                                AppRouter.instance.routerDelegate.navigatorKey,
+                            child: child ?? SizedBox.shrink(),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

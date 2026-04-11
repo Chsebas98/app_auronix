@@ -20,7 +20,7 @@ class ClientRegisterForm extends StatelessWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
-                  if (authRegisterFormKey.currentState!.validate()) {
+                  if (authRegisterFormKey.currentState?.validate() ?? false) {
                     context.read<AuthBloc>().add(
                       RegisterSubmitEvent(
                         email: state.email,

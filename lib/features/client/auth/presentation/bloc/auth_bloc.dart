@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/domain/request/dialog_request.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/client.dart';
@@ -17,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
   AuthBloc(this._authRepository) : super(AuthState()) {
     on<InitRememberEvent>(_onInitRememberEvent);
+    on<ResetFormStateEvent>(_onResetFormStateEvent);
     on<GoogleSignInRequestedEvent>(_onGoogleSignInRequestedEvent);
     on<ShowRegisterFormEvent>(_onShowRegisterFormEvent);
     on<CheckedChangedEvent>(_onCheckedChangedEvent);
@@ -25,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterSubmitEvent>(_onRegisterSubmitEvent);
     on<CompleteRegisterSubmitEvent>(_onCompleteRegisterSubmitEvent);
     on<LoginSubmittedEvent>(_onLoginSubmittedEvent);
+    on<ConductorSignInRequestedEvent>(_onConductorSignInRequestedEvent);
   }
 
   FutureOr<void> _onInitRememberEvent(
@@ -33,6 +36,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final bool saved = await _authRepository.getRemember();
     emit(state.copyWith(isRemember: saved));
+  }
+
+  FutureOr<void> _onResetFormStateEvent(
+    ResetFormStateEvent event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        loginForm: const InitialFormSubmitStatus(),
+        registerForm: const InitialFormSubmitStatus(),
+        completeRegisterForm: const InitialFormSubmitStatus(),
+      ),
+    );
   }
 
   FutureOr<void> _onGoogleSignInRequestedEvent(
@@ -46,38 +62,67 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       // debugPrint('Credenciales Google: ${creds.toString()}');
       // await Future.delayed(Duration(seconds: 10));
-      if (creds.token.isEmpty) {
+      if (creds.tokenAccess.isEmpty) {
         throw Exception('No se pudieron obtener las credenciales de Google');
       }
-      // final authenticatedCreds = await _authRepository
-      //     .loginOrRegisterWithGoogle(creds);
+      final response = await _authRepository.loginOrRegisterWithGoogle(creds);
 
-      // if (authenticatedCreds.photoUrl.isEmpty ||
-      //     authenticatedCreds.username.isEmpty) {
-      //   _prefs.setBool(StaticVariables.needsProfileComplete, true);
-      //   emit(
-      //     state.copyWith(
-      //       email: authenticatedCreds.email,
-      //       password: authenticatedCreds.token,
-      //       credentialsGoogle: authenticatedCreds,
-      //       loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
-      //     ),
-      //   );
-      //   return;
-      // }
+      if (!response.response) {
+        throw ErrorServiceException(
+          message: response.message,
+          errorDetail: response.errorDetail,
+          statusCode: response.statusCode,
+        );
+      }
+
+      if (creds.photoUrl.isEmpty || creds.username.isEmpty) {
+        _prefs.setBool(StaticVariables.needsProfileComplete, true);
+        emit(
+          state.copyWith(
+            email: creds.email,
+            password: creds.tokenAccess,
+            credentialsLogin: creds,
+            loginForm: FormSubmitSuccesfull(message: 'Faltan datos de perfil'),
+          ),
+        );
+        return;
+      }
       emit(
         state.copyWith(
           email: creds.email,
-          password: creds.token,
-          credentialsGoogle: creds,
+          password: creds.tokenAccess,
+          credentialsLogin: creds,
           loginForm: FormSubmitSuccesfull(
             message: 'Bienvenido ${creds.firstName}',
           ),
         ),
       );
+    } on ErrorServiceException catch (e) {
+      debugPrint('Error en Google Sign-In: ${e.message}');
+      final errorMessage = DialogRequest(
+        title: 'Error al iniciar sesión',
+        description: e.message,
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          loginForm: FormSubmitFailed(e.message),
+        ),
+      );
     } catch (e) {
       debugPrint('Error en Google Sign-In: $e');
-      emit(state.copyWith(loginForm: FormSubmitFailed(e.toString())));
+      final errorMessage = DialogRequest(
+        title: 'Error al iniciar sesión',
+        description:
+            'No podemos iniciar sesión con las credenciales proporcionadas.'
+            'Por favor, verifica tu correo y contraseña e intenta nuevamente.',
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          loginForm: FormSubmitFailed(e.toString()),
+        ),
+      );
     }
   }
 
@@ -118,24 +163,55 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(state.copyWith(registerForm: FormSubmitProgress()));
-      await Future.delayed(Duration(seconds: 1));
-      final res = true;
+
+      final registerData = RegisterVerifyRequest(
+        email: event.email,
+        password: event.psw,
+        rol: event.rol,
+      );
+
+      final response = await _authRepository.verifyRegister(registerData);
+
+      debugPrint('Register response: $response');
       //todo:verificar usuario
-      if (res) {
-        emit(
-          state.copyWith(
-            registerForm: FormSubmitSuccesfull(),
-            showRegisterCompleteForm: true,
-          ),
+      if (!response.response) {
+        throw ErrorServiceException(
+          message: response.message,
+          errorDetail: response.errorDetail,
+          statusCode: response.statusCode,
         );
       }
-      // else {
-      //   emit(state.copyWith(registerForm: FormSubmitSuccesfull(),showRegisterCompleteForm: false));
-      // }
-    } catch (e) {
       emit(
         state.copyWith(
-          registerForm: FormSubmitFailed(e.toString()),
+          showRegisterCompleteForm: true,
+          registerForm: FormSubmitSuccesfull(message: response.message),
+        ),
+      );
+    } on ErrorServiceException catch (e) {
+      debugPrint('Error en Registro: ${e.message}');
+      final errorMessage = DialogRequest(
+        title: 'Error al registrar usuario',
+        description: e.message,
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          completeRegisterForm: FormSubmitFailed(e.message),
+          showRegisterCompleteForm: false,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error en Registro: $e');
+      final errorMessage = DialogRequest(
+        title: 'Error al registrar usuario',
+        description:
+            'No podemos registrar al usuario con las credenciales proporcionadas.'
+            'Por favor, verifica tu correo y contraseña e intenta nuevamente.',
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          completeRegisterForm: FormSubmitFailed(e.toString()),
           showRegisterCompleteForm: false,
         ),
       );
@@ -148,7 +224,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(state.copyWith(completeRegisterForm: FormSubmitProgress()));
-      await Future.delayed(Duration(seconds: 1));
+      final registerData = RegisterRequest(
+        email: event.email,
+        password: event.psw,
+        rol: event.rol,
+        nombre1: event.name,
+        username: '',
+        ape1: '',
+        ape2: '',
+        nombre2: '',
+      );
+
+      debugPrint("Data que mando al repository: $registerData");
+      final response = await _authRepository.registerUser(registerData);
+
+      debugPrint('Complete Register response: $response');
+      if (!response.response) {
+        throw ErrorServiceException(
+          message: response.message,
+          errorDetail: response.errorDetail,
+          statusCode: response.statusCode,
+        );
+      }
+
       emit(
         state.copyWith(
           showRegisterCompleteForm: false,
@@ -168,5 +266,71 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   FutureOr<void> _onLoginSubmittedEvent(
     LoginSubmittedEvent event,
     Emitter<AuthState> emit,
-  ) {}
+  ) async {
+    try {
+      emit(state.copyWith(loginForm: FormSubmitProgress()));
+
+      // Validar email y password
+      if (state.email.isEmpty || state.password.isEmpty) {
+        throw Exception('Email y contraseña son requeridos');
+      }
+
+      // Llamar al repository
+      final response = await _authRepository.login(
+        email: state.email,
+        password: state.password,
+        rememberMe: state.isRemember,
+      );
+
+      if (!response.response) {
+        throw ErrorServiceException(
+          message: response.message,
+          errorDetail: response.errorDetail,
+          statusCode: response.statusCode,
+        );
+      }
+
+      emit(
+        state.copyWith(
+          loginForm: FormSubmitSuccesfull(message: 'Inicio de sesión exitoso'),
+        ),
+      );
+    } on ErrorServiceException catch (e) {
+      debugPrint('Error en Google Sign-In: ${e.message}');
+      final errorMessage = DialogRequest.fromResponse(
+        statusCode: e.statusCode,
+        message: e.message,
+        errorDetail: e.errorDetail,
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          loginForm: FormSubmitFailed(e.message),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error en login: $e');
+      final errorMessage = DialogRequest(
+        title: 'Error al iniciar sesión',
+        description:
+            'No podemos iniciar sesión con las credenciales proporcionadas. '
+            'Por favor, verifica tu correo y contraseña e intenta nuevamente.',
+      );
+      emit(
+        state.copyWith(
+          dialogRequest: errorMessage,
+          loginForm: FormSubmitFailed(
+            e is ErrorServiceException ? e.message : 'Error al iniciar sesión',
+          ),
+        ),
+      );
+    }
+  }
+
+  FutureOr<void> _onConductorSignInRequestedEvent(
+    ConductorSignInRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(state.copyWith(showLoginConductorForm: !state.showLoginConductorForm));
+  }
 }

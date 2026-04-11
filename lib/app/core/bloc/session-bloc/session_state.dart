@@ -20,6 +20,42 @@ class SessionAuthenticated extends SessionState {
   List<Object> get props => [dataUser];
 }
 
+class SessionAuthenticatedConductor extends SessionState {
+  final AuthenticationCredentials dataUser;
+
+  const SessionAuthenticatedConductor({required this.dataUser});
+
+  @override
+  List<Object> get props => [dataUser];
+}
+
+class SessionAuthenticatedAdmin extends SessionState {
+  final AuthenticationCredentials dataUser;
+
+  const SessionAuthenticatedAdmin({required this.dataUser});
+
+  @override
+  List<Object> get props => [dataUser];
+}
+
+class SessionAuthenticatedMember extends SessionState {
+  final AuthenticationCredentials dataUser;
+
+  const SessionAuthenticatedMember({required this.dataUser});
+
+  @override
+  List<Object> get props => [dataUser];
+}
+
+class SessionAuthenticatedGerente extends SessionState {
+  final AuthenticationCredentials dataUser;
+
+  const SessionAuthenticatedGerente({required this.dataUser});
+
+  @override
+  List<Object> get props => [dataUser];
+}
+
 class SessionUnauthenticated extends SessionState {}
 
 class SessionError extends SessionState {

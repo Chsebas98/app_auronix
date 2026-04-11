@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HorizontalLogo extends StatelessWidget {
-  const HorizontalLogo({super.key});
+  const HorizontalLogo({super.key, this.sizeIcon = 32});
+
+  final double sizeIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class HorizontalLogo extends StatelessWidget {
       children: [
         IconFromImage(
           imagePath: 'assets/images/png/logoAndo.png',
-          size: 32.r,
+          size: sizeIcon.w,
           color: AppColors.third,
         ),
         2.horizontalSpace,

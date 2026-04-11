@@ -9,10 +9,10 @@ class DefaultShowHidePasswordButton extends StatelessWidget {
     Widget? hidePasswordIcon,
     required Function() onPressed,
     required this.passwordIconColor,
-  })  : _hidePassword = hidePassword,
-        _showPasswordIcon = showPasswordIcon,
-        _hidePasswordIcon = hidePasswordIcon,
-        _onPressed = onPressed;
+  }) : _hidePassword = hidePassword,
+       _showPasswordIcon = showPasswordIcon,
+       _hidePasswordIcon = hidePasswordIcon,
+       _onPressed = onPressed;
 
   final bool _hidePassword;
   final Color passwordIconColor;
@@ -31,20 +31,22 @@ class DefaultShowHidePasswordButton extends StatelessWidget {
           child: _hidePassword
               ? Padding(
                   padding: EdgeInsets.only(right: 6.w),
-                  child: _hidePasswordIcon ??
+                  child:
+                      _hidePasswordIcon ??
                       Icon(
                         Icons.visibility,
                         color: passwordIconColor,
-                        size: 0.05.sw,
+                        size: 22.sp,
                       ),
                 )
               : Padding(
                   padding: EdgeInsets.only(right: 6.w),
-                  child: _showPasswordIcon ??
+                  child:
+                      _showPasswordIcon ??
                       Icon(
                         Icons.visibility_off,
                         color: passwordIconColor,
-                        size: 0.05.sw,
+                        size: 22.sp,
                       ),
                 ),
         ),

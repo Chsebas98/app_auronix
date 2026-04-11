@@ -8,6 +8,7 @@ class AppTheme {
     primaryColorDark: AppColors.black,
     primaryColorLight: AppColors.primary,
     scaffoldBackgroundColor: AppColors.primary,
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: AppColors.third),
     dividerTheme: DividerThemeData(color: AppColors.eight, thickness: 1.h),
     checkboxTheme: CheckboxThemeData(
       checkColor: WidgetStatePropertyAll(AppColors.secondary),
@@ -41,85 +42,85 @@ class AppTheme {
     textTheme: TextTheme(
       // Display (muy grande, para titulares impactantes)
       displayLarge: TextStyle(
-        fontSize: 96.sp,
+        fontSize: 96,
         fontWeight: FontWeight.w700,
         color: AppColors.secondary,
       ),
       displayMedium: TextStyle(
-        fontSize: 60.sp,
+        fontSize: 60,
         fontWeight: FontWeight.w300,
         color: AppColors.secondary,
       ),
       displaySmall: TextStyle(
-        fontSize: 48.sp,
+        fontSize: 48,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
 
       // Headlines
       headlineLarge: TextStyle(
-        fontSize: 34.sp,
+        fontSize: 34,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
       headlineMedium: TextStyle(
-        fontSize: 24.sp,
+        fontSize: 24,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
       headlineSmall: TextStyle(
-        fontSize: 20.sp,
+        fontSize: 20,
         fontWeight: FontWeight.w500,
         color: AppColors.secondary,
       ),
 
       // Titles
       titleLarge: TextStyle(
-        fontSize: 20.sp,
+        fontSize: 20,
         fontWeight: FontWeight.w600,
         color: AppColors.secondary,
       ),
       titleMedium: TextStyle(
-        fontSize: 16.sp,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
       titleSmall: TextStyle(
-        fontSize: 14.sp,
+        fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppColors.secondary,
       ),
 
       // Body (texto normal)
       bodyLarge: TextStyle(
-        fontSize: 16.sp,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
       bodyMedium: TextStyle(
-        fontSize: 14.sp,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
       bodySmall: TextStyle(
-        fontSize: 12.sp,
+        fontSize: 12,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
 
       // Labels (texto de botones u otros elementos pequeños)
       labelLarge: TextStyle(
-        fontSize: 14.sp,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.secondary,
       ),
       labelMedium: TextStyle(
-        fontSize: 12.sp,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.secondary,
       ),
       labelSmall: TextStyle(
-        fontSize: 10.sp,
+        fontSize: 10,
         fontWeight: FontWeight.w400,
         color: AppColors.secondary,
       ),
@@ -175,7 +176,7 @@ class AppTheme {
         textStyle: TextStyle(
           fontFamily: 'Poppins',
           fontWeight: FontWeight.w700,
-          fontSize: 14.sp,
+          fontSize: 14,
         ),
         disabledBackgroundColor: AppColors.fourth,
         disabledForegroundColor: AppColors.secondary,
@@ -192,7 +193,7 @@ class AppTheme {
         textStyle: TextStyle(
           fontFamily: 'Poppins',
           fontWeight: FontWeight.w700,
-          fontSize: 14.sp,
+          fontSize: 14,
         ),
         disabledBackgroundColor: AppColors.fourth,
         disabledForegroundColor: AppColors.secondary,
@@ -240,85 +241,85 @@ class AppTheme {
     textTheme: TextTheme(
       // Display (muy grande, para titulares impactantes)
       displayLarge: TextStyle(
-        fontSize: 96.sp,
+        fontSize: 96,
         fontWeight: FontWeight.w700,
         color: AppColors.white,
       ),
       displayMedium: TextStyle(
-        fontSize: 60.sp,
+        fontSize: 60,
         fontWeight: FontWeight.w300,
         color: AppColors.white,
       ),
       displaySmall: TextStyle(
-        fontSize: 48.sp,
+        fontSize: 48,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
 
       // Headlines
       headlineLarge: TextStyle(
-        fontSize: 34.sp,
+        fontSize: 34,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
       headlineMedium: TextStyle(
-        fontSize: 24.sp,
+        fontSize: 24,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
       headlineSmall: TextStyle(
-        fontSize: 20.sp,
+        fontSize: 20,
         fontWeight: FontWeight.w500,
         color: AppColors.white,
       ),
 
       // Titles
       titleLarge: TextStyle(
-        fontSize: 20.sp,
+        fontSize: 20,
         fontWeight: FontWeight.w600,
         color: AppColors.white,
       ),
       titleMedium: TextStyle(
-        fontSize: 16.sp,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
       titleSmall: TextStyle(
-        fontSize: 14.sp,
+        fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppColors.white,
       ),
 
       // Body (texto normal)
       bodyLarge: TextStyle(
-        fontSize: 16.sp,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
       bodyMedium: TextStyle(
-        fontSize: 14.sp,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
       bodySmall: TextStyle(
-        fontSize: 12.sp,
+        fontSize: 12,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
 
       // Labels (texto de botones u otros elementos pequeños)
       labelLarge: TextStyle(
-        fontSize: 14.sp,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.white,
       ),
       labelMedium: TextStyle(
-        fontSize: 12.sp,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.white,
       ),
       labelSmall: TextStyle(
-        fontSize: 10.sp,
+        fontSize: 10,
         fontWeight: FontWeight.w400,
         color: AppColors.white,
       ),
@@ -370,7 +371,7 @@ class AppTheme {
         textStyle: TextStyle(
           fontFamily: 'Poppins',
           fontWeight: FontWeight.w700,
-          fontSize: 14.sp,
+          fontSize: 14,
         ),
         disabledBackgroundColor: AppColors.fourth,
         disabledForegroundColor: AppColors.secondary,
@@ -387,7 +388,7 @@ class AppTheme {
         textStyle: TextStyle(
           fontFamily: 'Poppins',
           fontWeight: FontWeight.w700,
-          fontSize: 14.sp,
+          fontSize: 14,
         ),
         disabledBackgroundColor: AppColors.fourth,
         disabledForegroundColor: AppColors.secondary,

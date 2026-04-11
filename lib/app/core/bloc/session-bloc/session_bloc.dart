@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:auronix_app/features/features.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'session_event.dart';
@@ -18,11 +19,23 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     CheckLoggedUserEvent event,
     Emitter<SessionState> emit,
   ) async {
+    debugPrint('Verificando sesión guardada...');
     emit(SessionLoading());
-    final response = await _authRepository.getSavedSession();
-    if (response != null) {
-      emit(SessionAuthenticated(dataUser: response));
-    } else {
+
+    try {
+      final response = await _authRepository.getSavedSession();
+
+      if (response != null) {
+        debugPrint('Sesión encontrada: ${response.username}');
+        debugPrint('Email: ${response.email}');
+        debugPrint('Rol: ${response.role}');
+        emit(SessionAuthenticated(dataUser: response));
+      } else {
+        debugPrint('No hay sesión guardada');
+        emit(SessionUnauthenticated());
+      }
+    } catch (e) {
+      debugPrint('Error al verificar sesión: $e');
       emit(SessionUnauthenticated());
     }
   }
@@ -33,12 +46,11 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) async {
     emit(SessionLoading());
     try {
-      final response = await _authRepository.login(
-        email: event.email,
-        password: event.password,
-        isGoogle: event.isGoogle,
-      );
-      emit(SessionAuthenticated(dataUser: response));
+      // Los tokens ya están guardados en AuthRepository
+      // Solo necesitas cargar el usuario de la BD local
+      final user = event.dataUser;
+
+      return emit(SessionAuthenticated(dataUser: user));
     } catch (e) {
       emit(SessionError(e.toString()));
     }
@@ -48,6 +60,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     LoggoutUserEvent event,
     Emitter<SessionState> emit,
   ) async {
+    emit(SessionLoading());
     await _authRepository.logout();
     emit(SessionUnauthenticated());
   }

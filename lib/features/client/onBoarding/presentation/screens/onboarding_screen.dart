@@ -2,6 +2,7 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/router/router.dart';
 
 import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/features/client/client.dart';
 import 'package:auronix_app/l10n/app_localizations.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:auronix_app/shared/shared.dart';
@@ -19,7 +20,7 @@ class OnBoardingScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.primaryColor,
-      body: OnBoardingController(l10n: l10n),
+      body: _OnBoardingController(l10n: l10n),
       extendBody: true,
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -32,7 +33,7 @@ class OnBoardingScreen extends StatelessWidget {
                 child: CustomFilledButton(
                   desc: 'Continuar',
                   action: () {
-                    AppRouter.go(Routes.auth);
+                    context.read<SessionBloc>().add(CheckLoggedUserEvent());
                   },
                 ),
               ),
@@ -49,8 +50,8 @@ class OnBoardingScreen extends StatelessWidget {
                     Image.asset(
                       'assets/images/png/auronixDark.png',
 
-                      height: 50.h,
-                      fit: BoxFit.cover,
+                      width: 50.w,
+                      fit: BoxFit.fitWidth,
                     ),
                   ],
                 ),
@@ -63,14 +64,25 @@ class OnBoardingScreen extends StatelessWidget {
   }
 }
 
-class OnBoardingController extends StatelessWidget {
-  const OnBoardingController({super.key, required this.l10n});
+class _OnBoardingController extends StatelessWidget {
+  const _OnBoardingController({required this.l10n});
 
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
-    return _OnBoardingStructure(l10n: l10n);
+    return BlocListener<SessionBloc, SessionState>(
+      listener: (context, state) {
+        if (state is SessionAuthenticated) {
+          debugPrint('Usuario autenticado → navegando a /home');
+          AppRouter.go(ClientRoutesPath.home);
+        } else if (state is SessionUnauthenticated) {
+          debugPrint('Usuario no autenticado → navegando a /auth');
+          AppRouter.go(Routes.auth);
+        }
+      },
+      child: _OnBoardingStructure(l10n: l10n),
+    );
   }
 }
 
@@ -110,6 +122,7 @@ class _OnBoardingStructure extends StatelessWidget {
                   color: context.read<ThemeCubit>().state == ThemeMode.light
                       ? AppColors.black
                       : AppColors.white,
+                  size: 22.sp,
                 ),
               ),
             ],

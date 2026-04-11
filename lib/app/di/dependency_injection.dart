@@ -1,12 +1,14 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
+import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/features/client/auth/infraestructure/data/remote/strapi_services.dart';
-import 'package:auronix_app/features/client/home/domain/repository/home_client_repository.dart';
-import 'package:auronix_app/features/client/home/domain/repository/home_client_repository_impl.dart';
-import 'package:auronix_app/features/client/home/home-client-bloc/home_client_bloc.dart';
+import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
+import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
+import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository_impl.dart';
+import 'package:auronix_app/features/conductor/auth/presentation/bloc/auth_conductor_bloc.dart';
+import 'package:auronix_app/features/conductor/home/presentation/bloc/home_conductor_bloc.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/modals/modal_temp_cubit.dart';
 import 'package:dio/dio.dart';
@@ -17,7 +19,7 @@ import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
-  //?GLobales
+  //?Globales
   sl.registerFactory<GlobalCubit>(() => GlobalCubit());
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   sl.registerFactory<AppLifeCycleCubit>(() => AppLifeCycleCubit());
@@ -37,37 +39,47 @@ Future<void> initDependencies() async {
     ),
   );
 
-  final dio = await DioClient.getInstance(
-    enableSSLPinning: false, // Cambia a true en producción
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
-  );
-  sl.registerLazySingleton<Dio>(() => dio);
-
-  //?Database
+  //?Database (MOVER ANTES DE DIO)
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
   sl.registerLazySingleton<AuthLocalDbDataSource>(
     () => AuthLocalDbDataSource(sl<AppDatabase>()),
   );
+
+  // Crear Dio SIN AuthInterceptor primero
+  final dioBasic = await DioClient.getInstance(
+    enableSSLPinning: false,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  );
+
+  // Crear AuthenticationService con Dio básico
+  final authenticationService = AuthenticationService(dio: dioBasic);
+  sl.registerLazySingleton<AuthenticationService>(() => authenticationService);
+
+  // Agregar AuthInterceptor DESPUÉS
+  dioBasic.interceptors.insert(
+    2, // Después de Cache, antes de Retry
+    AuthInterceptor(
+      db: sl<AppDatabase>(),
+      authenticationService: authenticationService,
+    ),
+  );
+
+  // Registrar Dio configurado
+  sl.registerLazySingleton<Dio>(() => dioBasic);
 
   //?auth
   //local
   sl.registerLazySingleton<AuthLocalServices>(
     () => AuthLocalServices(sl<RxSharedPreferences>()),
   );
-  //remote
-  sl.registerLazySingleton<AuthRemoteServices>(() => AuthRemoteServices());
-  sl.registerLazySingleton<StrapiServices>(
-    () => StrapiServices(dio: sl<Dio>()),
-  );
 
   //Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       local: sl<AuthLocalServices>(),
-      remote: sl<AuthRemoteServices>(),
       localDb: sl<AuthLocalDbDataSource>(),
-      strapiServices: sl<StrapiServices>(),
+      authenticationService: sl<AuthenticationService>(),
     ),
   );
 
@@ -82,8 +94,23 @@ Future<void> initDependencies() async {
   sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
-  sl.registerFactory<MemberBloc>(() => MemberBloc(sl<RxSharedPreferences>()));
+  sl.registerFactory<AuthConductorBloc>(
+    () => AuthConductorBloc(sl<RxSharedPreferences>()),
+  );
+  sl.registerFactory<HomeConductorBloc>(() => HomeConductorBloc());
   sl.registerFactory<HomeClientBloc>(
     () => HomeClientBloc(sl<HomeClientRepository>()),
+  );
+
+  //?Trip
+  sl.registerLazySingleton<GooglePlacesDatasource>(
+    () => GooglePlacesDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<TripRepository>(
+    () => TripRepositoryImpl(placesDataSource: sl<GooglePlacesDatasource>()),
+  );
+  sl.registerFactory<RequestTripBloc>(
+    () => RequestTripBloc(tripRepository: sl<TripRepository>()),
   );
 }

@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
 import 'package:auronix_app/app/core/network/interceptors/cache_control_interceptors.dart';
 import 'package:auronix_app/app/core/network/interceptors/retry_control_interceptor.dart';
+import 'package:auronix_app/app/database/app_database.dart';
+import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -19,6 +22,8 @@ class DioClient {
     bool enableSSLPinning = false,
     Duration? connectTimeout,
     Duration? receiveTimeout,
+    AppDatabase? database,
+    AuthenticationService? authenticationService,
   }) async {
     if (_dio != null && _initialized) return _dio!;
 
@@ -51,6 +56,16 @@ class DioClient {
       dio.interceptors.add(
         CacheControlInterceptor(defaultCacheOptions: _cacheOptions!),
       );
+    }
+
+    if (database != null && authenticationService != null) {
+      dio.interceptors.add(
+        AuthInterceptor(
+          db: database,
+          authenticationService: authenticationService,
+        ),
+      );
+      debugPrint('✅ Auth Interceptor agregado');
     }
 
     // 3. Retry Control Interceptor (controla retry dinámicamente)

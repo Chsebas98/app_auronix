@@ -20,6 +20,10 @@ class ModalTempCubit extends Cubit<ModalTempState> {
     emit(state.copyWith(stringTemp3: value));
   }
 
+  FutureOr<void> stringTemp4ChangedEvent(String value) {
+    emit(state.copyWith(stringTemp4: value));
+  }
+
   FutureOr<void> boolTemp1ChangedEvent(bool value) {
     emit(state.copyWith(boolTemp1: value));
   }

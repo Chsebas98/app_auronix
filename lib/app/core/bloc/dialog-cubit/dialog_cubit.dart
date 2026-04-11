@@ -1,4 +1,5 @@
 import 'dart:async' show Completer;
+import 'package:auronix_app/app/core/bloc/domain/interfaces/dialog_presentation.dart';
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter/widgets.dart' show WidgetBuilder;
 import 'package:flutter_bloc/flutter_bloc.dart';

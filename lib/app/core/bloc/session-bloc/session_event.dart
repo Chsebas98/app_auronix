@@ -10,17 +10,11 @@ sealed class SessionEvent extends Equatable {
 class CheckLoggedUserEvent extends SessionEvent {}
 
 class LoginUserEvent extends SessionEvent {
-  final String email;
-  final String password;
-  final AuthenticationCredentials isGoogle;
-  const LoginUserEvent({
-    required this.email,
-    required this.password,
-    this.isGoogle = const AuthenticationCredentials.empty(),
-  });
+  final AuthenticationCredentials dataUser;
+  const LoginUserEvent({required this.dataUser});
 
   @override
-  List<Object> get props => [email, password, isGoogle];
+  List<Object> get props => [dataUser];
 }
 
 class LoggoutUserEvent extends SessionEvent {}
