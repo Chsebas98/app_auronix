@@ -41,7 +41,7 @@ class ConductorAuthService {
         ),
         data: {'ci_passport': ciPassport, 'password': password},
       );
-      debugPrint('✅ loginConductor response: ${response.data}');
+      debugPrint('✅ loginConductor exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -66,7 +66,7 @@ class ConductorAuthService {
           'email': email,
         },
       );
-      debugPrint('✅ registerConductor response: ${response.data}');
+      debugPrint('✅ registerConductor exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -81,7 +81,7 @@ class ConductorAuthService {
         options: Options(contentType: 'application/json'),
         data: {'token_refresh': refreshToken},
       );
-      debugPrint('✅ refreshToken (conductor) response: ${response.data}');
+      debugPrint('✅ refreshToken (conductor) exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);

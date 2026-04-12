@@ -38,7 +38,6 @@ class AuthConductorRepositoryImpl implements AuthConductorRepository {
   }) async {
     try {
       debugPrint('🔐 Iniciando login de conductor');
-      debugPrint('👤 CI/Pasaporte: $ciPassport');
 
       final response = await _conductorAuthService.loginConductor(
         ciPassport: ciPassport,
@@ -87,7 +86,6 @@ class AuthConductorRepositoryImpl implements AuthConductorRepository {
       await setRemember(rememberMe);
 
       debugPrint('✅ Login de conductor completado');
-      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
 
       return Right(creds);
     } catch (e) {

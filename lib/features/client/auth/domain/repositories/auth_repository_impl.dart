@@ -78,8 +78,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await local.setRememberMe(rememberMe);
 
       debugPrint('✅ Login completado');
-      debugPrint('🔑 Access Token: ${creds.tokenAccess.substring(0, 20)}...');
-      debugPrint('🔄 Refresh Token: ${creds.tokenRefresh.substring(0, 20)}...');
 
       return Right(creds);
     } catch (e) {
@@ -142,7 +140,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final googleAccount = await _googleSignIn.authenticate();
       final GoogleSignInAuthentication googleAuth =
           googleAccount.authentication;
-      debugPrintStack(label: 'Google Auth: ${googleAuth.idToken}');
       if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
         return const Left(
           AuthFailure(message: 'El token no se obtuvo correctamente'),
@@ -184,8 +181,7 @@ class AuthRepositoryImpl implements AuthRepository {
     AuthenticationCredentials googleCreds,
   ) async {
     try {
-      debugPrint('🔐 Iniciando login/registro con Google + Backend');
-      debugPrint('📧 Email: ${googleCreds.email}');
+      debugPrint('🔐 Iniciando login/registro con Google + Backend');      debugPrint('📧 Email: ${googleCreds.email}');
 
       final response = await authenticationService.googleLogin(googleCreds);
 
@@ -224,8 +220,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await local.setRememberMe(true);
 
       debugPrint('✅ Login/Registro completado');
-      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
-      debugPrint('🔄 Refresh Token: ${tokenRefresh.substring(0, 20)}...');
 
       return Right(creds);
     } catch (e) {
@@ -313,8 +307,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await local.setRememberMe(false);
 
       debugPrint('✅ Registro completado');
-      debugPrint('🔑 Access Token: ${creds.tokenAccess.substring(0, 20)}...');
-      debugPrint('🔄 Refresh Token: ${creds.tokenRefresh.substring(0, 20)}...');
 
       return Right(creds);
     } catch (e) {
