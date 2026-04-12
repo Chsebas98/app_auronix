@@ -1,7 +1,12 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/features/client/auth/data/local/auth_local_services.dart';
+import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
+import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
+import 'package:auronix_app/features/client/auth/domain/repositories/auth_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -61,39 +66,20 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       final result = response['result'] as Map<String, dynamic>;
-      final tokenAccess = result['token_access'] as String?;
-      final tokenRefresh = result['token_refresh'] as String?;
-      final userData = result['user'] as Map<String, dynamic>?;
 
-      if (tokenAccess == null || tokenRefresh == null || userData == null) {
-        return const Left(
-          ServerFailure(
-            message: 'Respuesta inválida del servidor',
-            detail: 'Tokens o datos de usuario faltantes',
-            statusCode: 500,
-          ),
-        );
-      }
+      final credsResult = _credsFromResult(result);
+      if (credsResult.isLeft()) return credsResult;
 
-      final creds = AuthenticationCredentials(
-        tokenAccess: tokenAccess,
-        tokenRefresh: tokenRefresh,
-        email: userData['email'] as String,
-        username: userData['username'] as String,
-        firstName: userData['nombre1'] as String? ?? '',
-        lastName: userData['ape1'] as String? ?? '',
-        secondName: userData['nombre2'] as String? ?? '',
-        secondlastName: userData['ape2'] as String? ?? '',
-        photoUrl: userData['photo_url'] as String? ?? '',
-        role: RoleHelpers.mapRole(userData['role']),
+      final creds = credsResult.getOrElse(
+        () => const AuthenticationCredentials.empty(),
       );
 
       await localDb.saveUser(creds);
       await local.setRememberMe(rememberMe);
 
       debugPrint('✅ Login completado');
-      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
-      debugPrint('🔄 Refresh Token: ${tokenRefresh.substring(0, 20)}...');
+      debugPrint('🔑 Access Token: ${creds.tokenAccess.substring(0, 20)}...');
+      debugPrint('🔄 Refresh Token: ${creds.tokenRefresh.substring(0, 20)}...');
 
       return Right(creds);
     } catch (e) {
@@ -111,6 +97,41 @@ class AuthRepositoryImpl implements AuthRepository {
     if (_googleInitialized) return;
     await _googleSignIn.initialize();
     _googleInitialized = true;
+  }
+
+  /// Extracts tokens and user data from a successful API response result map.
+  /// Returns [Left] with [ServerFailure] if required fields are missing.
+  Either<Failure, AuthenticationCredentials> _credsFromResult(
+    Map<String, dynamic> result,
+  ) {
+    final tokenAccess = result['token_access'] as String?;
+    final tokenRefresh = result['token_refresh'] as String?;
+    final userData = result['user'] as Map<String, dynamic>?;
+
+    if (tokenAccess == null || tokenRefresh == null || userData == null) {
+      return const Left(
+        ServerFailure(
+          message: 'Respuesta inválida del servidor',
+          detail: 'Tokens o datos de usuario faltantes',
+          statusCode: 500,
+        ),
+      );
+    }
+
+    return Right(
+      AuthenticationCredentials(
+        tokenAccess: tokenAccess,
+        tokenRefresh: tokenRefresh,
+        email: userData['email'] as String? ?? '',
+        username: userData['username'] as String? ?? '',
+        firstName: userData['nombre1'] as String? ?? '',
+        lastName: userData['ape1'] as String? ?? '',
+        secondName: userData['nombre2'] as String? ?? '',
+        secondlastName: userData['ape2'] as String? ?? '',
+        photoUrl: userData['photo_url'] as String? ?? '',
+        role: RoleHelpers.mapRole(userData['role']),
+      ),
+    );
   }
 
   @override
@@ -196,7 +217,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final creds = googleCreds.copyWith(
         tokenAccess: tokenAccess,
         tokenRefresh: tokenRefresh,
-        username: userData['username'] as String,
+        username: userData['username'] as String? ?? '',
       );
 
       await localDb.saveUser(creds);
@@ -280,39 +301,20 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       final result = response['result'] as Map<String, dynamic>;
-      final tokenAccess = result['token_access'] as String?;
-      final tokenRefresh = result['token_refresh'] as String?;
-      final userData = result['user'] as Map<String, dynamic>?;
 
-      if (tokenAccess == null || tokenRefresh == null || userData == null) {
-        return const Left(
-          ServerFailure(
-            message: 'Respuesta inválida del servidor',
-            detail: 'Tokens o datos de usuario faltantes',
-            statusCode: 500,
-          ),
-        );
-      }
+      final credsResult = _credsFromResult(result);
+      if (credsResult.isLeft()) return credsResult;
 
-      final creds = AuthenticationCredentials(
-        tokenAccess: tokenAccess,
-        tokenRefresh: tokenRefresh,
-        email: userData['email'] as String,
-        username: userData['username'] as String,
-        firstName: userData['nombre1'] as String? ?? '',
-        lastName: userData['ape1'] as String? ?? '',
-        secondName: userData['nombre2'] as String? ?? '',
-        secondlastName: userData['ape2'] as String? ?? '',
-        photoUrl: userData['photo_url'] as String? ?? '',
-        role: RoleHelpers.mapRole(userData['role']),
+      final creds = credsResult.getOrElse(
+        () => const AuthenticationCredentials.empty(),
       );
 
       await localDb.saveUser(creds);
       await local.setRememberMe(false);
 
       debugPrint('✅ Registro completado');
-      debugPrint('🔑 Access Token: ${tokenAccess.substring(0, 20)}...');
-      debugPrint('🔄 Refresh Token: ${tokenRefresh.substring(0, 20)}...');
+      debugPrint('🔑 Access Token: ${creds.tokenAccess.substring(0, 20)}...');
+      debugPrint('🔄 Refresh Token: ${creds.tokenRefresh.substring(0, 20)}...');
 
       return Right(creds);
     } catch (e) {

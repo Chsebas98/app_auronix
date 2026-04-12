@@ -123,9 +123,7 @@ class AuthConductorBloc
   ) async {
     emit(state.copyWith(loginForm: FormSubmitProgress()));
 
-    debugPrint(
-      'Login conductor con CI/Pasaporte: ${event.ciPassport}',
-    );
+    debugPrint('Login conductor iniciado');
 
     final result = await _authConductorRepository.login(
       ciPassport: event.ciPassport,

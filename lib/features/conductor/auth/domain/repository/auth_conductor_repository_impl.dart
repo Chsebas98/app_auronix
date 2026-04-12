@@ -178,6 +178,7 @@ class AuthConductorRepositoryImpl implements AuthConductorRepository {
       debugPrint('Sesión de conductor cerrada');
       return const Right(null);
     } catch (e) {
+      debugPrint('⚠️ Error al cerrar sesión de conductor: $e');
       await _localDb.clear();
       return const Right(null);
     }

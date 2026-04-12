@@ -60,16 +60,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final googleResult = await _authRepository.loginWithGoogle();
 
-    if (googleResult.isLeft()) {
-      final failure = googleResult.fold((f) => f, (_) => null)!;
-      debugPrint('Error obteniendo credenciales Google: ${failure.message}');
+    final googleFailure = googleResult.fold<Failure?>((f) => f, (_) => null);
+    if (googleFailure != null) {
+      debugPrint(
+        'Error obteniendo credenciales Google: ${googleFailure.message}',
+      );
       emit(
         state.copyWith(
           dialogRequest: DialogRequest(
             title: 'Error al iniciar sesión',
-            description: failure.message,
+            description: googleFailure.message,
           ),
-          loginForm: FormSubmitFailed(failure.message),
+          loginForm: FormSubmitFailed(googleFailure.message),
         ),
       );
       return;

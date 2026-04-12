@@ -10,6 +10,24 @@ class ConductorAuthService {
 
   ConductorAuthService({required Dio dio}) : _dio = dio;
 
+  Map<String, dynamic> _handleDioException(DioException e) {
+    if (e.response?.data != null && e.response!.data is Map) {
+      final data = e.response!.data as Map<String, dynamic>;
+      return {
+        'response': false,
+        'statusCode': e.response?.statusCode ?? 0,
+        'message': data['message'] ?? 'Error de conexión',
+        'errorDetail': data['errorDetail'] ?? e.message ?? 'Error desconocido',
+      };
+    }
+    return {
+      'response': false,
+      'statusCode': e.response?.statusCode ?? 0,
+      'message': 'Error de conexión',
+      'errorDetail': e.message ?? 'No se pudo conectar al servidor',
+    };
+  }
+
   Future<Map<String, dynamic>> loginConductor({
     required String ciPassport,
     required String password,
@@ -26,22 +44,7 @@ class ConductorAuthService {
       debugPrint('✅ loginConductor response: ${response.data}');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      if (e.response?.data != null && e.response!.data is Map) {
-        final data = e.response!.data as Map<String, dynamic>;
-        return {
-          'response': false,
-          'statusCode': e.response?.statusCode ?? 0,
-          'message': data['message'] ?? 'Error de conexión',
-          'errorDetail':
-              data['errorDetail'] ?? e.message ?? 'Error desconocido',
-        };
-      }
-      return {
-        'response': false,
-        'statusCode': e.response?.statusCode ?? 0,
-        'message': 'Error de conexión',
-        'errorDetail': e.message ?? 'No se pudo conectar al servidor',
-      };
+      return _handleDioException(e);
     }
   }
 
@@ -66,22 +69,7 @@ class ConductorAuthService {
       debugPrint('✅ registerConductor response: ${response.data}');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      if (e.response?.data != null && e.response!.data is Map) {
-        final data = e.response!.data as Map<String, dynamic>;
-        return {
-          'response': false,
-          'statusCode': e.response?.statusCode ?? 0,
-          'message': data['message'] ?? 'Error de conexión',
-          'errorDetail':
-              data['errorDetail'] ?? e.message ?? 'Error desconocido',
-        };
-      }
-      return {
-        'response': false,
-        'statusCode': e.response?.statusCode ?? 0,
-        'message': 'Error de conexión',
-        'errorDetail': e.message ?? 'No se pudo conectar al servidor',
-      };
+      return _handleDioException(e);
     }
   }
 
@@ -96,22 +84,7 @@ class ConductorAuthService {
       debugPrint('✅ refreshToken (conductor) response: ${response.data}');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      if (e.response?.data != null && e.response!.data is Map) {
-        final data = e.response!.data as Map<String, dynamic>;
-        return {
-          'response': false,
-          'statusCode': e.response?.statusCode ?? 0,
-          'message': data['message'] ?? 'Error de conexión',
-          'errorDetail':
-              data['errorDetail'] ?? e.message ?? 'Error desconocido',
-        };
-      }
-      return {
-        'response': false,
-        'statusCode': e.response?.statusCode ?? 0,
-        'message': 'Error de conexión',
-        'errorDetail': e.message ?? 'No se pudo conectar al servidor',
-      };
+      return _handleDioException(e);
     }
   }
 }
