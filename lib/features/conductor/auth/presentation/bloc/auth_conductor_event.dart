@@ -39,11 +39,16 @@ class ConductorCheckedChangedEvent extends AuthConductorEvent {}
 
 class ConductorRegisterSubmitEvent extends AuthConductorEvent {
   final String email;
+  final String ciPassport;
   final String psw;
-  const ConductorRegisterSubmitEvent({required this.email, required this.psw});
+  const ConductorRegisterSubmitEvent({
+    required this.email,
+    required this.ciPassport,
+    required this.psw,
+  });
 
   @override
-  List<Object> get props => [email, psw];
+  List<Object> get props => [email, ciPassport, psw];
 }
 
 class ConductorLoginSubmittedEvent extends AuthConductorEvent {
