@@ -5,7 +5,6 @@ import 'package:auronix_app/app/core/bloc/domain/request/dialog_request.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/client.dart';
-import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
