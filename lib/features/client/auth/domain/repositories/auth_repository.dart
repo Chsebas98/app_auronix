@@ -1,5 +1,8 @@
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
+import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
+import 'package:dartz/dartz.dart';
 
 abstract class AuthRepository {
   //?Local
@@ -7,26 +10,27 @@ abstract class AuthRepository {
   Future<bool> getRemember();
 
   //?Remote
-  Future<ServiceResponse> login({
+  Future<Either<Failure, AuthenticationCredentials>> login({
     required String email,
     required String password,
-    AuthenticationCredentials isGoogle =
-        const AuthenticationCredentials.empty(),
     bool rememberMe = false,
   });
 
-  Future<AuthenticationCredentials> loginWithGoogle();
+  Future<Either<Failure, AuthenticationCredentials>> loginWithGoogle();
 
-  /// NUEVO: Login/Registro con Google + Strapi
-  Future<ServiceResponse> loginOrRegisterWithGoogle(
+  Future<Either<Failure, AuthenticationCredentials>> loginOrRegisterWithGoogle(
     AuthenticationCredentials googleCreds,
   );
 
-  Future<ServiceResponse> verifyRegister(RegisterVerifyRequest registerData);
+  Future<Either<Failure, void>> verifyRegister(
+    RegisterVerifyRequest registerData,
+  );
 
-  Future<ServiceResponse> registerUser(RegisterRequest registerData);
+  Future<Either<Failure, AuthenticationCredentials>> registerUser(
+    RegisterRequest registerData,
+  );
 
-  Future<AuthenticationCredentials?> getSavedSession();
+  Future<Either<Failure, AuthenticationCredentials?>> getSavedSession();
 
-  Future<void> logout();
+  Future<Either<Failure, void>> logout();
 }

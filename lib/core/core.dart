@@ -1,5 +1,6 @@
 export 'constants/static_variables.dart';
 export 'errors/errors.dart';
+export 'errors/failure.dart';
 export 'errors/prefs_exceptions.dart';
 export 'errors/service_exceptions.dart';
 export 'firebase/dev/firebase_options_dev.dart';
