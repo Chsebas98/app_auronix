@@ -7,6 +7,9 @@ import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository_impl.dart';
+import 'package:auronix_app/features/conductor/auth/data/remote/conductor_auth_service.dart';
+import 'package:auronix_app/features/conductor/auth/domain/repository/auth_conductor_repository.dart';
+import 'package:auronix_app/features/conductor/auth/domain/repository/auth_conductor_repository_impl.dart';
 import 'package:auronix_app/features/conductor/auth/presentation/bloc/auth_conductor_bloc.dart';
 import 'package:auronix_app/features/conductor/home/presentation/bloc/home_conductor_bloc.dart';
 import 'package:auronix_app/features/features.dart';
@@ -56,6 +59,10 @@ Future<void> initDependencies() async {
   final authenticationService = AuthenticationService(dio: dioBasic);
   sl.registerLazySingleton<AuthenticationService>(() => authenticationService);
 
+  // Crear ConductorAuthService con Dio básico
+  final conductorAuthService = ConductorAuthService(dio: dioBasic);
+  sl.registerLazySingleton<ConductorAuthService>(() => conductorAuthService);
+
   // Agregar AuthInterceptor DESPUÉS
   dioBasic.interceptors.insert(
     2, // Después de Cache, antes de Retry
@@ -83,6 +90,14 @@ Future<void> initDependencies() async {
     ),
   );
 
+  sl.registerLazySingleton<AuthConductorRepository>(
+    () => AuthConductorRepositoryImpl(
+      conductorAuthService: sl<ConductorAuthService>(),
+      localDb: sl<AuthLocalDbDataSource>(),
+      prefs: sl<RxSharedPreferences>(),
+    ),
+  );
+
   sl.registerLazySingleton<HomeClientRepository>(
     () => HomeClientRepositoryImpl(localDb: sl<AuthLocalDbDataSource>()),
   );
@@ -95,7 +110,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
   sl.registerFactory<AuthConductorBloc>(
-    () => AuthConductorBloc(sl<RxSharedPreferences>()),
+    () => AuthConductorBloc(sl<AuthConductorRepository>()),
   );
   sl.registerFactory<HomeConductorBloc>(() => HomeConductorBloc());
   sl.registerFactory<HomeClientBloc>(

@@ -9,6 +9,7 @@ class AuthConductorState extends Equatable {
     this.isRemember = false,
     this.registerForm = const InitialFormSubmitStatus(),
     this.loginForm = const InitialFormSubmitStatus(),
+    this.credentialsLogin = const AuthenticationCredentials.empty(),
   });
   final DialogRequest dialogRequest;
   final bool showRegisterForm;
@@ -17,6 +18,7 @@ class AuthConductorState extends Equatable {
   final bool isRemember;
   final FormSubmitStatus registerForm;
   final FormSubmitStatus loginForm;
+  final AuthenticationCredentials credentialsLogin;
 
   ValidationFieldResult get isValidUsername =>
       FormValidators.validateCiPassport(ciPassport);
@@ -32,6 +34,7 @@ class AuthConductorState extends Equatable {
     bool? isRemember,
     FormSubmitStatus? registerForm,
     FormSubmitStatus? loginForm,
+    AuthenticationCredentials? credentialsLogin,
   }) {
     return AuthConductorState(
       dialogRequest: dialogRequest ?? this.dialogRequest,
@@ -41,6 +44,7 @@ class AuthConductorState extends Equatable {
       isRemember: isRemember ?? this.isRemember,
       registerForm: registerForm ?? this.registerForm,
       loginForm: loginForm ?? this.loginForm,
+      credentialsLogin: credentialsLogin ?? this.credentialsLogin,
     );
   }
 
@@ -53,5 +57,6 @@ class AuthConductorState extends Equatable {
     isRemember,
     registerForm,
     loginForm,
+    credentialsLogin,
   ];
 }

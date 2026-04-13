@@ -37,9 +37,7 @@ class AuthInterceptor extends Interceptor {
 
     // Agregar Authorization header
     options.headers['Authorization'] = 'Bearer $accessToken';
-    debugPrint(
-      '🔑 Authorization header agregado: Bearer ${accessToken.substring(0, 20)}...',
-    );
+    debugPrint('🔑 Authorization header agregado');
 
     handler.next(options);
   }
@@ -138,10 +136,18 @@ class AuthInterceptor extends Interceptor {
   /// Rutas que NO requieren autenticación
   bool _isPublicRoute(String path) {
     final publicRoutes = [
-      '/tb-clients/login',
-      '/tb-clients/register',
-      '/tb-clients/google-login',
-      '/tb-clients/refresh-token',
+      // Client auth
+      '/auth/clients/login',
+      '/auth/clients/register',
+      '/auth/clients/google-login',
+      '/auth/clients/verify-register',
+      '/auth/clients/refresh-token',
+      // Driver auth
+      '/auth/drivers/login',
+      '/auth/drivers/register',
+      '/auth/drivers/refresh-token',
+      // Shared logout
+      '/auth/logout',
     ];
 
     return publicRoutes.any((route) => path.contains(route));
