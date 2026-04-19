@@ -100,6 +100,8 @@ class AppDatabase {
             );
           ''');
 
+          // Determine user_type from the stored role:
+          // 'rolDriver' maps to DRIVER; everything else maps to CLIENT.
           await db.execute('''
             INSERT INTO user_v3 (
               ${DbConstants.colUserType},
@@ -118,7 +120,10 @@ class AppDatabase {
               ${DbConstants.colCreatedAt}
             )
             SELECT
-              '${DbConstants.userTypeClient}',
+              CASE WHEN ${DbConstants.colRole} = 'rolDriver'
+                   THEN '${DbConstants.userTypeDriver}'
+                   ELSE '${DbConstants.userTypeClient}'
+              END,
               ${DbConstants.colTokenAccess},
               ${DbConstants.colTokenRefresh},
               ${DbConstants.colRole},

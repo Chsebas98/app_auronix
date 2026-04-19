@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:auronix_app/app/core/bloc/bloc.dart';
-import 'package:auronix_app/app/core/bloc/domain/request/dialog_request.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:auronix_app/features/auth/domain/usecases/google_login_usecase.dart';
@@ -11,6 +9,7 @@ import 'package:auronix_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/refresh_token_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/register_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/register_driver_usecase.dart';
+import 'package:auronix_app/features/auth/presentation/bloc/auth_form_cubit.dart';
 import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:bloc/bloc.dart';
@@ -18,7 +17,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
-part 'auth_form_cubit.dart';
+export 'auth_form_cubit.dart';
+
 part 'auth_bloc_event.dart';
 part 'auth_bloc_state.dart';
 

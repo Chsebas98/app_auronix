@@ -1,8 +1,11 @@
-part of 'auth_bloc.dart';
+import 'package:auronix_app/core/core.dart';
+import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 /// Monolithic form cubit that holds all auth-related form field values
-/// and derived validation results. It replaces both [AuthState] and
-/// [AuthConductorState] for the presentation layer.
+/// and derived validation results. It replaces both the old AuthState and
+/// AuthConductorState for the presentation layer.
 class AuthFormCubit extends Cubit<AuthFormState> {
   final RxSharedPreferences _prefs;
 

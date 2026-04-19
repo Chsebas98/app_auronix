@@ -181,7 +181,8 @@ class AuthRepositoryImpl implements AuthRepository {
     AuthenticationCredentials googleCreds,
   ) async {
     try {
-      debugPrint('🔐 Iniciando login/registro con Google + Backend');      debugPrint('📧 Email: ${googleCreds.email}');
+      debugPrint('🔐 Iniciando login/registro con Google + Backend');
+      debugPrint('📧 Email: ${googleCreds.email}');
 
       final response = await authenticationService.googleLogin(googleCreds);
 
