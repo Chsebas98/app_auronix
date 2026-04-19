@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
-import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/client.dart';
 import 'package:equatable/equatable.dart';
@@ -17,8 +16,13 @@ part 'home_client_state.dart';
 
 class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
   final HomeClientRepository _homeClientRepository;
-  final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
-  HomeClientBloc(this._homeClientRepository) : super(HomeClientState()) {
+  final RxSharedPreferences _prefs;
+
+  HomeClientBloc(
+    this._homeClientRepository, {
+    required RxSharedPreferences prefs,
+  }) : _prefs = prefs,
+       super(HomeClientState()) {
     on<GetDataProfileEvent>(_onSetDataProfileEvent);
     on<CompleteProfileEvent>(_onCompleteProfileEvent);
     on<CheckCurrentTripEvent>(_onCheckCurrentTripEvent);

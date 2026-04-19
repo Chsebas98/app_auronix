@@ -1,4 +1,5 @@
 import 'package:auronix_app/app/database/app_database.dart';
+import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -27,8 +28,10 @@ class AuthInterceptor extends Interceptor {
       return handler.next(options);
     }
 
-    // Obtener access token
-    final accessToken = await _db.getAccessToken();
+    // Obtener access token del usuario activo
+    final activeUser = await _db.getActiveUserMap();
+    final accessToken =
+        activeUser?[DbConstants.colTokenAccess] as String?;
 
     if (accessToken == null || accessToken.isEmpty) {
       debugPrint('⚠️ No hay access token, request sin auth');
@@ -65,12 +68,16 @@ class AuthInterceptor extends Interceptor {
       _isRefreshing = true;
       debugPrint('🔄 Iniciando refresh de tokens...');
 
-      // Obtener refresh token
-      final refreshToken = await _db.getRefreshToken();
+      // Obtener usuario activo y su refresh token
+      final activeUser = await _db.getActiveUserMap();
+      final userType =
+          activeUser?[DbConstants.colUserType] as String?;
+      final refreshToken =
+          activeUser?[DbConstants.colTokenRefresh] as String?;
 
-      if (refreshToken == null || refreshToken.isEmpty) {
+      if (refreshToken == null || refreshToken.isEmpty || userType == null) {
         debugPrint('❌ No hay refresh token, cerrando sesión');
-        await _db.clearUser();
+        if (userType != null) await _db.clearUser(userType);
         return handler.next(err);
       }
 
@@ -79,7 +86,7 @@ class AuthInterceptor extends Interceptor {
 
       if (!response['response']) {
         debugPrint('❌ Refresh falló: ${response['message']}');
-        await _db.clearUser();
+        await _db.clearUser(userType);
         return handler.next(err);
       }
 
@@ -94,6 +101,7 @@ class AuthInterceptor extends Interceptor {
       await _db.updateTokens(
         tokenAccess: newAccessToken,
         tokenRefresh: newRefreshToken,
+        userType: userType,
       );
 
       // Reintentar request original con nuevo token
@@ -126,7 +134,9 @@ class AuthInterceptor extends Interceptor {
       return handler.resolve(retryResponse);
     } catch (e) {
       debugPrint('❌ Error durante refresh: $e');
-      await _db.clearUser();
+      final activeUser = await _db.getActiveUserMap();
+      final userType = activeUser?[DbConstants.colUserType] as String?;
+      if (userType != null) await _db.clearUser(userType);
       return handler.next(err);
     } finally {
       _isRefreshing = false;
