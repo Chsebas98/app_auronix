@@ -1,6 +1,7 @@
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -11,70 +12,62 @@ class TripRepositoryImpl implements TripRepository {
     : _placesDataSource = placesDataSource;
 
   @override
-  Future<ServiceResponse> searchPlaces(String query) async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> searchPlaces(
+    String query,
+  ) async {
     try {
       debugPrint('🔍 [Repository] Buscando lugares: $query');
 
       final places = await _placesDataSource.searchPlaces(query);
 
-      if (places.isEmpty) {
-        return ServiceResponse.success(
-          message: 'No se encontraron resultados',
-          result: [],
-          statusCode: 200,
-        );
-      }
-
       debugPrint('✅ [Repository] ${places.length} lugares encontrados');
 
-      return ServiceResponse.success(
-        message: 'Lugares encontrados',
-        result: places.map((p) => p.toJson()).toList(),
-        statusCode: 200,
-      );
+      return Right(places.map((p) => p.toJson()).toList());
     } catch (e) {
       debugPrint('❌ [Repository] Error buscando lugares: $e');
-      return ServiceResponse.error(
-        message: 'Error al buscar lugares',
-        errorDetail: e.toString(),
-        statusCode: 500,
+      return Left(
+        UnexpectedFailure(
+          message: 'Error al buscar lugares',
+          detail: e.toString(),
+        ),
       );
     }
   }
 
   @override
-  Future<ServiceResponse> getPlaceDetails(String placeId) async {
+  Future<Either<Failure, Map<String, dynamic>>> getPlaceDetails(
+    String placeId,
+  ) async {
     try {
       debugPrint('📍 [Repository] Obteniendo detalles del lugar: $placeId');
 
       final place = await _placesDataSource.getPlaceDetails(placeId, '');
 
       if (place == null) {
-        return ServiceResponse.error(
-          message: 'No se pudo obtener los detalles del lugar',
-          statusCode: 404,
+        return const Left(
+          ServerFailure(
+            message: 'No se pudo obtener los detalles del lugar',
+            statusCode: 404,
+          ),
         );
       }
 
       debugPrint('✅ [Repository] Detalles obtenidos: ${place.name}');
 
-      return ServiceResponse.success(
-        message: 'Detalles del lugar obtenidos',
-        result: place.toJson(),
-        statusCode: 200,
-      );
+      return Right(place.toJson());
     } catch (e) {
       debugPrint('❌ [Repository] Error obteniendo detalles: $e');
-      return ServiceResponse.error(
-        message: 'Error al obtener detalles del lugar',
-        errorDetail: e.toString(),
-        statusCode: 500,
+      return Left(
+        UnexpectedFailure(
+          message: 'Error al obtener detalles del lugar',
+          detail: e.toString(),
+        ),
       );
     }
   }
 
   @override
-  Future<ServiceResponse> getDirections({
+  Future<Either<Failure, Map<String, dynamic>>> getDirections({
     required LatLng origin,
     required LatLng destination,
   }) async {
@@ -87,9 +80,11 @@ class TripRepositoryImpl implements TripRepository {
       );
 
       if (directions == null) {
-        return ServiceResponse.error(
-          message: 'No se pudo obtener la ruta',
-          statusCode: 404,
+        return const Left(
+          ServerFailure(
+            message: 'No se pudo obtener la ruta',
+            statusCode: 404,
+          ),
         );
       }
 
@@ -101,22 +96,19 @@ class TripRepositoryImpl implements TripRepository {
         '✅ [Repository] Ruta obtenida: ${polylinePoints.length} puntos',
       );
 
-      return ServiceResponse.success(
-        message: 'Ruta obtenida exitosamente',
-        result: {
-          ...directions,
-          'polylinePoints': polylinePoints
-              .map((point) => {'lat': point.latitude, 'lng': point.longitude})
-              .toList(),
-        },
-        statusCode: 200,
-      );
+      return Right({
+        ...directions,
+        'polylinePoints': polylinePoints
+            .map((point) => {'lat': point.latitude, 'lng': point.longitude})
+            .toList(),
+      });
     } catch (e) {
       debugPrint('❌ [Repository] Error obteniendo ruta: $e');
-      return ServiceResponse.error(
-        message: 'Error al obtener la ruta',
-        errorDetail: e.toString(),
-        statusCode: 500,
+      return Left(
+        UnexpectedFailure(
+          message: 'Error al obtener la ruta',
+          detail: e.toString(),
+        ),
       );
     }
   }

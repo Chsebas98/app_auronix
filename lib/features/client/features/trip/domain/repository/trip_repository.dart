@@ -1,20 +1,18 @@
 import 'package:auronix_app/core/core.dart';
+import 'package:dartz/dartz.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 abstract class TripRepository {
   /// Busca lugares usando Google Places
-  Future<ServiceResponse> searchPlaces(String query);
+  Future<Either<Failure, List<Map<String, dynamic>>>> searchPlaces(
+    String query,
+  );
 
   /// Obtiene detalles de un lugar específico
-  Future<ServiceResponse> getPlaceDetails(String placeId);
+  Future<Either<Failure, Map<String, dynamic>>> getPlaceDetails(String placeId);
 
-  Future<ServiceResponse> getDirections({
+  Future<Either<Failure, Map<String, dynamic>>> getDirections({
     required LatLng origin,
     required LatLng destination,
   });
-
-  // TODO: Agregar después
-  // Future<ServiceResponse> requestTrip({required TripRequest request});
-  // Future<ServiceResponse> getTripDetails(String tripId);
-  // Future<ServiceResponse> cancelTrip(String tripId);
 }
