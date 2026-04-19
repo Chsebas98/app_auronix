@@ -4,13 +4,14 @@ import 'package:auronix_app/features/client/auth/domain/models/request/register_
 import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
 
-abstract class AuthRepository {
+/// Unified authentication repository used by both clients and drivers.
+abstract class AuthUnifiedRepository {
   //?Local
   Future<void> setRemember(bool value);
   Future<bool> getRemember();
 
-  //?Remote
-  Future<Either<Failure, AuthenticationCredentials>> login({
+  //?Remote – Client
+  Future<Either<Failure, AuthenticationCredentials>> loginClient({
     required String email,
     required String password,
     bool rememberMe = false,
@@ -26,11 +27,27 @@ abstract class AuthRepository {
     RegisterVerifyRequest registerData,
   );
 
-  Future<Either<Failure, AuthenticationCredentials>> registerUser(
+  Future<Either<Failure, AuthenticationCredentials>> registerClient(
     RegisterRequest registerData,
   );
 
-  Future<Either<Failure, AuthenticationCredentials?>> getSavedSession();
+  Future<Either<Failure, AuthenticationCredentials?>> getClientSession();
 
+  //?Remote – Driver
+  Future<Either<Failure, AuthenticationCredentials>> loginDriver({
+    required String ciPassport,
+    required String password,
+    bool rememberMe = false,
+  });
+
+  Future<Either<Failure, AuthenticationCredentials>> registerDriver({
+    required String ciPassport,
+    required String password,
+    required String email,
+  });
+
+  Future<Either<Failure, AuthenticationCredentials?>> getDriverSession();
+
+  //?Shared
   Future<Either<Failure, void>> logout();
 }

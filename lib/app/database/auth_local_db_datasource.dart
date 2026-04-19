@@ -5,32 +5,37 @@ import 'package:auronix_app/features/features.dart';
 
 class AuthLocalDbDataSource {
   final AppDatabase _db;
-  AuthLocalDbDataSource(this._db);
+  final String userType;
+
+  AuthLocalDbDataSource(this._db, {required this.userType});
 
   /// Guardar usuario completo (login/registro inicial)
   Future<void> saveUser(AuthenticationCredentials creds) {
-    return _db.upsertUserMap({
-      DbConstants.colTokenAccess: creds.tokenAccess,
-      DbConstants.colTokenRefresh: creds.tokenRefresh,
-      DbConstants.colRole: creds.role.name,
-      DbConstants.colUsername: creds.username,
-      DbConstants.colFirstName: creds.firstName,
-      DbConstants.colSecondName:
-          (creds.secondName is String && (creds.secondName as String).isEmpty)
-          ? null
-          : creds.secondName?.toString(),
-      DbConstants.colLastName: creds.lastName,
-      DbConstants.colSecondLastName: creds.secondlastName,
-      DbConstants.colEmail: creds.email,
-      DbConstants.colPhotoUrl: creds.photoUrl,
-      DbConstants.colIsGoogleUser: creds.isGoogleUser ? 1 : 0,
-      DbConstants.colTokenExpiresAt: DateTime.now()
-          .add(const Duration(hours: 1))
-          .millisecondsSinceEpoch,
-    });
+    return _db.upsertUserMap(
+      {
+        DbConstants.colTokenAccess: creds.tokenAccess,
+        DbConstants.colTokenRefresh: creds.tokenRefresh,
+        DbConstants.colRole: creds.role.name,
+        DbConstants.colUsername: creds.username,
+        DbConstants.colFirstName: creds.firstName,
+        DbConstants.colSecondName:
+            (creds.secondName is String && (creds.secondName as String).isEmpty)
+            ? null
+            : creds.secondName?.toString(),
+        DbConstants.colLastName: creds.lastName,
+        DbConstants.colSecondLastName: creds.secondlastName,
+        DbConstants.colEmail: creds.email,
+        DbConstants.colPhotoUrl: creds.photoUrl,
+        DbConstants.colIsGoogleUser: creds.isGoogleUser ? 1 : 0,
+        DbConstants.colTokenExpiresAt: DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch,
+      },
+      userType,
+    );
   }
 
-  /// ✅ NUEVO: Actualizar solo tokens (después de refresh)
+  /// Actualizar solo tokens (después de refresh)
   Future<void> updateTokens({
     required String tokenAccess,
     required String tokenRefresh,
@@ -38,17 +43,18 @@ class AuthLocalDbDataSource {
     return _db.updateTokens(
       tokenAccess: tokenAccess,
       tokenRefresh: tokenRefresh,
+      userType: userType,
     );
   }
 
-  /// ✅ NUEVO: Obtener access token
-  Future<String?> getAccessToken() => _db.getAccessToken();
+  /// Obtener access token
+  Future<String?> getAccessToken() => _db.getAccessToken(userType);
 
-  /// ✅ NUEVO: Obtener refresh token
-  Future<String?> getRefreshToken() => _db.getRefreshToken();
+  /// Obtener refresh token
+  Future<String?> getRefreshToken() => _db.getRefreshToken(userType);
 
   Future<AuthenticationCredentials?> readUser() async {
-    final row = await _db.getUserMap();
+    final row = await _db.getUserMap(userType);
     if (row == null) return null;
 
     return AuthenticationCredentials(
@@ -66,5 +72,5 @@ class AuthLocalDbDataSource {
     );
   }
 
-  Future<void> clear() => _db.clearUser();
+  Future<void> clear() => _db.clearUser(userType);
 }

@@ -22,22 +22,25 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     debugPrint('Verificando sesión guardada...');
     emit(SessionLoading());
 
-    try {
-      final response = await _authRepository.getSavedSession();
+    final result = await _authRepository.getSavedSession();
 
-      if (response != null) {
-        debugPrint('Sesión encontrada: ${response.username}');
-        debugPrint('Email: ${response.email}');
-        debugPrint('Rol: ${response.role}');
-        emit(SessionAuthenticated(dataUser: response));
-      } else {
-        debugPrint('No hay sesión guardada');
+    result.fold(
+      (failure) {
+        debugPrint('Error al verificar sesión: ${failure.message}');
         emit(SessionUnauthenticated());
-      }
-    } catch (e) {
-      debugPrint('Error al verificar sesión: $e');
-      emit(SessionUnauthenticated());
-    }
+      },
+      (user) {
+        if (user != null) {
+          debugPrint('Sesión encontrada: ${user.username}');
+          debugPrint('Email: ${user.email}');
+          debugPrint('Rol: ${user.role}');
+          emit(SessionAuthenticated(dataUser: user));
+        } else {
+          debugPrint('No hay sesión guardada');
+          emit(SessionUnauthenticated());
+        }
+      },
+    );
   }
 
   FutureOr<void> _onLoginUserEvent(
@@ -46,10 +49,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) async {
     emit(SessionLoading());
     try {
-      // Los tokens ya están guardados en AuthRepository
-      // Solo necesitas cargar el usuario de la BD local
       final user = event.dataUser;
-
       return emit(SessionAuthenticated(dataUser: user));
     } catch (e) {
       emit(SessionError(e.toString()));

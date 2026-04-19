@@ -35,51 +35,39 @@ class RequestTripBloc extends Bloc<RequestTripEvent, RequestTripState> {
       return;
     }
 
-    try {
-      emit(state.copyWith(isSearching: true));
+    emit(state.copyWith(isSearching: true));
 
-      debugPrint('🔍 [Bloc] Buscando: $query');
+    debugPrint('🔍 [Bloc] Buscando: $query');
 
-      // ✅ Llamar al Repository
-      final response = await _tripRepository.searchPlaces(query);
+    final result = await _tripRepository.searchPlaces(query);
 
-      if (!response.response) {
-        debugPrint('❌ [Bloc] Error: ${response.message}');
+    result.fold(
+      (failure) {
+        debugPrint('❌ [Bloc] Error: ${failure.message}');
         emit(
           state.copyWith(
             searchResults: [],
             isSearching: false,
-            errorMessage: response.message,
+            errorMessage: failure.message,
           ),
         );
-        return;
-      }
+      },
+      (placesJson) {
+        final places = placesJson
+            .map((json) => PlaceModel.fromJson(json))
+            .toList();
 
-      // Parsear resultados
-      final placesJson = response.result as List;
-      final places = placesJson
-          .map((json) => PlaceModel.fromJson(json))
-          .toList();
+        debugPrint('✅ [Bloc] ${places.length} resultados encontrados');
 
-      debugPrint('✅ [Bloc] ${places.length} resultados encontrados');
-
-      emit(
-        state.copyWith(
-          searchResults: places,
-          isSearching: false,
-          errorMessage: null,
-        ),
-      );
-    } catch (e) {
-      debugPrint('❌ [Bloc] Error en búsqueda: $e');
-      emit(
-        state.copyWith(
-          searchResults: [],
-          isSearching: false,
-          errorMessage: 'Error al buscar lugares',
-        ),
-      );
-    }
+        emit(
+          state.copyWith(
+            searchResults: places,
+            isSearching: false,
+            errorMessage: null,
+          ),
+        );
+      },
+    );
   }
 
   FutureOr<void> _onSelectDestination(
@@ -117,62 +105,53 @@ class RequestTripBloc extends Bloc<RequestTripEvent, RequestTripState> {
     CalculateRouteEvent event,
     Emitter<RequestTripState> emit,
   ) async {
-    try {
-      emit(state.copyWith(isCalculatingRoute: true));
+    emit(state.copyWith(isCalculatingRoute: true));
 
-      debugPrint('🗺️  [Bloc] Calculando ruta...');
-      debugPrint(
-        '   Origen: ${event.origin.latitude}, ${event.origin.longitude}',
-      );
-      debugPrint(
-        '   Destino: ${event.destination.lat}, ${event.destination.lng}',
-      );
+    debugPrint('🗺️  [Bloc] Calculando ruta...');
+    debugPrint(
+      '   Origen: ${event.origin.latitude}, ${event.origin.longitude}',
+    );
+    debugPrint(
+      '   Destino: ${event.destination.lat}, ${event.destination.lng}',
+    );
 
-      final destination = LatLng(event.destination.lat, event.destination.lng);
+    final destination = LatLng(event.destination.lat, event.destination.lng);
 
-      final response = await _tripRepository.getDirections(
-        origin: event.origin,
-        destination: destination,
-      );
+    final result = await _tripRepository.getDirections(
+      origin: event.origin,
+      destination: destination,
+    );
 
-      if (!response.response) {
-        debugPrint('❌ [Bloc] Error: ${response.message}');
+    result.fold(
+      (failure) {
+        debugPrint('❌ [Bloc] Error: ${failure.message}');
         emit(
           state.copyWith(
             isCalculatingRoute: false,
-            errorMessage: response.message,
+            errorMessage: failure.message,
           ),
         );
-        return;
-      }
+      },
+      (directions) {
+        final polylinePointsJson = directions['polylinePoints'] as List;
+        final polylinePoints = polylinePointsJson
+            .map((point) => LatLng(point['lat'], point['lng']))
+            .toList();
 
-      final result = response.result as Map<String, dynamic>;
-      final polylinePointsJson = result['polylinePoints'] as List;
-      final polylinePoints = polylinePointsJson
-          .map((point) => LatLng(point['lat'], point['lng']))
-          .toList();
+        debugPrint('✅ [Bloc] Ruta calculada: ${polylinePoints.length} puntos');
+        debugPrint('   Distancia: ${directions['distanceText']}');
+        debugPrint('   Duración: ${directions['durationText']}');
 
-      debugPrint('✅ [Bloc] Ruta calculada: ${polylinePoints.length} puntos');
-      debugPrint('   Distancia: ${result['distanceText']}');
-      debugPrint('   Duración: ${result['durationText']}');
-
-      emit(
-        state.copyWith(
-          polylinePoints: polylinePoints,
-          distance: result['distanceText'],
-          duration: result['durationText'],
-          isCalculatingRoute: false,
-          errorMessage: null,
-        ),
-      );
-    } catch (e) {
-      debugPrint('❌ [Bloc] Error calculando ruta: $e');
-      emit(
-        state.copyWith(
-          isCalculatingRoute: false,
-          errorMessage: 'Error al calcular la ruta',
-        ),
-      );
-    }
+        emit(
+          state.copyWith(
+            polylinePoints: polylinePoints,
+            distance: directions['distanceText'],
+            duration: directions['durationText'],
+            isCalculatingRoute: false,
+            errorMessage: null,
+          ),
+        );
+      },
+    );
   }
 }

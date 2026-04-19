@@ -1,4 +1,4 @@
-abstract class FormSubmitStatus {
+sealed class FormSubmitStatus {
   const FormSubmitStatus();
 }
 
@@ -18,5 +18,5 @@ class FormSubmitSuccesfull extends FormSubmitStatus {
 
 class FormSubmitFailed extends FormSubmitStatus {
   final String message;
-  FormSubmitFailed(this.message);
+  const FormSubmitFailed(this.message);
 }

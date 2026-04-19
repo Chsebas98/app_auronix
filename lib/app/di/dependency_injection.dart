@@ -4,9 +4,14 @@ import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
+import 'package:auronix_app/app/database/db_constants.dart';
+import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/client/features/trip/data/google_places_datasource.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository.dart';
 import 'package:auronix_app/features/client/features/trip/domain/repository/trip_repository_impl.dart';
+import 'package:auronix_app/features/conductor/auth/data/remote/conductor_auth_service.dart';
+import 'package:auronix_app/features/conductor/auth/domain/repository/auth_conductor_repository.dart';
+import 'package:auronix_app/features/conductor/auth/data/repositories/auth_conductor_repository_impl.dart';
 import 'package:auronix_app/features/conductor/auth/presentation/bloc/auth_conductor_bloc.dart';
 import 'package:auronix_app/features/conductor/home/presentation/bloc/home_conductor_bloc.dart';
 import 'package:auronix_app/features/features.dart';
@@ -41,8 +46,21 @@ Future<void> initDependencies() async {
 
   //?Database (MOVER ANTES DE DIO)
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
+
+  // Datasources separados por tipo de usuario
   sl.registerLazySingleton<AuthLocalDbDataSource>(
-    () => AuthLocalDbDataSource(sl<AppDatabase>()),
+    () => AuthLocalDbDataSource(
+      sl<AppDatabase>(),
+      userType: DbConstants.userTypeClient,
+    ),
+    instanceName: DbConstants.userTypeClient,
+  );
+  sl.registerLazySingleton<AuthLocalDbDataSource>(
+    () => AuthLocalDbDataSource(
+      sl<AppDatabase>(),
+      userType: DbConstants.userTypeDriver,
+    ),
+    instanceName: DbConstants.userTypeDriver,
   );
 
   // Crear Dio SIN AuthInterceptor primero
@@ -55,6 +73,10 @@ Future<void> initDependencies() async {
   // Crear AuthenticationService con Dio básico
   final authenticationService = AuthenticationService(dio: dioBasic);
   sl.registerLazySingleton<AuthenticationService>(() => authenticationService);
+
+  // Crear ConductorAuthService con Dio básico
+  final conductorAuthService = ConductorAuthService(dio: dioBasic);
+  sl.registerLazySingleton<ConductorAuthService>(() => conductorAuthService);
 
   // Agregar AuthInterceptor DESPUÉS
   dioBasic.interceptors.insert(
@@ -78,13 +100,30 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       local: sl<AuthLocalServices>(),
-      localDb: sl<AuthLocalDbDataSource>(),
+      localDb: sl<AuthLocalDbDataSource>(
+        instanceName: DbConstants.userTypeClient,
+      ),
       authenticationService: sl<AuthenticationService>(),
+      prefs: sl<RxSharedPreferences>(),
+    ),
+  );
+
+  sl.registerLazySingleton<AuthConductorRepository>(
+    () => AuthConductorRepositoryImpl(
+      conductorAuthService: sl<ConductorAuthService>(),
+      localDb: sl<AuthLocalDbDataSource>(
+        instanceName: DbConstants.userTypeDriver,
+      ),
+      prefs: sl<RxSharedPreferences>(),
     ),
   );
 
   sl.registerLazySingleton<HomeClientRepository>(
-    () => HomeClientRepositoryImpl(localDb: sl<AuthLocalDbDataSource>()),
+    () => HomeClientRepositoryImpl(
+      localDb: sl<AuthLocalDbDataSource>(
+        instanceName: DbConstants.userTypeClient,
+      ),
+    ),
   );
 
   //Blocs
@@ -93,13 +132,51 @@ Future<void> initDependencies() async {
   );
   sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
   sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
-  sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
+  sl.registerFactory<AuthBloc>(
+    () => AuthBloc(
+      sl<AuthRepository>(),
+      prefs: sl<RxSharedPreferences>(),
+    ),
+  );
   sl.registerFactory<AuthConductorBloc>(
-    () => AuthConductorBloc(sl<RxSharedPreferences>()),
+    () => AuthConductorBloc(sl<AuthConductorRepository>()),
   );
   sl.registerFactory<HomeConductorBloc>(() => HomeConductorBloc());
   sl.registerFactory<HomeClientBloc>(
-    () => HomeClientBloc(sl<HomeClientRepository>()),
+    () => HomeClientBloc(
+      sl<HomeClientRepository>(),
+      prefs: sl<RxSharedPreferences>(),
+    ),
+  );
+
+  //?Unified Auth Feature
+  sl.registerLazySingleton<AuthRemoteDatasource>(
+    () => AuthRemoteDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<AuthUnifiedRepository>(
+    () => AuthRepositoryUnifiedImpl(
+      remote: sl<AuthRemoteDatasource>(),
+      clientDb: sl<AuthLocalDbDataSource>(
+        instanceName: DbConstants.userTypeClient,
+      ),
+      driverDb: sl<AuthLocalDbDataSource>(
+        instanceName: DbConstants.userTypeDriver,
+      ),
+      local: sl<AuthLocalServices>(),
+      prefs: sl<RxSharedPreferences>(),
+    ),
+  );
+
+  sl.registerFactory<AuthUnifiedBloc>(
+    () => AuthUnifiedBloc(
+      repository: sl<AuthUnifiedRepository>(),
+      prefs: sl<RxSharedPreferences>(),
+    ),
+  );
+
+  sl.registerFactory<AuthFormCubit>(
+    () => AuthFormCubit(prefs: sl<RxSharedPreferences>()),
   );
 
   //?Trip
