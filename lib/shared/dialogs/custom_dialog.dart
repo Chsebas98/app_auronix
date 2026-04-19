@@ -1,4 +1,4 @@
-import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/app/design/theme/theme.dart';
 import 'package:auronix_app/shared/dialogs/anims/native_animations.dart';
 import 'package:auronix_app/shared/dialogs/widgets/animated_button.dart';
 import 'package:auronix_app/shared/dialogs/widgets/header_dialog.dart';

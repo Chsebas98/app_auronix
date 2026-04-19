@@ -10,8 +10,8 @@ import 'package:auronix_app/features/auth/domain/usecases/refresh_token_usecase.
 import 'package:auronix_app/features/auth/domain/usecases/register_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/register_driver_usecase.dart';
 import 'package:auronix_app/features/auth/presentation/bloc/auth_form_cubit.dart';
-import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
+import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -35,15 +35,15 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
   AuthUnifiedBloc({
     required AuthUnifiedRepository repository,
     required RxSharedPreferences prefs,
-  })  : _loginClient = LoginClientUseCase(repository),
-        _loginDriver = LoginDriverUseCase(repository),
-        _googleLogin = GoogleLoginUseCase(repository),
-        _registerClient = RegisterClientUseCase(repository),
-        _registerDriver = RegisterDriverUseCase(repository),
-        _refreshToken = RefreshTokenUseCase(repository),
-        _logout = LogoutUseCase(repository),
-        _prefs = prefs,
-        super(const AuthUnifiedIdle()) {
+  }) : _loginClient = LoginClientUseCase(repository),
+       _loginDriver = LoginDriverUseCase(repository),
+       _googleLogin = GoogleLoginUseCase(repository),
+       _registerClient = RegisterClientUseCase(repository),
+       _registerDriver = RegisterDriverUseCase(repository),
+       _refreshToken = RefreshTokenUseCase(repository),
+       _logout = LogoutUseCase(repository),
+       _prefs = prefs,
+       super(const AuthUnifiedIdle()) {
     on<AuthLoginClientEvent>(_onLoginClient);
     on<AuthLoginDriverEvent>(_onLoginDriver);
     on<AuthGoogleSignInEvent>(_onGoogleSignIn);
@@ -155,8 +155,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
     emit(const AuthUnifiedLoading());
 
     final verifyResult = await _registerClient.verify(event.verifyRequest);
-    final verifyFailure =
-        verifyResult.fold<Failure?>((f) => f, (_) => null);
+    final verifyFailure = verifyResult.fold<Failure?>((f) => f, (_) => null);
 
     if (verifyFailure != null) {
       emit(AuthUnifiedFailure(failure: verifyFailure));
@@ -180,9 +179,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     result.fold(
       (failure) {
-        debugPrint(
-          '❌ [AuthBloc] Registro conductor falló: ${failure.message}',
-        );
+        debugPrint('❌ [AuthBloc] Registro conductor falló: ${failure.message}');
         emit(AuthUnifiedFailure(failure: failure));
       },
       (creds) {
@@ -200,16 +197,15 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     final result = await _refreshToken.forClient();
 
-    result.fold(
-      (failure) => emit(AuthUnifiedFailure(failure: failure)),
-      (creds) {
-        if (creds == null) {
-          emit(const AuthUnifiedIdle());
-        } else {
-          emit(AuthUnifiedSuccess(credentials: creds));
-        }
-      },
-    );
+    result.fold((failure) => emit(AuthUnifiedFailure(failure: failure)), (
+      creds,
+    ) {
+      if (creds == null) {
+        emit(const AuthUnifiedIdle());
+      } else {
+        emit(AuthUnifiedSuccess(credentials: creds));
+      }
+    });
   }
 
   FutureOr<void> _onRestoreDriverSession(
@@ -220,16 +216,15 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     final result = await _refreshToken.forDriver();
 
-    result.fold(
-      (failure) => emit(AuthUnifiedFailure(failure: failure)),
-      (creds) {
-        if (creds == null) {
-          emit(const AuthUnifiedIdle());
-        } else {
-          emit(AuthUnifiedSuccess(credentials: creds));
-        }
-      },
-    );
+    result.fold((failure) => emit(AuthUnifiedFailure(failure: failure)), (
+      creds,
+    ) {
+      if (creds == null) {
+        emit(const AuthUnifiedIdle());
+      } else {
+        emit(AuthUnifiedSuccess(credentials: creds));
+      }
+    });
   }
 
   FutureOr<void> _onLogout(

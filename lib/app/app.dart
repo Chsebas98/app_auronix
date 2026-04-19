@@ -1,11 +1,11 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
+import 'package:auronix_app/app/design/theme/app_theme.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/handlers/dialog_handler.dart';
 import 'package:auronix_app/app/router/app_router.dart';
-import 'package:auronix_app/app/theme/theme.dart';
-import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
+import 'package:auronix_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,7 +26,6 @@ class AppAuronixMain extends StatelessWidget {
         BlocProvider.value(value: sl<DialogCubit>()),
         BlocProvider.value(value: sl<PermissionCubit>()),
         BlocProvider.value(value: sl<BottomNavCubit>()),
-        BlocProvider.value(value: sl<HomeClientBloc>()),
       ],
       child: Builder(
         builder: (context) => ScreenUtilInit(
@@ -64,8 +63,8 @@ class AppAuronixMain extends StatelessWidget {
                         debugShowCheckedModeBanner: false,
                         scaffoldMessengerKey: rootMessengerKey,
                         routerConfig: AppRouter.instance,
-                        theme: AppTheme.lightTheme,
-                        darkTheme: AppTheme.darkTheme,
+                        theme: AppTheme.light,
+                        darkTheme: AppTheme.dark,
                         themeMode: themeMode,
                         localizationsDelegates:
                             AppLocalizations.localizationsDelegates,

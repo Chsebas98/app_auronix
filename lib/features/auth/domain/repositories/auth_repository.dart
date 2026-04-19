@@ -1,7 +1,7 @@
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
+import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
 
 /// Unified authentication repository used by both clients and drivers.

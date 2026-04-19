@@ -1,5 +1,5 @@
 import 'package:auronix_app/app/app.dart';
-import 'package:auronix_app/app/theme/theme.dart';
+import 'package:auronix_app/app/design/theme/theme.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/shared/snackbars/custom_snackbar.dart';
 import 'package:flutter/material.dart'

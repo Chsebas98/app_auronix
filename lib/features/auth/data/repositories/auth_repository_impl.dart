@@ -1,12 +1,11 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
-import 'package:auronix_app/features/client/auth/data/local/auth_local_services.dart';
-import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/client/auth/domain/models/request/register_verify_request.dart';
+import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
+import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -27,11 +26,11 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
     required AuthLocalDbDataSource driverDb,
     required AuthLocalServices local,
     required RxSharedPreferences prefs,
-  })  : _remote = remote,
-        _clientDb = clientDb,
-        _driverDb = driverDb,
-        _local = local,
-        _prefs = prefs;
+  }) : _remote = remote,
+       _clientDb = clientDb,
+       _driverDb = driverDb,
+       _local = local,
+       _prefs = prefs;
 
   // ──────────────────── LOCAL ────────────────────
 
@@ -331,10 +330,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       );
 
       await _driverDb.saveUser(creds);
-      await _prefs.setBool(
-        StaticVariables.rememberConductorKey,
-        rememberMe,
-      );
+      await _prefs.setBool(StaticVariables.rememberConductorKey, rememberMe);
 
       debugPrint('✅ [AuthUnified] Login conductor completado');
       return Right(creds);
