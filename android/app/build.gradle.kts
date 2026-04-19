@@ -1,9 +1,9 @@
 import java.util.Properties
-import java.io.FileInputStream
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     // Plugin para el auth de Google Flutter Fire
@@ -37,46 +37,34 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
-
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.auronix.ando.app2026"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        multiDexEnabled = true //IMPORTANTE PARA MAPBOX
+        multiDexEnabled = true
     }
 
-    // IMPORTANTE: Habilitar BuildConfig para acceder a los tokens
     buildFeatures {
         buildConfig = true
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
 
-    // Flavors environments
     flavorDimensions += "env"
+
     productFlavors {
         create("dev") {
             dimension = "env"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             resValue("string", "app_name", "Ando Dev")
-            
-            //Token de Mapbox para DESARROLLO
+
             buildConfigField(
                 "String",
                 "MAPBOX_ACCESS_TOKEN",
@@ -88,17 +76,16 @@ android {
                 getMapboxToken("MAPBOX_PUBLIC_TOKEN_DEV")
             )
         }
+
         create("prod") {
             dimension = "env"
             resValue("string", "app_name", "Ando")
-            // Token de Mapbox para PRODUCCIÓN
+
             buildConfigField(
                 "String",
                 "MAPBOX_ACCESS_TOKEN",
                 "\"${getMapboxToken("MAPBOX_PUBLIC_TOKEN_PROD")}\""
             )
-            
-            // También como resource string (para AndroidManifest)
             resValue(
                 "string",
                 "mapbox_access_token",
@@ -108,11 +95,16 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
+}
+
 flutter {
     source = "../.."
 }
 
 dependencies {
-    // MultiDex support
     implementation("androidx.multidex:multidex:2.0.1")
 }
