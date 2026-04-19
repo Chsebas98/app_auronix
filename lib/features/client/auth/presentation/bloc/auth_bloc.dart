@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/domain/request/dialog_request.dart';
-import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/client.dart';
 import 'package:equatable/equatable.dart';
@@ -15,8 +14,11 @@ part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
-  final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
-  AuthBloc(this._authRepository) : super(AuthState()) {
+  final RxSharedPreferences _prefs;
+
+  AuthBloc(this._authRepository, {required RxSharedPreferences prefs})
+    : _prefs = prefs,
+      super(AuthState()) {
     on<InitRememberEvent>(_onInitRememberEvent);
     on<ResetFormStateEvent>(_onResetFormStateEvent);
     on<GoogleSignInRequestedEvent>(_onGoogleSignInRequestedEvent);

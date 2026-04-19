@@ -1,13 +1,14 @@
 class DbConstants {
   static const String dbName = 'auronix.db';
-  static const int dbVersion = 2; //
+  static const int dbVersion = 3;
 
   static const String tableUser = 'user';
 
-  // Columnas existentes
+  // Columnas
   static const String colId = 'id';
-  static const String colTokenAccess = 'token_access'; // RENOMBRAR
-  static const String colTokenRefresh = 'token_refresh'; // NUEVO
+  static const String colUserType = 'user_type';
+  static const String colTokenAccess = 'token_access';
+  static const String colTokenRefresh = 'token_refresh';
   static const String colRole = 'role';
   static const String colUsername = 'username';
   static const String colFirstName = 'first_name';
@@ -17,8 +18,9 @@ class DbConstants {
   static const String colEmail = 'email';
   static const String colPhotoUrl = 'photo_url';
   static const String colIsGoogleUser = 'is_google_user';
-  static const String colTokenExpiresAt = 'token_expires_at'; // NUEVO
-  static const String colCreatedAt = 'created_at'; // NUEVO
+  static const String colTokenExpiresAt = 'token_expires_at';
+  static const String colCreatedAt = 'created_at';
 
-  static const int singleUserId = 1;
+  static const String userTypeClient = 'CLIENT';
+  static const String userTypeDriver = 'DRIVER';
 }

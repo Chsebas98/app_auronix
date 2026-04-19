@@ -1,5 +1,4 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
-import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/client/auth/data/local/auth_local_services.dart';
 import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
@@ -17,15 +16,16 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalServices local;
   final AuthLocalDbDataSource localDb;
   final AuthenticationService authenticationService;
+  final RxSharedPreferences _prefs;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
-  final RxSharedPreferences _prefs = sl<RxSharedPreferences>();
   bool _googleInitialized = false;
 
   AuthRepositoryImpl({
     required this.local,
     required this.localDb,
     required this.authenticationService,
-  });
+    required RxSharedPreferences prefs,
+  }) : _prefs = prefs;
 
   //?LOCAL
   @override
