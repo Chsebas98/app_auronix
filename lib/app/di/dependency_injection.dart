@@ -87,34 +87,12 @@ Future<void> initDependencies() async {
     () => AuthLocalServices(sl<RxSharedPreferences>()),
   );
 
-  //Repository
-  sl.registerLazySingleton<AuthRepositoryUnifiedImpl>(
-    () => AuthRepositoryUnifiedImpl(
-      local: sl<AuthLocalServices>(),
-      clientDb: sl<AuthLocalDbDataSource>(
-        instanceName: DbConstants.userTypeClient,
-      ),
-      driverDb: sl<AuthLocalDbDataSource>(
-        instanceName: DbConstants.userTypeDriver,
-      ),
-
-      remote: sl<AuthRemoteDatasource>(),
-      prefs: sl<RxSharedPreferences>(),
-    ),
-  );
-
-  //Blocs
-  sl.registerLazySingleton<SessionBloc>(
-    () => SessionBloc(sl<AuthRepositoryUnifiedImpl>()),
-  );
-  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
-  sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
-
-  //?Unified Auth Feature
+  // Remote datasource — must be registered before the repository
   sl.registerLazySingleton<AuthRemoteDatasource>(
     () => AuthRemoteDatasource(dio: sl<Dio>()),
   );
 
+  // Single unified repository instance
   sl.registerLazySingleton<AuthUnifiedRepository>(
     () => AuthRepositoryUnifiedImpl(
       remote: sl<AuthRemoteDatasource>(),
@@ -128,6 +106,13 @@ Future<void> initDependencies() async {
       prefs: sl<RxSharedPreferences>(),
     ),
   );
+
+  //Blocs
+  sl.registerLazySingleton<SessionBloc>(
+    () => SessionBloc(sl<AuthUnifiedRepository>()),
+  );
+  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
+  sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
 
   sl.registerFactory<AuthUnifiedBloc>(
     () => AuthUnifiedBloc(
