@@ -6,11 +6,10 @@ import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/features/auth/auth.dart';
-import 'package:auronix_app/features/auth/data/datasources/auth_client_services.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/shared/blocs/modals/modal_temp_cubit.dart';
-import 'package:auronix_app/shared/widgets/widgets.dart';
+import 'package:auronix_app/shared/templates/appbar/bottom-appbar/cubit/bottom_nav_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:get_it/get_it.dart';
@@ -19,15 +18,20 @@ import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
-  //?Globales
+  // ── 1. Globales ───────────────────────────────────────────────────────────
+  // Cubits y servicios transversales que no dependen de nada más.
+
   sl.registerFactory<GlobalCubit>(() => GlobalCubit());
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   sl.registerFactory<AppLifeCycleCubit>(() => AppLifeCycleCubit());
   sl.registerFactory<PermissionCubit>(() => PermissionCubit());
+
   sl.registerLazySingleton<RxSharedPreferences>(
     () => RxSharedPreferences.getInstance(),
   );
+
   sl.registerLazySingleton<DialogCubit>(() => DialogCubit());
+
   sl.registerLazySingleton<CacheOptions>(
     () => CacheOptions(
       store: MemCacheStore(),
@@ -39,10 +43,11 @@ Future<void> initDependencies() async {
     ),
   );
 
-  //?Database (MOVER ANTES DE DIO)
+  // ── 2. Base de datos ──────────────────────────────────────────────────────
+  // Debe registrarse antes de los datasources locales y del interceptor.
+
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
 
-  // Datasources separados por tipo de usuario
   sl.registerLazySingleton<AuthLocalDbDataSource>(
     () => AuthLocalDbDataSource(
       sl<AppDatabase>(),
@@ -50,6 +55,7 @@ Future<void> initDependencies() async {
     ),
     instanceName: DbConstants.userTypeClient,
   );
+
   sl.registerLazySingleton<AuthLocalDbDataSource>(
     () => AuthLocalDbDataSource(
       sl<AppDatabase>(),
@@ -58,41 +64,45 @@ Future<void> initDependencies() async {
     instanceName: DbConstants.userTypeDriver,
   );
 
-  // Crear Dio SIN AuthInterceptor primero
+  // ── 3. Red ────────────────────────────────────────────────────────────────
+  // El orden aqui es critico:
+  //   a. Crear la instancia de Dio sin el AuthInterceptor.
+  //   b. Crear AuthRemoteDatasource con esa instancia y registrarla.
+  //   c. Insertar el AuthInterceptor pasando instancias directas, no sl<>().
+  //   d. Registrar Dio ya configurado en GetIt.
+  //
+  // Razon: el AuthInterceptor se resuelve de forma inmediata al insertarse,
+  // por lo que sl<Dio>() aun no existiria si se usara dentro del interceptor.
+
   final dioBasic = await DioClient.getInstance(
     enableSSLPinning: false,
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
   );
 
-  // Crear AuthenticationService con Dio básico
-  final authenticationService = AuthClientServices(dio: dioBasic);
-  sl.registerLazySingleton<AuthClientServices>(() => authenticationService);
+  final authRemote = AuthRemoteDatasource(dio: dioBasic);
+  sl.registerLazySingleton<AuthRemoteDatasource>(() => authRemote);
 
-  // Agregar AuthInterceptor DESPUÉS
   dioBasic.interceptors.insert(
-    2, // Después de Cache, antes de Retry
+    2, // posicion: despues de Cache, antes de Retry
     AuthInterceptor(
       db: sl<AppDatabase>(),
-      authenticationService: authenticationService,
+      dio: dioBasic,
+      authRemote: authRemote,
     ),
   );
 
-  // Registrar Dio configurado
   sl.registerLazySingleton<Dio>(() => dioBasic);
 
-  //?auth
-  //local
+  // ── 4. Auth — datasources locales ────────────────────────────────────────
+
   sl.registerLazySingleton<AuthLocalServices>(
     () => AuthLocalServices(sl<RxSharedPreferences>()),
   );
 
-  // Remote datasource — must be registered before the repository
-  sl.registerLazySingleton<AuthRemoteDatasource>(
-    () => AuthRemoteDatasource(dio: sl<Dio>()),
-  );
+  // ── 5. Auth — repository ──────────────────────────────────────────────────
+  // Una sola instancia registrada bajo la interfaz AuthUnifiedRepository.
 
-  // Single unified repository instance
   sl.registerLazySingleton<AuthUnifiedRepository>(
     () => AuthRepositoryUnifiedImpl(
       remote: sl<AuthRemoteDatasource>(),
@@ -107,12 +117,13 @@ Future<void> initDependencies() async {
     ),
   );
 
-  //Blocs
+  // ── 6. Auth — blocs ───────────────────────────────────────────────────────
+  // SessionBloc es singleton porque el router lo escucha como stream global.
+  // AuthUnifiedBloc es factory porque cada pantalla necesita una instancia limpia.
+
   sl.registerLazySingleton<SessionBloc>(
     () => SessionBloc(sl<AuthUnifiedRepository>()),
   );
-  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
-  sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
 
   sl.registerFactory<AuthUnifiedBloc>(
     () => AuthUnifiedBloc(
@@ -124,4 +135,9 @@ Future<void> initDependencies() async {
   sl.registerFactory<AuthFormCubit>(
     () => AuthFormCubit(prefs: sl<RxSharedPreferences>()),
   );
+
+  // ── 7. Globales de navegacion y modales ───────────────────────────────────
+
+  sl.registerLazySingleton<BottomNavCubit>(() => BottomNavCubit());
+  sl.registerFactory<ModalTempCubit>(() => ModalTempCubit());
 }

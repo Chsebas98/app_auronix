@@ -46,7 +46,7 @@ class AuthRemoteDatasource {
         ),
         data: {'email': email, 'password': password},
       );
-      debugPrint('✅ loginClient exitoso');
+      debugPrint('loginClient exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -70,7 +70,7 @@ class AuthRemoteDatasource {
           'ape1': creds.lastName,
         },
       );
-      debugPrint('✅ googleLogin exitoso');
+      debugPrint('googleLogin exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -91,7 +91,7 @@ class AuthRemoteDatasource {
         ),
         data: {'email': email, 'password': password, 'rol': rol},
       );
-      debugPrint('✅ verifyRegisterClient exitoso');
+      debugPrint('verifyRegisterClient exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -108,7 +108,7 @@ class AuthRemoteDatasource {
         ),
         data: data,
       );
-      debugPrint('✅ registerClient exitoso');
+      debugPrint('registerClient exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -122,7 +122,7 @@ class AuthRemoteDatasource {
         options: Options(contentType: 'application/json'),
         data: {'token_refresh': refreshToken},
       );
-      debugPrint('✅ refreshClientToken exitoso');
+      debugPrint('refreshClientToken exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -160,7 +160,7 @@ class AuthRemoteDatasource {
         ),
         data: {'ci_passport': ciPassport, 'password': password},
       );
-      debugPrint('✅ loginDriver exitoso');
+      debugPrint('loginDriver exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -181,7 +181,7 @@ class AuthRemoteDatasource {
         ),
         data: {'ci_passport': ciPassport, 'password': password, 'email': email},
       );
-      debugPrint('✅ registerDriver exitoso');
+      debugPrint('registerDriver exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -195,7 +195,7 @@ class AuthRemoteDatasource {
         options: Options(contentType: 'application/json'),
         data: {'token_refresh': refreshToken},
       );
-      debugPrint('✅ refreshDriverToken exitoso');
+      debugPrint('refreshDriverToken exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);

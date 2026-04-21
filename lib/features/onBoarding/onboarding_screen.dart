@@ -1,4 +1,6 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/l10n/app_localizations.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
@@ -27,9 +29,9 @@ class OnBoardingScreen extends StatelessWidget {
             children: [
               SizedBox(
                 width: double.infinity,
-                child: CustomFilledButton(
-                  desc: 'Continuar',
-                  action: () {
+                child: AppButton(
+                  label: 'Continuar',
+                  onPressed: () {
                     context.read<SessionBloc>().add(CheckLoggedUserEvent());
                   },
                 ),
@@ -108,7 +110,7 @@ class _OnBoardingStructure extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              HorizontalLogo(),
+              AppHorizontalLogo(),
 
               IconButton(
                 onPressed: () => context.read<ThemeCubit>().toggleTheme(),

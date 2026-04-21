@@ -5,7 +5,7 @@ import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/handlers/dialog_handler.dart';
 import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
-import 'package:auronix_app/shared/widgets/widgets.dart';
+import 'package:auronix_app/shared/templates/appbar/bottom-appbar/cubit/bottom_nav_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

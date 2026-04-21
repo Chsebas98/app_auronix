@@ -1,139 +1,130 @@
+import 'dart:async';
+
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
-import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
+import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-/// Interceptor para manejo automático de autenticación y refresh de tokens
 class AuthInterceptor extends Interceptor {
   final AppDatabase _db;
-  final AuthenticationService _authenticationService;
+  final AuthRemoteDatasource _authRemote;
+  final Dio _dio;
+
   bool _isRefreshing = false;
-  final List<RequestOptions> _requestsQueue = [];
+
+  // Completer por request — cada uno espera su resolución
+  final List<Completer<String>> _refreshQueue = [];
 
   AuthInterceptor({
     required AppDatabase db,
-    required AuthenticationService authenticationService,
+    required AuthRemoteDatasource authRemote,
+    required Dio dio,
   }) : _db = db,
-       _authenticationService = authenticationService;
+       _authRemote = authRemote,
+       _dio = dio;
+
+  // ── onRequest ────────────────────────────────────────────────────
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Excluir rutas que no necesitan autenticación
-    if (_isPublicRoute(options.path)) {
-      debugPrint('🌍 Ruta pública: ${options.path}');
-      return handler.next(options);
-    }
+    if (_isPublicRoute(options.path)) return handler.next(options);
 
-    // Obtener access token del usuario activo
     final activeUser = await _db.getActiveUserMap();
-    final accessToken =
-        activeUser?[DbConstants.colTokenAccess] as String?;
+    final accessToken = activeUser?[DbConstants.colTokenAccess] as String?;
 
-    if (accessToken == null || accessToken.isEmpty) {
-      debugPrint('⚠️ No hay access token, request sin auth');
-      return handler.next(options);
+    if (accessToken != null && accessToken.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $accessToken';
     }
-
-    // Agregar Authorization header
-    options.headers['Authorization'] = 'Bearer $accessToken';
-    debugPrint('🔑 Authorization header agregado');
 
     handler.next(options);
   }
+
+  // ── onError ──────────────────────────────────────────────────────
 
   @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    // Solo manejar 401 Unauthorized
-    if (err.response?.statusCode != 401) {
-      return handler.next(err);
-    }
+    if (err.response?.statusCode != 401) return handler.next(err);
 
-    debugPrint('🔴 401 Unauthorized detectado en: ${err.requestOptions.path}');
+    debugPrint('401 en: ${err.requestOptions.path}');
 
-    // Si ya estamos refrescando, encolar request
+    //Si ya hay un refresh en curso — encolar con Completer y esperar
     if (_isRefreshing) {
-      debugPrint('⏳ Refresh en progreso, encolando request...');
-      _requestsQueue.add(err.requestOptions);
-      return;
+      debugPrint('⏳ Refresh en progreso, encolando...');
+      final completer = Completer<String>();
+      _refreshQueue.add(completer);
+
+      try {
+        // Esperar a que el refresh termine y recibir el nuevo token
+        final newToken = await completer.future;
+        final retryOptions = err.requestOptions;
+        retryOptions.headers['Authorization'] = 'Bearer $newToken';
+        final response = await _dio.fetch(retryOptions); // usa _dio configurado
+        return handler.resolve(response);
+      } catch (e) {
+        return handler.next(err);
+      }
     }
+
+    // ── Ejecutar refresh ─────────────────────────────────────────
+
+    _isRefreshing = true;
 
     try {
-      _isRefreshing = true;
-      debugPrint('🔄 Iniciando refresh de tokens...');
-
-      // Obtener usuario activo y su refresh token
       final activeUser = await _db.getActiveUserMap();
-      final userType =
-          activeUser?[DbConstants.colUserType] as String?;
-      final refreshToken =
-          activeUser?[DbConstants.colTokenRefresh] as String?;
+      final userType = activeUser?[DbConstants.colUserType] as String?;
+      final refreshToken = activeUser?[DbConstants.colTokenRefresh] as String?;
 
       if (refreshToken == null || refreshToken.isEmpty || userType == null) {
-        debugPrint('❌ No hay refresh token, cerrando sesión');
+        debugPrint('Sin refresh token — limpiando sesión');
+        _resolveQueue(null); // notificar a encolados que falló
         if (userType != null) await _db.clearUser(userType);
         return handler.next(err);
       }
 
-      // Llamar a refresh endpoint
-      final response = await _authenticationService.refreshToken(refreshToken);
+      // Llamar al endpoint de refresh según userType
+      final response = userType == DbConstants.userTypeClient
+          ? await _authRemote.refreshClientToken(refreshToken)
+          : await _authRemote.refreshDriverToken(refreshToken);
 
       if (!response['response']) {
-        debugPrint('❌ Refresh falló: ${response['message']}');
+        debugPrint('Refresh falló: ${response['message']}');
+        _resolveQueue(null);
         await _db.clearUser(userType);
         return handler.next(err);
       }
 
-      // Extraer nuevos tokens
       final result = response['result'] as Map<String, dynamic>;
       final newAccessToken = result['token_access'] as String;
       final newRefreshToken = result['token_refresh'] as String;
 
-      debugPrint('✅ Tokens refrescados exitosamente');
-
-      // Guardar nuevos tokens
       await _db.updateTokens(
         tokenAccess: newAccessToken,
         tokenRefresh: newRefreshToken,
         userType: userType,
       );
 
-      // Reintentar request original con nuevo token
+      debugPrint('Tokens refrescados');
+
+      // Notificar a todos los encolados con el nuevo token
+      _resolveQueue(newAccessToken);
+
+      // Reintentar el request original
       final retryOptions = err.requestOptions;
       retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-
-      debugPrint('🔄 Reintentando request original...');
-      final retryResponse = await Dio().fetch(retryOptions);
-
-      debugPrint('✅ Request original exitoso después de refresh');
-
-      // Procesar cola de requests
-      if (_requestsQueue.isNotEmpty) {
-        debugPrint(
-          '📦 Procesando ${_requestsQueue.length} requests encolados...',
-        );
-
-        for (final queuedRequest in _requestsQueue) {
-          queuedRequest.headers['Authorization'] = 'Bearer $newAccessToken';
-          try {
-            await Dio().fetch(queuedRequest);
-          } catch (e) {
-            debugPrint('⚠️ Error en request encolado: $e');
-          }
-        }
-
-        _requestsQueue.clear();
-      }
-
+      final retryResponse = await _dio.fetch(
+        retryOptions,
+      ); // usa _dio configurado
       return handler.resolve(retryResponse);
     } catch (e) {
-      debugPrint('❌ Error durante refresh: $e');
+      debugPrint('Error en refresh: $e');
+      _resolveQueue(null);
       final activeUser = await _db.getActiveUserMap();
       final userType = activeUser?[DbConstants.colUserType] as String?;
       if (userType != null) await _db.clearUser(userType);
@@ -143,23 +134,32 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  /// Rutas que NO requieren autenticación
+  // ── Helpers ──────────────────────────────────────────────────────
+
+  /// Resuelve o rechaza todos los Completers encolados
+  void _resolveQueue(String? newToken) {
+    for (final completer in _refreshQueue) {
+      if (newToken != null) {
+        completer.complete(newToken); // éxito → reciben el token
+      } else {
+        completer.completeError('Refresh failed'); // fallo → se manejan
+      }
+    }
+    _refreshQueue.clear();
+  }
+
   bool _isPublicRoute(String path) {
-    final publicRoutes = [
-      // Client auth
+    const publicRoutes = [
       '/auth/clients/login',
       '/auth/clients/register',
       '/auth/clients/google-login',
       '/auth/clients/verify-register',
       '/auth/clients/refresh-token',
-      // Driver auth
       '/auth/drivers/login',
       '/auth/drivers/register',
       '/auth/drivers/refresh-token',
-      // Shared logout
       '/auth/logout',
     ];
-
-    return publicRoutes.any((route) => path.contains(route));
+    return publicRoutes.any(path.contains);
   }
 }

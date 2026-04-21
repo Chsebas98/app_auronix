@@ -1,8 +1,8 @@
-import 'package:auronix_app/app/design/theme/theme.dart';
-import 'package:auronix_app/shared/dialogs/anims/native_animations.dart';
-import 'package:auronix_app/shared/dialogs/widgets/animated_button.dart';
-import 'package:auronix_app/shared/dialogs/widgets/header_dialog.dart';
-import 'package:auronix_app/shared/dialogs/widgets/vertical_stack_header_dialog.dart';
+import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/shared/organisms/dialogs/anims/native_animations.dart';
+import 'package:auronix_app/shared/organisms/dialogs/widgets/animated_button.dart';
+import 'package:auronix_app/shared/organisms/dialogs/widgets/header_dialog.dart';
+import 'package:auronix_app/shared/organisms/dialogs/widgets/vertical_stack_header_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

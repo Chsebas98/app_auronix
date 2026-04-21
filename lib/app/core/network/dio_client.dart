@@ -3,7 +3,7 @@ import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart'
 import 'package:auronix_app/app/core/network/interceptors/cache_control_interceptors.dart';
 import 'package:auronix_app/app/core/network/interceptors/retry_control_interceptor.dart';
 import 'package:auronix_app/app/database/app_database.dart';
-import 'package:auronix_app/features/client/auth/data/remote/authentication_service.dart';
+import 'package:auronix_app/features/auth/auth.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -23,7 +23,7 @@ class DioClient {
     Duration? connectTimeout,
     Duration? receiveTimeout,
     AppDatabase? database,
-    AuthenticationService? authenticationService,
+    AuthRemoteDatasource? authRemote,
   }) async {
     if (_dio != null && _initialized) return _dio!;
 
@@ -58,14 +58,11 @@ class DioClient {
       );
     }
 
-    if (database != null && authenticationService != null) {
+    if (database != null && authRemote != null) {
       dio.interceptors.add(
-        AuthInterceptor(
-          db: database,
-          authenticationService: authenticationService,
-        ),
+        AuthInterceptor(db: database, authRemote: authRemote, dio: dio),
       );
-      debugPrint('✅ Auth Interceptor agregado');
+      debugPrint('Auth Interceptor agregado');
     }
 
     // 3. Retry Control Interceptor (controla retry dinámicamente)
@@ -84,21 +81,17 @@ class DioClient {
         responseBody: true,
         requestHeader: false,
         responseHeader: false,
-        logPrint: (obj) => debugPrint('🌐 Dio: $obj'),
+        logPrint: (obj) => debugPrint('Dio: $obj'),
       ),
     );
 
     _dio = dio;
     _initialized = true;
 
-    debugPrint('✅ DioClient inicializado');
-    debugPrint(
-      '   📦 Cache: ${_cacheOptions != null ? 'Enabled' : 'Disabled'}',
-    );
-    debugPrint('   🔄 Retry: Enabled (dinámico)');
-    debugPrint(
-      '   🔒 SSL Pinning: ${enableSSLPinning ? 'Enabled' : 'Disabled'}',
-    );
+    debugPrint('DioClient inicializado');
+    debugPrint('Cache: ${_cacheOptions != null ? 'Enabled' : 'Disabled'}');
+    debugPrint('Retry: Enabled (dinámico)');
+    debugPrint('SSL Pinning: ${enableSSLPinning ? 'Enabled' : 'Disabled'}');
 
     return _dio!;
   }
@@ -122,9 +115,9 @@ class DioClient {
         keyBuilder: _smartCacheKeyBuilder,
       );
 
-      debugPrint('✅ Cache inicializado: ${cacheDir.path}');
+      debugPrint('Cache inicializado: ${cacheDir.path}');
     } catch (e) {
-      debugPrint('❌ Error al inicializar cache: $e');
+      debugPrint('Error al inicializar cache: $e');
       _cacheOptions = null;
     }
   }
@@ -151,9 +144,9 @@ class DioClient {
         createHttpClient: () => HttpClient(context: context),
       );
 
-      debugPrint('✅ SSL Pinning configurado');
+      debugPrint('SSL Pinning configurado');
     } catch (e) {
-      debugPrint('⚠️ SSL Pinning no disponible: $e');
+      debugPrint('SSL Pinning no disponible: $e');
     }
   }
 
@@ -161,9 +154,9 @@ class DioClient {
   static Future<void> clearCache() async {
     try {
       await _cacheOptions?.store?.clean();
-      debugPrint('🗑️ Cache limpiado completamente');
+      debugPrint('Cache limpiado completamente');
     } catch (e) {
-      debugPrint('❌ Error al limpiar cache: $e');
+      debugPrint('Error al limpiar cache: $e');
     }
   }
 
@@ -171,9 +164,9 @@ class DioClient {
   static Future<void> deleteCacheByKey(String key) async {
     try {
       await _cacheOptions?.store?.delete(key);
-      debugPrint('🗑️ Cache eliminado para key: $key');
+      debugPrint('Cache eliminado para key: $key');
     } catch (e) {
-      debugPrint('❌ Error al eliminar cache: $e');
+      debugPrint('Error al eliminar cache: $e');
     }
   }
 

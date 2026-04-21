@@ -1,4 +1,3 @@
-import 'package:auronix_app/shared/atoms/radius/app_radius.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:flutter/material.dart';
 

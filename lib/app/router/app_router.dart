@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/router/client/client_routes.dart';
+import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
-import 'package:auronix_app/features/conductor/routes/conductor_routes.dart';
-import 'package:auronix_app/features/conductor/routes/conductor_routes_path.dart';
-import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/onBoarding/onboarding_screen.dart';
+import 'package:auronix_app/shared/pages/root_page.dart';
+import 'package:auronix_app/shared/templates/presentation/allow_permits_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +23,6 @@ final _publicRoutes = <String>{
   Routes.newVersion,
   Routes.root,
   Routes.sessionExpired,
-  ConductorRoutesPath.login,
 };
 
 final _publicPrefixes = <String>{'/recuperar-password'};
@@ -78,10 +82,17 @@ class AppRouter {
             return null;
           }
 
+          final role = sessionState.dataUser.role;
           // Si está en rutas públicas y no es onBoarding
           if (isPublic && currentLocation != Routes.onBoarding) {
-            debugPrint('Autenticado → /home');
-            return ClientRoutesPath.home;
+            return switch (role) {
+              Roles.rolUser => ClientRoutesPath.home,
+              Roles.rolDriver => ConductorRoutesPath.home,
+              // 'socio' => SocioRoutesPath.home,
+              // 'gerente' => GerenteRoutesPath.home,
+              // 'superadmin' => SuperAdminRoutesPath.home,
+              _ => Routes.root,
+            };
           }
 
           // Si está en onBoarding, dejarlo ahí
@@ -111,26 +122,12 @@ class AppRouter {
             return OnBoardingScreen();
           },
         ),
-        GoRoute(
-          name: 'about',
-          path: Routes.about,
-          builder: (context, state) {
-            return AboutScreen();
-          },
-        ),
-        GoRoute(
-          name: 'authClient',
-          path: Routes.auth,
-          builder: (context, state) {
-            return AuthScreen();
-          },
-        ),
 
         GoRoute(
           name: 'root',
           path: Routes.root,
           builder: (context, state) {
-            return RootScreen();
+            return RootPage();
           },
         ),
 

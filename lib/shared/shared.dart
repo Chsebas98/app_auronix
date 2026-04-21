@@ -30,8 +30,8 @@ export 'atoms/spacing/app_spacing.dart';
 export 'atoms/text/app_text.dart';
 
 // ── molecules ────────────────────────────────────────────────────────────────
-export 'molecules/appbar/app_appbar.dart';
-export 'molecules/appbar/app_bottom_nav.dart';
+export 'molecules/navigation/app_appbar.dart';
+export 'molecules/navigation/app_bottom_nav.dart';
 export 'molecules/avatar/app_editable_avatar.dart';
 export 'molecules/horizontal-logo/app_horizontal_logo.dart';
 export 'molecules/inputs/app_input_select.dart';
@@ -39,13 +39,10 @@ export 'molecules/skeleton/app_skeleton_list_tile.dart';
 export 'molecules/snackbar/app_snackbar.dart';
 
 // ── skeleton ─────────────────────────────────────────────────────────────────
-export 'skeleton/app_skeleton_box.dart';
+export 'atoms/skeleton/app_skeleton_box.dart';
 
 // ── blocs ────────────────────────────────────────────────────────────────────
 export 'blocs/modals/modal_temp_cubit.dart';
 
 // ── dialogs ──────────────────────────────────────────────────────────────────
-export 'package:auronix_app/shared/dialogs/dialogs.dart';
-
-// ── widgets (do not modify — templates) ──────────────────────────────────────
-export 'widgets/widgets.dart';
+export 'package:auronix_app/shared/organisms/dialogs/dialogs.dart';

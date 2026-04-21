@@ -9,7 +9,6 @@ import 'package:auronix_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/refresh_token_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/register_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/register_driver_usecase.dart';
-import 'package:auronix_app/features/auth/presentation/bloc/auth_form_cubit.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:bloc/bloc.dart';

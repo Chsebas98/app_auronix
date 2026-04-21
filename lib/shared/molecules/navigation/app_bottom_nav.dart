@@ -2,7 +2,8 @@ import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/shared/atoms/radius/app_radius.dart';
 import 'package:auronix_app/shared/atoms/spacing/app_spacing.dart';
-import 'package:auronix_app/shared/widgets/widgets.dart';
+import 'package:auronix_app/shared/templates/appbar/bottom-appbar/models/interfaces/shared_item_nav.dart';
+
 import 'package:flutter/material.dart';
 
 class AppBottomNav extends StatelessWidget {

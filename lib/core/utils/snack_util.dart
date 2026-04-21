@@ -1,7 +1,8 @@
 import 'package:auronix_app/app/app.dart';
-import 'package:auronix_app/app/design/theme/theme.dart';
+import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/shared/snackbars/custom_snackbar.dart';
+import 'package:auronix_app/shared/molecules/snackbar/app_snackbar.dart';
+
 import 'package:flutter/material.dart'
     show
         BuildContext,
@@ -28,11 +29,10 @@ class SnackUtil {
   }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       rootMessengerKey.currentState?.showSnackBar(
-        CustomSnackbar(
+        appSnackbar(
           theme: theme,
           title: title,
           description: description,
-          isDefaultSnackbar: isDefaultSnackbar ?? TypeToast.defaultToast,
           typeColor: typeColor ?? TypeColor.success,
           behavior: behavior ?? SnackBarBehavior.floating,
           descriptionRich: descriptionRich,

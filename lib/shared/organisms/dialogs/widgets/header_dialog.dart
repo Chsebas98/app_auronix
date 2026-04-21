@@ -1,5 +1,5 @@
-import 'package:auronix_app/shared/dialogs/anims/rive_anim.dart';
-import 'package:auronix_app/shared/dialogs/custom_dialog.dart';
+import 'package:auronix_app/shared/organisms/dialogs/anims/rive_anim.dart';
+import 'package:auronix_app/shared/organisms/dialogs/custom_dialog.dart';
 import 'package:flutter/material.dart';
 
 ///Header of the [AwesomeDialog]

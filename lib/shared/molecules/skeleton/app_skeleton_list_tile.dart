@@ -1,6 +1,6 @@
 import 'package:auronix_app/shared/atoms/radius/app_radius.dart';
 import 'package:auronix_app/shared/atoms/spacing/app_spacing.dart';
-import 'package:auronix_app/shared/skeleton/app_skeleton_box.dart';
+import 'package:auronix_app/shared/atoms/skeleton/app_skeleton_box.dart';
 import 'package:flutter/material.dart';
 
 class AppSkeletonListTile extends StatelessWidget {

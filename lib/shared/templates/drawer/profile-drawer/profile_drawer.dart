@@ -1,6 +1,7 @@
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
-import 'package:auronix_app/shared/widgets/widgets.dart';
+import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer_config.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
