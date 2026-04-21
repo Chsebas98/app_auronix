@@ -13,7 +13,7 @@ export 'atoms/images/app_svg_image_asset.dart';
 export 'atoms/inputs/app_checkbox.dart';
 export 'atoms/inputs/app_radio.dart';
 export 'atoms/inputs/input_default/app_text_field.dart';
-export 'atoms/inputs/input_default/input_default_controller.dart';
+export 'atoms/inputs/input_default/app_text_controller.dart';
 export 'atoms/inputs/input_default/validation_rule.dart';
 export 'atoms/inputs/input_default/widget/default_show_hide_password_button.dart';
 export 'atoms/inputs/input_default/widget/default_strength_indicator.dart';

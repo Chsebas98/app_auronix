@@ -73,6 +73,25 @@ final class AuthRestoreDriverSessionEvent extends AuthUnifiedEvent {
   const AuthRestoreDriverSessionEvent();
 }
 
+final class AuthCompleteRegisterClientEvent extends AuthUnifiedEvent {
+  final String name;
+  final String email;
+  final String gender;
+  final String phone;
+  final String password;
+
+  const AuthCompleteRegisterClientEvent({
+    required this.name,
+    required this.email,
+    required this.gender,
+    required this.phone,
+    required this.password,
+  });
+
+  @override
+  List<Object?> get props => [name, email, gender, phone, password];
+}
+
 final class AuthLogoutEvent extends AuthUnifiedEvent {
   const AuthLogoutEvent();
 }

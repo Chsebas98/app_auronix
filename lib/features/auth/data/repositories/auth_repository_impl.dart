@@ -77,10 +77,10 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       await _clientDb.saveUser(creds);
       await _local.setRememberMe(rememberMe);
 
-      debugPrint('✅ [AuthUnified] Login cliente completado');
+      debugPrint('[AuthUnified] Login cliente completado');
       return Right(creds);
     } catch (e) {
-      debugPrint('❌ [AuthUnified] Error en login cliente: $e');
+      debugPrint('[AuthUnified] Error en login cliente: $e');
       return Left(
         UnexpectedFailure(
           message: 'Error inesperado al iniciar sesión',
@@ -177,10 +177,10 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       await _clientDb.saveUser(creds);
       await _local.setRememberMe(true);
 
-      debugPrint('✅ [AuthUnified] Google login/registro completado');
+      debugPrint('[AuthUnified] Google login/registro completado');
       return Right(creds);
     } catch (e) {
-      debugPrint('❌ [AuthUnified] Error en Google login: $e');
+      debugPrint('[AuthUnified] Error en Google login: $e');
       return Left(
         UnexpectedFailure(
           message: 'Error inesperado al iniciar sesión con Google',
@@ -213,7 +213,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
       return const Right(null);
     } catch (e) {
-      debugPrint('❌ [AuthUnified] Error en verifyRegister: $e');
+      debugPrint('[AuthUnified] Error en verifyRegister: $e');
       return Left(
         UnexpectedFailure(
           message: 'Error al verificar usuario',
@@ -263,10 +263,10 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       await _clientDb.saveUser(creds);
       await _local.setRememberMe(false);
 
-      debugPrint('✅ [AuthUnified] Registro cliente completado');
+      debugPrint('[AuthUnified] Registro cliente completado');
       return Right(creds);
     } catch (e) {
-      debugPrint('❌ [AuthUnified] Error en registerClient: $e');
+      debugPrint('[AuthUnified] Error en registerClient: $e');
       return Left(
         UnexpectedFailure(
           message: 'Error al registrar usuario',
@@ -289,6 +289,24 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       return Left(
         CacheFailure(
           message: 'Error al obtener sesión de cliente',
+          detail: e.toString(),
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthenticationCredentials>>
+  completeRegisterClient() async {
+    try {
+      debugPrint('[AuthUnified] Completando registro de cliente');
+      // Aquí podrías hacer una llamada al backend para completar el registro
+      return const Right(AuthenticationCredentials.empty());
+    } catch (e) {
+      debugPrint('[AuthUnified] Error en completeRegisterClient: $e');
+      return Left(
+        UnexpectedFailure(
+          message: 'Error al completar registro',
           detail: e.toString(),
         ),
       );
@@ -332,10 +350,10 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       await _driverDb.saveUser(creds);
       await _prefs.setBool(StaticVariables.rememberConductorKey, rememberMe);
 
-      debugPrint('✅ [AuthUnified] Login conductor completado');
+      debugPrint('[AuthUnified] Login conductor completado');
       return Right(creds);
     } catch (e) {
-      debugPrint('❌ [AuthUnified] Error en login conductor: $e');
+      debugPrint('[AuthUnified] Error en login conductor: $e');
       return Left(
         UnexpectedFailure(
           message: 'Error inesperado al iniciar sesión',
@@ -380,10 +398,10 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
       await _driverDb.saveUser(creds);
 
-      debugPrint('✅ [AuthUnified] Registro conductor completado');
+      debugPrint('[AuthUnified] Registro conductor completado');
       return Right(creds);
     } catch (e) {
-      debugPrint('❌ [AuthUnified] Error en registerDriver: $e');
+      debugPrint('[AuthUnified] Error en registerDriver: $e');
       return Left(
         UnexpectedFailure(
           message: 'Error inesperado al registrar conductor',

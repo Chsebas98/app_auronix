@@ -1,13 +1,13 @@
 import 'package:auronix_app/app/design/theme/app_colors.dart';
-import 'package:auronix_app/shared/atoms/inputs/input_default/input_default_controller.dart';
+import 'package:auronix_app/shared/atoms/inputs/input_default/app_text_controller.dart';
 import 'package:auronix_app/shared/atoms/inputs/input_default/validation_rule.dart';
 import 'package:auronix_app/shared/atoms/inputs/input_default/widget/input_formatters.dart';
 import 'package:auronix_app/shared/atoms/inputs/input_default/widget/widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class CustomTextFormField extends StatefulWidget {
-  const CustomTextFormField({
+class AppTextField extends StatefulWidget {
+  const AppTextField({
     super.key,
     this.onChanged,
     this.onSaved,
@@ -170,7 +170,7 @@ class CustomTextFormField extends StatefulWidget {
   // Instancia de [FancyPasswordController].
   //
   // Útil cuando quieres obtener información del widget.
-  final CustomTextFormFieldController? passwordController;
+  final AppTextFieldController? passwordController;
 
   // Identificador para el nodo de semántica en la jerarquía de accesibilidad nativa.
   // No se expone al usuario; suele usarse en pruebas de UI con herramientas
@@ -333,18 +333,18 @@ class CustomTextFormField extends StatefulWidget {
   final bool? obscureText;
 
   @override
-  State<CustomTextFormField> createState() => _CustomTextFormFieldState();
+  State<AppTextField> createState() => _AppTextFieldState();
 }
 
-class _CustomTextFormFieldState extends State<CustomTextFormField> {
+class _AppTextFieldState extends State<AppTextField> {
   String _value = '';
   bool _hidePassword = true;
-  late CustomTextFormFieldController _passwordController;
+  late AppTextFieldController _passwordController;
 
   @override
   void initState() {
     _passwordController =
-        (widget.passwordController ?? CustomTextFormFieldController())
+        (widget.passwordController ?? AppTextFieldController())
           ..setRules(widget.validationRules);
     // El orden no importa, porque TextEditingController fallará si initialValue y text están configurados.
     _value = widget.initialValue ?? widget.controller?.text ?? '';

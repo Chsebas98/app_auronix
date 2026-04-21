@@ -33,6 +33,8 @@ abstract class AuthUnifiedRepository {
 
   Future<Either<Failure, AuthenticationCredentials?>> getClientSession();
 
+  Future<Either<Failure, void>> completeRegisterClient();
+
   //?Remote – Driver
   Future<Either<Failure, AuthenticationCredentials>> loginDriver({
     required String ciPassport,

@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 /// field. This controller gives the widget access to some internal info of
 /// the password field, like what are the rules, and what rules are beeing
 /// ofended.
-class CustomTextFormFieldController extends ChangeNotifier {
+class AppTextFieldController extends ChangeNotifier {
   late Set<ValidationRule> _rules;
   final Set<ValidationRule> _ofendingRules = {};
 

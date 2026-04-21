@@ -7,6 +7,7 @@ import 'package:auronix_app/app/router/driver/conductor_routes.dart';
 import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/auth/presentation/pages/client/auth_page.dart';
 import 'package:auronix_app/features/onBoarding/onboarding_screen.dart';
 import 'package:auronix_app/shared/pages/root_page.dart';
 import 'package:auronix_app/shared/templates/presentation/allow_permits_screen.dart';
@@ -128,6 +129,14 @@ class AppRouter {
           path: Routes.root,
           builder: (context, state) {
             return RootPage();
+          },
+        ),
+
+        GoRoute(
+          name: 'auth',
+          path: Routes.auth,
+          builder: (context, state) {
+            return const AuthPage();
           },
         ),
 

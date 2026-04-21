@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:auronix_app/features/auth/domain/usecases/auth_complete_register_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/google_login_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/login_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/login_driver_usecase.dart';
@@ -29,6 +30,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
   final RegisterDriverUseCase _registerDriver;
   final RefreshTokenUseCase _refreshToken;
   final LogoutUseCase _logout;
+  final AuthCompleteRegisterClientUsecase _completeRegisterClient;
   final RxSharedPreferences _prefs;
 
   AuthUnifiedBloc({
@@ -41,6 +43,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
        _registerDriver = RegisterDriverUseCase(repository),
        _refreshToken = RefreshTokenUseCase(repository),
        _logout = LogoutUseCase(repository),
+       _completeRegisterClient = AuthCompleteRegisterClientUsecase(repository),
        _prefs = prefs,
        super(const AuthUnifiedIdle()) {
     on<AuthLoginClientEvent>(_onLoginClient);
@@ -50,6 +53,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
     on<AuthRegisterDriverEvent>(_onRegisterDriver);
     on<AuthRestoreClientSessionEvent>(_onRestoreClientSession);
     on<AuthRestoreDriverSessionEvent>(_onRestoreDriverSession);
+    on<AuthCompleteRegisterClientEvent>(_onAuthCompleteRegisterClientEvent);
     on<AuthLogoutEvent>(_onLogout);
   }
 
@@ -67,11 +71,11 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     result.fold(
       (failure) {
-        debugPrint('❌ [AuthBloc] Login cliente falló: ${failure.message}');
+        debugPrint('[AuthBloc] Login cliente falló: ${failure.message}');
         emit(AuthUnifiedFailure(failure: failure));
       },
       (creds) {
-        debugPrint('✅ [AuthBloc] Login cliente exitoso');
+        debugPrint('[AuthBloc] Login cliente exitoso');
         emit(AuthUnifiedSuccess(credentials: creds));
       },
     );
@@ -91,11 +95,11 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     result.fold(
       (failure) {
-        debugPrint('❌ [AuthBloc] Login conductor falló: ${failure.message}');
+        debugPrint('[AuthBloc] Login conductor falló: ${failure.message}');
         emit(AuthUnifiedFailure(failure: failure));
       },
       (creds) {
-        debugPrint('✅ [AuthBloc] Login conductor exitoso');
+        debugPrint('[AuthBloc] Login conductor exitoso');
         emit(AuthUnifiedSuccess(credentials: creds));
       },
     );
@@ -134,11 +138,11 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     result.fold(
       (failure) {
-        debugPrint('❌ [AuthBloc] Google login falló: ${failure.message}');
+        debugPrint('[AuthBloc] Google login falló: ${failure.message}');
         emit(AuthUnifiedFailure(failure: failure));
       },
       (creds) {
-        debugPrint('✅ [AuthBloc] Google login exitoso');
+        debugPrint('[AuthBloc] Google login exitoso');
         if (creds.photoUrl.isEmpty || creds.username.isEmpty) {
           _prefs.setBool(StaticVariables.needsProfileComplete, true);
         }
@@ -178,11 +182,11 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
 
     result.fold(
       (failure) {
-        debugPrint('❌ [AuthBloc] Registro conductor falló: ${failure.message}');
+        debugPrint('[AuthBloc] Registro conductor falló: ${failure.message}');
         emit(AuthUnifiedFailure(failure: failure));
       },
       (creds) {
-        debugPrint('✅ [AuthBloc] Registro conductor exitoso');
+        debugPrint('[AuthBloc] Registro conductor exitoso');
         emit(AuthUnifiedSuccess(credentials: creds));
       },
     );
@@ -224,6 +228,32 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
         emit(AuthUnifiedSuccess(credentials: creds));
       }
     });
+  }
+
+  FutureOr<void> _onAuthCompleteRegisterClientEvent(
+    AuthCompleteRegisterClientEvent event,
+    Emitter<AuthUnifiedState> emit,
+  ) async {
+    emit(const AuthUnifiedLoading());
+
+    final result = await _completeRegisterClient(
+      name: event.name,
+      email: event.email,
+      gender: event.gender,
+      phone: event.phone,
+      password: event.password,
+    );
+    debugPrint('[AuthBloc] Completar registro cliente resultado: $result');
+    // result.fold(
+    //   (failure) {
+    //     debugPrint('[AuthBloc] Completar registro cliente falló: ${failure.message}');
+    //     emit(AuthUnifiedFailure(failure: failure));
+    //   },
+    //   (creds) {
+    //     debugPrint('[AuthBloc] Completar registro cliente exitoso');
+    //     emit(AuthUnifiedSuccess(credentials: creds));
+    //   },
+    // );
   }
 
   FutureOr<void> _onLogout(
