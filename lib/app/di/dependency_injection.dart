@@ -8,6 +8,8 @@ import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/features/home/presentation/bloc/client/home_client_bloc.dart';
+import 'package:auronix_app/features/home/presentation/bloc/driver/home_driver_bloc.dart';
 import 'package:auronix_app/shared/blocs/modals/modal_temp_cubit.dart';
 import 'package:auronix_app/shared/templates/appbar/bottom-appbar/cubit/bottom_nav_cubit.dart';
 import 'package:dio/dio.dart';
@@ -135,6 +137,9 @@ Future<void> initDependencies() async {
   sl.registerFactory<AuthFormCubit>(
     () => AuthFormCubit(prefs: sl<RxSharedPreferences>()),
   );
+
+  sl.registerFactory<HomeClientBloc>(() => HomeClientBloc());
+  sl.registerFactory<HomeDriverBloc>(() => HomeDriverBloc());
 
   // ── 7. Globales de navegacion y modales ───────────────────────────────────
 

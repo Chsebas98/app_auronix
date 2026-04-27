@@ -1,4 +1,4 @@
-import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,13 +25,19 @@ class HomeLocationRow extends StatelessWidget {
                 height: 18.r,
                 child: const CircularProgressIndicator.adaptive(strokeWidth: 2),
               )
-            : Icon(Icons.location_on, size: 18.r, color: AppColors.third),
+            : Icon(
+                Icons.location_on,
+                size: 18.r,
+                color: context
+                    .appColors
+                    .button, // third en light, twelveth en dark
+              ),
         const SizedBox(width: 6),
         Expanded(
           child: AppText(
             address.isEmpty ? 'Obteniendo ubicacion...' : address,
             variant: AppTextVariant.bodySmall,
-            color: AppColors.fourth,
+            color: context.appColors.textSecondary, // fourth → semantico
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -44,7 +50,7 @@ class HomeLocationRow extends StatelessWidget {
           child: AppText(
             'Actualizar',
             variant: AppTextVariant.labelSmall,
-            color: AppColors.third,
+            color: context.appColors.button,
           ),
         ),
       ],

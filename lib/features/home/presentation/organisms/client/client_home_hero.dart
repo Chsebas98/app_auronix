@@ -1,4 +1,5 @@
 import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/home/presentation/bloc/client/home_client_bloc.dart';
 import 'package:auronix_app/features/home/presentation/molecules/client/client_home_hero_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

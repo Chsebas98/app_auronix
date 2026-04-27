@@ -1,4 +1,5 @@
 import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,8 @@ class ClientHomeFloatingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    // Los gradientes de marca (brand) no cambian entre modos
+    // pero el texto/icono encima si debe respetar contraste
     return Material(
       elevation: 8,
       borderRadius: BorderRadius.circular(16.r),
@@ -21,13 +23,19 @@ class ClientHomeFloatingButton extends StatelessWidget {
         child: Container(
           height: 64.h,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.third, AppColors.nineth],
+            gradient: const LinearGradient(
+              colors: [
+                AppColors.third,
+                AppColors.nineth,
+              ], // brand — OK hardcoded
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.third, width: 2.w),
+            border: Border.all(
+              color: context.appColors.borderPrimary,
+              width: 2.w,
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

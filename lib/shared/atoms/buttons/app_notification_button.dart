@@ -1,4 +1,3 @@
-import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -26,8 +25,9 @@ class AppNotificationButton extends StatelessWidget {
               child: Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.sevent,
+                decoration: BoxDecoration(
+                  // context.appColors en lugar de AppColors.sevent hardcodeado
+                  color: Theme.of(context).colorScheme.error,
                   shape: BoxShape.circle,
                 ),
               ),

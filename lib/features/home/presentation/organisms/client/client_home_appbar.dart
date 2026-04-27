@@ -19,7 +19,7 @@ class ClientHomeAppbar extends StatelessWidget {
           backgroundColor: Theme.of(context).primaryColor,
           forceMaterialTransparency: true,
           leading: Padding(
-            padding: EdgeInsets.only(left: 12.w),
+            padding: EdgeInsets.only(left: 12),
             child: HomeAvatarButton(
               photoUrl: state.dataProfile.photoUrl,
               onTap: () => Scaffold.of(context).openDrawer(),

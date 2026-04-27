@@ -1,6 +1,6 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
-import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/features/home/presentation/bloc/client/home_client_bloc.dart';
@@ -40,7 +40,8 @@ class ClientHomeDrawer extends StatelessWidget {
             userEmail: user.email,
             userRole: 'Cliente',
             photoUrl: user.photoUrl.isNotEmpty ? user.photoUrl : null,
-            roleColor: AppColors.third,
+            // context.appColors.button = third (light) / twelveth (dark)
+            roleColor: context.appColors.button,
             onProfileTap: () => AppRouter.push(ClientRoutesPath.profile),
             onLogout: () => _handleLogout(context),
             items: [
@@ -62,6 +63,7 @@ class ClientHomeDrawer extends StatelessWidget {
               ProfileDrawerItem(
                 title: 'Notificaciones',
                 icon: Icons.notifications_outlined,
+                // Atom extraido
                 trailing: _NotificationBadge(count: 3),
                 onTap: () => debugPrint('Notificaciones'),
                 showDivider: true,
@@ -89,6 +91,7 @@ class ClientHomeDrawer extends StatelessWidget {
   }
 }
 
+// Atom inline — si se reutiliza en driver, mover a lib/shared/atoms/
 class _NotificationBadge extends StatelessWidget {
   const _NotificationBadge({required this.count});
 
@@ -99,13 +102,13 @@ class _NotificationBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.sevent,
+        color: Theme.of(context).colorScheme.error,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         '$count',
-        style: const TextStyle(
-          color: AppColors.white,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onError,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),

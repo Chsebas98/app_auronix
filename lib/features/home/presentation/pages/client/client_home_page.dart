@@ -4,16 +4,14 @@ import 'package:auronix_app/features/home/presentation/templates/client/client_h
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Punto de entrada del home cliente.
-/// Solo provee el BlocProvider y delega todo al template.
-class HomeClientPage extends StatelessWidget {
-  const HomeClientPage({super.key});
+class ClientHomePage extends StatelessWidget {
+  const ClientHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<HomeClientBloc>()..add(GetProfileEvent()),
-      child: const HomeClientTemplate(),
+      create: (_) => sl<HomeClientBloc>()..add(const HomeClientInitEvent()),
+      child: const ClientHomeTemplate(),
     );
   }
 }

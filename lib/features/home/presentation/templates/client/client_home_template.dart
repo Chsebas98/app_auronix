@@ -4,10 +4,10 @@ import 'package:auronix_app/features/home/presentation/organisms/client/client_h
 import 'package:flutter/material.dart';
 
 /// Scaffold base del home cliente.
-/// Solo estructura visual: drawer + body(feed + FAB flotante).
-/// Sin logica de negocio.
-class HomeClientTemplate extends StatelessWidget {
-  const HomeClientTemplate({super.key});
+/// Solo estructura visual: drawer + feed + FAB.
+/// Sin logica de negocio ni BlocProvider.
+class ClientHomeTemplate extends StatelessWidget {
+  const ClientHomeTemplate({super.key});
 
   @override
   Widget build(BuildContext context) {
