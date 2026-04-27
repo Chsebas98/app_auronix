@@ -99,7 +99,7 @@ flutter_native_splash:
  # Android 12 pide config específica:
  android_12:
   color: "#F2F6FC"
-  image: assets/images/png/auronix4x.png
+  image: assets/images/png/auronix.png
   icon_background_color: "#F2F6FC"
 
  # Modo oscuro (opcional):

@@ -2,6 +2,7 @@ import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/shared/atoms/icons/app_image_icon.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppHorizontalLogo extends StatelessWidget {
   const AppHorizontalLogo({this.size = 32, super.key});
@@ -19,7 +20,7 @@ class AppHorizontalLogo extends StatelessWidget {
           size: size,
           color: AppColors.third,
         ),
-        const SizedBox(width: 2),
+        2.horizontalSpace,
         AppText(
           'Ando',
           variant: AppTextVariant.headlineMedium,

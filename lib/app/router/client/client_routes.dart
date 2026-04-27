@@ -15,7 +15,7 @@ abstract final class ClientRoutes {
         GoRoute(
           path: ClientRoutesPath.home,
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: ClientHomePage()),
+              const NoTransitionPage(child: HomeClientPage()),
         ),
         // GoRoute(
         //   path: ClientRoutesPath.profile,

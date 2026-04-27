@@ -48,8 +48,7 @@ class OnBoardingScreen extends StatelessWidget {
                     ),
                     Image.asset(
                       'assets/images/png/auronixDark.png',
-
-                      width: 50.w,
+                      height: 50,
                       fit: BoxFit.fitWidth,
                     ),
                   ],
@@ -121,7 +120,7 @@ class _OnBoardingStructure extends StatelessWidget {
                   color: context.read<ThemeCubit>().state == ThemeMode.light
                       ? AppColors.black
                       : AppColors.white,
-                  size: 22.sp,
+                  size: 32,
                 ),
               ),
             ],

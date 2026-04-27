@@ -17,7 +17,6 @@ class AuthTemplate extends StatelessWidget {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
         appBar: AppAppbar(
           hasBackButton: true,
           goTo: () => AppRouter.go(Routes.onBoarding),

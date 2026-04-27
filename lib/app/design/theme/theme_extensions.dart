@@ -42,7 +42,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
   // ── Instancias estáticas listas para usar en AppTheme ──────────────────────
 
   static const light = AppColorsTheme(
-    background: AppColors.lightBackground,
+    background: AppColors.white,
     surface: AppColors.lightSurface,
     card: AppColors.lightCard,
     input: AppColors.lightInput,
