@@ -23,8 +23,8 @@ class AuthEmailField extends StatelessWidget {
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
-            hintText: 'Ingresa tu correo electronico',
-            labelText: 'Correo electronico',
+            hintText: 'Ingresa tu correo electrónico',
+            labelText: 'Correo electrónico',
             border: InputBorder.none,
           ),
           // Lee el getter directamente del state

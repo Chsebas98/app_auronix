@@ -60,13 +60,13 @@ class AppTheme {
             thickness: 1.h,
           ),
 
-          // ── Checkbox ─────────────���────────────────────────────────────────────
+          // ── Checkbox ─────────────────────────────────────────────────────────
           checkboxTheme: CheckboxThemeData(
             checkColor: WidgetStatePropertyAll(
               isLight ? AppColors.secondary : AppColors.primary,
             ),
             side: BorderSide(
-              color: isLight ? AppColors.secondary : AppColors.primary,
+              color: isLight ? AppColors.secondary : AppColors.white,
             ),
             fillColor: WidgetStateProperty.resolveWith<Color>((states) {
               if (states.contains(WidgetState.disabled)) return AppColors.eight;

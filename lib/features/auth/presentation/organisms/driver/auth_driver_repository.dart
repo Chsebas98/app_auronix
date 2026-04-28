@@ -48,7 +48,7 @@ class AuthDriverBody extends StatelessWidget {
               size: 18,
             ),
             label: AppText(
-              'Volver a inicio de sesion cliente',
+              'Volver a inicio de sesión cliente',
               variant: AppTextVariant.bodyMedium,
               color: context.appColors.text,
             ),

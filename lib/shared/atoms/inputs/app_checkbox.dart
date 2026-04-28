@@ -18,7 +18,7 @@ class AppCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkbox = Checkbox.adaptive(
+    final checkbox = Checkbox(
       value: value,
       onChanged: isDisabled ? null : (v) => onChanged(v ?? false),
     );
@@ -31,7 +31,7 @@ class AppCheckbox extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           checkbox,
-          const SizedBox(width: AppSpacing.x2),
+          const SizedBox(width: AppSpacing.x1),
           AppText(label!, variant: AppTextVariant.bodyMedium),
         ],
       ),

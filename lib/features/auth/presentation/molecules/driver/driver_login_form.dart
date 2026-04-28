@@ -23,14 +23,17 @@ class DriverLoginForm extends StatelessWidget {
               20.verticalSpace,
               const AuthPasswordField(),
               8.verticalSpace,
-              AppCheckbox(
-                value: state.isRemember,
-                onChanged: (_) => context.read<AuthFormCubit>().toggleRemember(
-                  isDriver: true,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppCheckbox(
+                  value: state.isRemember,
+                  onChanged: (_) => context
+                      .read<AuthFormCubit>()
+                      .toggleRemember(isDriver: true),
+                  label: 'Recuérdame',
                 ),
-                label: 'Recuerdame',
               ),
-              const SizedBox(height: 12),
+              12.verticalSpace,
               AppButton(
                 label: 'Ingresar',
                 expand: true,

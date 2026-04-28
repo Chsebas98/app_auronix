@@ -1,9 +1,11 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
+import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/features/home/presentation/bloc/client/home_client_bloc.dart';
+import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer.dart';
 import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer_config.dart';
 import 'package:flutter/material.dart';
@@ -13,14 +15,18 @@ class ClientHomeDrawer extends StatelessWidget {
   const ClientHomeDrawer({super.key});
 
   Future<void> _handleLogout(BuildContext context) async {
-    final confirmed = await context.read<DialogCubit>().showConfirm(
-      title: 'Cerrar sesion?',
-      message: 'Estas seguro que deseas cerrar sesion?',
-      okText: 'Cerrar sesion',
+    final dialogCubit = context.read<DialogCubit>();
+    final sessionBloc = context.read<SessionBloc>();
+
+    final confirmed = await dialogCubit.showConfirm(
+      title: 'Cerrar sesión?',
+      message: 'Estas seguro que deseas cerrar sesión?',
+      okText: 'Cerrar sesión',
       cancelText: 'Cancelar',
     );
-    if (confirmed && context.mounted) {
-      context.read<SessionBloc>().add(LoggoutUserEvent());
+
+    if (confirmed) {
+      sessionBloc.add(LoggoutUserEvent());
       AppRouter.go(Routes.auth);
     }
   }
@@ -50,11 +56,11 @@ class ClientHomeDrawer extends StatelessWidget {
                 icon: Icons.person_outline,
                 onTap: () => AppRouter.push(ClientRoutesPath.profile),
               ),
-              ProfileDrawerItem(
-                title: 'Mis viajes',
-                icon: Icons.history,
-                onTap: () => AppRouter.push(ClientRoutesPath.saveTrips),
-              ),
+              // ProfileDrawerItem(
+              //   title: 'Mis viajes',
+              //   icon: Icons.history,
+              //   onTap: () => AppRouter.push(ClientRoutesPath.saveTrips),
+              // ),
               ProfileDrawerItem(
                 title: 'Metodos de pago',
                 icon: Icons.payment,
@@ -73,16 +79,16 @@ class ClientHomeDrawer extends StatelessWidget {
                 icon: Icons.help_outline,
                 onTap: () => debugPrint('Ayuda'),
               ),
-              ProfileDrawerItem(
-                title: 'Configuracion',
-                icon: Icons.settings_outlined,
-                onTap: () => debugPrint('Configuracion'),
-              ),
-              ProfileDrawerItem(
-                title: 'Acerca de',
-                icon: Icons.info_outline,
-                onTap: () => AppRouter.push(Routes.about),
-              ),
+              // ProfileDrawerItem(
+              //   title: 'Configuracion',
+              //   icon: Icons.settings_outlined,
+              //   onTap: () => debugPrint('Configuracion'),
+              // ),
+              // ProfileDrawerItem(
+              //   title: 'Acerca de',
+              //   icon: Icons.info_outline,
+              //   onTap: () => AppRouter.push(Routes.about),
+              // ),
             ],
           ),
         );
@@ -105,14 +111,7 @@ class _NotificationBadge extends StatelessWidget {
         color: Theme.of(context).colorScheme.error,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        '$count',
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onError,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: AppText('$count', color: AppColors.white),
     );
   }
 }

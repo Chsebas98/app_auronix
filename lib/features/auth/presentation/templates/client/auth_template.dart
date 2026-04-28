@@ -57,12 +57,12 @@ class _AuthTabSwitcher extends StatelessWidget {
     return Text.rich(
       TextSpan(
         text: showRegister
-            ? 'Ya tienes una cuenta? '
-            : 'No tienes una cuenta? ',
+            ? '¿Ya tienes una cuenta? '
+            : '¿No tienes una cuenta? ',
         style: baseStyle,
         children: [
           TextSpan(
-            text: showRegister ? 'Inicia Sesion' : 'Registrate',
+            text: showRegister ? 'Inicia Sesión' : 'Regístrate',
             style: baseStyle.copyWith(color: AppColors.twelveth),
           ),
         ],

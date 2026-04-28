@@ -31,22 +31,22 @@ class ClientLoginForm extends StatelessWidget {
                     onChanged: (_) => context
                         .read<AuthFormCubit>()
                         .toggleRemember(isDriver: false),
-                    label: 'Recuerdame',
+                    label: 'Recuérdame',
                   ),
                   const Spacer(),
                   TextButton(
                     onPressed: () {},
                     child: AppText(
-                      'Olvidaste tu contrasena?',
+                      'Olvidaste tu contraseña?',
                       variant: AppTextVariant.bodyMedium,
                       color: theme.colorScheme.primary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              12.verticalSpace,
               AppButton(
-                label: 'Iniciar sesion',
+                label: 'Iniciar sesión',
                 expand: true,
                 onPressed: () {
                   if (formKey.currentState!.validate()) {

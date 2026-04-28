@@ -7,8 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class AuthPasswordField extends StatelessWidget {
   const AuthPasswordField({
     this.isRegister = false,
-    this.label = 'Contrasena',
-    this.hint = 'Ingresa tu contrasena',
+    this.label = 'Contraseña',
+    this.hint = 'Ingresa tu contraseña',
     this.textInputAction = TextInputAction.done,
     super.key,
   });

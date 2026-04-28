@@ -88,7 +88,7 @@ class AuthClientBody extends StatelessWidget {
               30.verticalSpace,
 
               AppButton(
-                label: 'Iniciar sesion con Google',
+                label: 'Iniciar sesión con Google',
                 variant: AppButtonVariant.outlined,
                 expand: true,
                 icon: SvgPicture.asset(
@@ -124,6 +124,6 @@ class AuthClientBody extends StatelessWidget {
       state.showRegisterForm ? 'Bienvenido a Ando' : 'Bienvenido de vuelta!';
 
   String _getSubtitle(AuthFormState state) => state.showRegisterForm
-      ? 'Debes iniciar sesion para continuar'
+      ? 'Debes iniciar sesión para continuar'
       : 'Ingresa a tu cuenta';
 }
