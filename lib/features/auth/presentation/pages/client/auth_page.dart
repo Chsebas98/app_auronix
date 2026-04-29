@@ -95,6 +95,12 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
               LoginUserEvent(dataUser: credentials),
             );
 
+          case AuthUnifiedRegistering(:final email):
+            context.read<DialogCubit>().hideTop();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showRegisterComplete(context);
+            });
+
           case AuthUnifiedIdle():
             context.read<DialogCubit>().hideTop();
         }

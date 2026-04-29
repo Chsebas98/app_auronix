@@ -41,6 +41,15 @@ final class AuthGoogleSignInEvent extends AuthUnifiedEvent {
   const AuthGoogleSignInEvent();
 }
 
+final class AuthVerifyRegisterClientEvent extends AuthUnifiedEvent {
+  final String email;
+
+  const AuthVerifyRegisterClientEvent({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 final class AuthRegisterClientEvent extends AuthUnifiedEvent {
   final RegisterVerifyRequest verifyRequest;
 

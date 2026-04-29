@@ -49,6 +49,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
     on<AuthLoginClientEvent>(_onLoginClient);
     on<AuthLoginDriverEvent>(_onLoginDriver);
     on<AuthGoogleSignInEvent>(_onGoogleSignIn);
+    on<AuthVerifyRegisterClientEvent>(_onVerifyRegisterClient);
     on<AuthRegisterClientEvent>(_onRegisterClient);
     on<AuthRegisterDriverEvent>(_onRegisterDriver);
     on<AuthRestoreClientSessionEvent>(_onRestoreClientSession);
@@ -166,6 +167,22 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
     }
 
     emit(const AuthUnifiedVerified());
+  }
+
+  FutureOr<void> _onVerifyRegisterClient(
+    AuthVerifyRegisterClientEvent event,
+    Emitter<AuthUnifiedState> emit,
+  ) async {
+    emit(const AuthUnifiedLoading());
+
+    // final verifyResult = await _registerClient.verify(event.verifyRequest);
+    await Future.delayed(
+      const Duration(seconds: 3),
+    ); // Simula tiempo de verificación
+    debugPrint(
+      '[AuthBloc] Verificación registro cliente simulada para email: ${event.email}',
+    );
+    emit(AuthUnifiedRegistering(email: event.email));
   }
 
   FutureOr<void> _onRegisterDriver(
