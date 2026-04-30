@@ -106,11 +106,17 @@ List<NavItem> tabsForRole(Roles role) {
           cupertino: CupertinoIcons.car_detailed,
           material: Icons.directions_car_rounded,
         ),
+        // NavItem(
+        //   tab: AppTab.mensajes,
+        //   label: 'Mensajes',
+        //   cupertino: CupertinoIcons.chat_bubble_2_fill,
+        //   material: Icons.chat_bubble_rounded,
+        // ),
         NavItem(
-          tab: AppTab.mensajes,
-          label: 'Mensajes',
-          cupertino: CupertinoIcons.chat_bubble_2_fill,
-          material: Icons.chat_bubble_rounded,
+          tab: AppTab.ganancias,
+          label: 'Ganancias',
+          cupertino: CupertinoIcons.money_dollar_circle_fill,
+          material: Icons.savings_rounded,
         ),
         NavItem(
           tab: AppTab.vehiculo,

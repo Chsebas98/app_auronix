@@ -1,7 +1,12 @@
 import 'package:auronix_app/app/app.dart';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
+import 'package:auronix_app/app/core/bloc/domain/interfaces/dialog_presentation.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
+import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
+import 'package:auronix_app/app/router/router.dart';
+import 'package:auronix_app/core/models/interfaces/core_enums.dart';
 import 'package:auronix_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:auronix_app/features/auth/presentation/organisms/client/auth_client_body.dart';
 
@@ -36,36 +41,10 @@ class _AuthPageListener extends StatefulWidget {
 }
 
 class _AuthPageListenerState extends State<_AuthPageListener> {
-  bool _registerDialogOpen = false;
-
   @override
   void dispose() {
     rootMessengerKey.currentState?.hideCurrentSnackBar();
     super.dispose();
-  }
-
-  Future<void> _showRegisterComplete(BuildContext ctx) async {
-    if (_registerDialogOpen) return;
-    _registerDialogOpen = true;
-
-    final authBloc = ctx.read<AuthUnifiedBloc>();
-    final formCubit = ctx.read<AuthFormCubit>();
-
-    await showGeneralDialog<void>(
-      context: ctx,
-      barrierDismissible: false,
-      fullscreenDialog: true,
-      useRootNavigator: false,
-      pageBuilder: (_, __, ___) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: authBloc),
-          BlocProvider.value(value: formCubit),
-        ],
-        child: const RegisterCompletePage(),
-      ),
-    );
-
-    _registerDialogOpen = false;
   }
 
   @override
@@ -84,25 +63,53 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
               message: failure.message,
             );
 
-          case AuthUnifiedVerified():
-            // Verificacion OK — abrir dialogo de completar registro
-            context.read<DialogCubit>().hideTop();
-            _showRegisterComplete(context);
-
-          case AuthUnifiedSuccess(:final credentials):
-            context.read<DialogCubit>().hideTop();
-            context.read<SessionBloc>().add(
-              LoginUserEvent(dataUser: credentials),
-            );
-
           case AuthUnifiedRegistering(:final email):
-            context.read<DialogCubit>().hideTop();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _showRegisterComplete(context);
-            });
+            // Delega todo al DialogHandler — el reemplaza el loading y abre el fullscreen
+            context.read<DialogCubit>().showFullscreenDialog(
+              presentation:
+                  DialogPresentation.replaceTop, // cierra loading primero
+              pageBuilder: (ctx) => MultiBlocProvider(
+                providers: [
+                  BlocProvider.value(value: context.read<AuthUnifiedBloc>()),
+                  BlocProvider.value(value: context.read<AuthFormCubit>()),
+                ],
+                child: RegisterCompletePage(email: email),
+              ),
+            );
+          case AuthUnifiedVerified():
+            context.read<DialogCubit>().showFullscreenDialog(
+              presentation: DialogPresentation.replaceTop,
+              pageBuilder: (ctx) => MultiBlocProvider(
+                providers: [
+                  BlocProvider.value(value: context.read<AuthUnifiedBloc>()),
+                  BlocProvider.value(value: context.read<AuthFormCubit>()),
+                ],
+                child: RegisterCompletePage(email: ''),
+              ),
+            );
 
           case AuthUnifiedIdle():
             context.read<DialogCubit>().hideTop();
+          case AuthUnifiedSuccess():
+            debugPrint('Login exitoso, navegar a home');
+
+            switch (state.credentials.role) {
+              case Roles.rolAdmin:
+                throw UnimplementedError('Rol admin no implementado');
+              case Roles.rolGerente:
+                throw UnimplementedError('Rol gerente no implementado');
+              case Roles.rolDriver:
+                final driverCreds =
+                    context.read<AuthUnifiedBloc>().state as AuthUnifiedSuccess;
+                context.read<SessionBloc>().add(
+                  LoginUserEvent(dataUser: driverCreds.credentials),
+                );
+                AppRouter.goAndClear(ConductorRoutesPath.home);
+              case Roles.rolMember:
+                throw UnimplementedError('Rol socio no implementado');
+              case Roles.rolUser:
+                AppRouter.goAndClear(ClientRoutesPath.home);
+            }
         }
       },
       child: BlocBuilder<AuthFormCubit, AuthFormState>(

@@ -18,6 +18,9 @@ final class HomeDriverState extends Equatable {
     this.isAvailable = false,
     this.incomingTrip,
     this.activeTrip,
+    this.dailyEarnings = 0.0,
+    this.completedTrips = 0,
+    this.earningsHistory = const [],
   });
 
   final HomeDriverStatus status;
@@ -27,6 +30,9 @@ final class HomeDriverState extends Equatable {
   final bool isAvailable;
   final dynamic incomingTrip;
   final dynamic activeTrip;
+  final double dailyEarnings;
+  final int completedTrips;
+  final List<EarningsPoint> earningsHistory;
 
   bool get isReady => status == HomeDriverStatus.ready;
   bool get hasTripIncoming => status == HomeDriverStatus.tripIncoming;
@@ -40,6 +46,9 @@ final class HomeDriverState extends Equatable {
     bool? isAvailable,
     dynamic incomingTrip,
     dynamic activeTrip,
+    double? dailyEarnings,
+    int? completedTrips,
+    List<EarningsPoint>? earningsHistory,
   }) {
     return HomeDriverState(
       status: status ?? this.status,
@@ -49,6 +58,9 @@ final class HomeDriverState extends Equatable {
       isAvailable: isAvailable ?? this.isAvailable,
       incomingTrip: incomingTrip ?? this.incomingTrip,
       activeTrip: activeTrip ?? this.activeTrip,
+      dailyEarnings: dailyEarnings ?? this.dailyEarnings,
+      completedTrips: completedTrips ?? this.completedTrips,
+      earningsHistory: earningsHistory ?? this.earningsHistory,
     );
   }
 
@@ -61,5 +73,8 @@ final class HomeDriverState extends Equatable {
     isAvailable,
     incomingTrip,
     activeTrip,
+    dailyEarnings,
+    completedTrips,
+    earningsHistory,
   ];
 }

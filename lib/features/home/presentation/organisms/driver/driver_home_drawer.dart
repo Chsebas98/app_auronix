@@ -2,17 +2,17 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
-import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
-import 'package:auronix_app/features/home/presentation/bloc/client-bloc/home_client_bloc.dart';
+import 'package:auronix_app/features/home/presentation/bloc/driver-bloc/home_driver_bloc.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer.dart';
 import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ClientHomeDrawer extends StatelessWidget {
-  const ClientHomeDrawer({super.key});
+class DriverHomeDrawer extends StatelessWidget {
+  const DriverHomeDrawer({super.key});
 
   Future<void> _handleLogout(BuildContext context) async {
     final dialogCubit = context.read<DialogCubit>();
@@ -33,7 +33,7 @@ class ClientHomeDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeClientBloc, HomeClientState>(
+    return BlocBuilder<HomeDriverBloc, HomeDriverState>(
       builder: (context, state) {
         final user = state.dataProfile;
         return ProfileDrawer(
@@ -44,36 +44,43 @@ class ClientHomeDrawer extends StatelessWidget {
                 ? user.firstName
                 : 'Usuario',
             userEmail: user.email,
-            userRole: 'Cliente',
+            userRole: 'Conductor',
             photoUrl: user.photoUrl.isNotEmpty ? user.photoUrl : null,
             // context.appColors.button = third (light) / twelveth (dark)
             roleColor: context.appColors.button,
-            onProfileTap: () => AppRouter.push(ClientRoutesPath.profile),
+            onProfileTap: () => AppRouter.push(ConductorRoutesPath.vehicle),
             onLogout: () => _handleLogout(context),
             items: [
+              // ProfileDrawerItem(
+              //   title: 'Mi perfil',
+              //   icon: Icons.person_outline,
+              //   onTap: () => AppRouter.push(ConductorRoutesPath.profile),
+              // ),
               ProfileDrawerItem(
-                title: 'Mi perfil',
-                icon: Icons.person_outline,
-                onTap: () => AppRouter.push(ClientRoutesPath.profile),
+                title: 'Mi vehículo',
+                icon: Icons.directions_car_outlined,
+                onTap: () => AppRouter.push(ConductorRoutesPath.vehicle),
               ),
+
               // ProfileDrawerItem(
               //   title: 'Mis viajes',
               //   icon: Icons.history,
-              //   onTap: () => AppRouter.push(ClientRoutesPath.saveTrips),
+              //   onTap: () => AppRouter.push(ConductorRoutesPath.saveTrips),
               // ),
               ProfileDrawerItem(
-                title: 'Metodos de pago',
+                title: 'Ganancias',
                 icon: Icons.payment,
-                onTap: () => debugPrint('Metodos de pago'),
-              ),
-              ProfileDrawerItem(
-                title: 'Notificaciones',
-                icon: Icons.notifications_outlined,
-                // Atom extraido
-                trailing: _NotificationBadge(count: 3),
-                onTap: () => debugPrint('Notificaciones'),
+                onTap: () => debugPrint('Ganancias'),
                 showDivider: true,
               ),
+              // ProfileDrawerItem(
+              //   title: 'Notificaciones',
+              //   icon: Icons.notifications_outlined,
+              //   // Atom extraido
+              //   trailing: _NotificationBadge(count: 3),
+              //   onTap: () => debugPrint('Notificaciones'),
+              //   showDivider: true,
+              // ),
               ProfileDrawerItem(
                 title: 'Ayuda y soporte',
                 icon: Icons.help_outline,

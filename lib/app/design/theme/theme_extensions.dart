@@ -21,6 +21,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     required this.tripActionButton,
     required this.skeletonBase,
     required this.skeletonHighlight,
+    required this.earningsCard,
   });
 
   final Color background;
@@ -38,6 +39,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
   final Color tripActionButton;
   final Color skeletonBase;
   final Color skeletonHighlight;
+  final Color earningsCard;
 
   // ── Instancias estáticas listas para usar en AppTheme ──────────────────────
 
@@ -57,6 +59,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     tripActionButton: AppColors.lightCard,
     skeletonBase: AppColors.skeletonBaseLight,
     skeletonHighlight: AppColors.skeletonHighlightLight,
+    earningsCard: AppColors.lightBackground,
   );
 
   static const dark = AppColorsTheme(
@@ -75,6 +78,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     tripActionButton: AppColors.twelveth,
     skeletonBase: AppColors.skeletonBaseDark,
     skeletonHighlight: AppColors.skeletonHighlightDark,
+    earningsCard: AppColors.darkCard,
   );
 
   // ── ThemeExtension overrides ───────────────────────────────────────────────
@@ -96,6 +100,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     Color? tripActionButton,
     Color? skeletonBase,
     Color? skeletonHighlight,
+    Color? earningsCard,
   }) {
     return AppColorsTheme(
       background: background ?? this.background,
@@ -113,6 +118,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
       tripActionButton: tripActionButton ?? this.tripActionButton,
       skeletonBase: skeletonBase ?? this.skeletonBase,
       skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
+      earningsCard: earningsCard ?? this.earningsCard,
     );
   }
 
@@ -143,6 +149,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
         other.skeletonHighlight,
         t,
       )!,
+      earningsCard: Color.lerp(earningsCard, other.earningsCard, t)!,
     );
   }
 }

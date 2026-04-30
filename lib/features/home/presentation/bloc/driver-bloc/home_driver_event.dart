@@ -7,6 +7,8 @@ sealed class HomeDriverEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+final class GetCurrentLocationEvent extends HomeDriverEvent {}
+
 final class HomeDriverInitEvent extends HomeDriverEvent {
   const HomeDriverInitEvent();
 }

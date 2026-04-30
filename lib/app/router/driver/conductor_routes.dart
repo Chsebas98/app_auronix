@@ -1,17 +1,50 @@
-class ConductorRoutesPath {
-  static const String base = '/driver';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
+import 'package:auronix_app/features/home/presentation/pages/driver/driver_home_page.dart';
+import 'package:auronix_app/features/home/presentation/pages/driver/driver_metrics_page.dart';
+import 'package:auronix_app/features/home/presentation/templates/driver/conductor_shell_template.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 
-  static const String home = '$base/home';
-  static const String trips = '$base/trips';
-  static const String profile = '$base/profile';
-  static const String saveTrips = '$base/save-trips';
-  static const String messages = '$base/messages';
+abstract final class ConductorRoutes {
+  static List<RouteBase> routes({
+    required GlobalKey<NavigatorState> rootNavKey,
+  }) => [
+    ShellRoute(
+      navigatorKey: GlobalKey<NavigatorState>(),
+      builder: (context, state, child) => ConductorShellTemplate(child: child),
+      routes: [
+        GoRoute(
+          path: ConductorRoutesPath.home,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DriverHomePage()),
+        ),
+        GoRoute(
+          path: ConductorRoutesPath.trips,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DriverHomePage()),
+        ),
+        GoRoute(
+          path: ConductorRoutesPath.metrics,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DriverMetricsPage()),
+        ),
+        GoRoute(
+          path: ConductorRoutesPath.vehicle,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DriverHomePage()),
+        ),
 
-  //Flujo de solicitar taxi
-  static const String selectDestination = '$base/select-destination';
-  static const String confirmTrip = '$base/confirm-trip';
-  static const String searchingDriver = '$base/searching-driver';
-  static const String tripInProgress = '$base/trip-in-progress';
-  static const String rateTrip = '$base/rate-trip';
-  static const String tripCompleted = '$base/trip-completed';
+        // GoRoute(
+        //   path: ClientRoutesPath.profile,
+        //   pageBuilder: (context, state) => const NoTransitionPage(
+        //     child: ClientProfilePage(),
+        //   ),
+        // ),
+        // GoRoute(
+        //   path: ClientRoutesPath.trip,
+        //   builder: (context, state) => const TripPage(),
+        // ),
+      ],
+    ),
+  ];
 }

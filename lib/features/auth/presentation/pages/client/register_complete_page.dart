@@ -4,9 +4,11 @@ import 'package:auronix_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class RegisterCompletePage extends StatefulWidget {
-  const RegisterCompletePage({super.key});
+  const RegisterCompletePage({super.key, required this.email});
+  final String email;
 
   @override
   State<RegisterCompletePage> createState() => _RegisterCompletePageState();
@@ -74,7 +76,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             children: [
-              const SizedBox(height: 20),
+              20.verticalSpace,
 
               // Nombre
               AppTextField(
@@ -102,7 +104,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                 onChanged: (v) => _name = v,
               ),
 
-              const SizedBox(height: 20),
+              20.verticalSpace,
 
               // Email de solo lectura
               BlocBuilder<AuthFormCubit, AuthFormState>(
@@ -120,7 +122,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              20.verticalSpace,
 
               // Genero
               AppInputSelect(
@@ -132,7 +134,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                 onChanged: (v) => _gender = v ?? '',
               ),
 
-              const SizedBox(height: 20),
+              20.verticalSpace,
 
               // Telefono
               AppTextField(
@@ -157,7 +159,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                 onChanged: (v) => _phone = v,
               ),
 
-              const SizedBox(height: 20),
+              20.verticalSpace,
 
               // Confirmar contrasena
               BlocBuilder<AuthFormCubit, AuthFormState>(
@@ -200,7 +202,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
 
               // Indicador de coincidencia
               if (_showMatchIndicator) ...[
-                const SizedBox(height: 10),
+                10.verticalSpace,
                 Row(
                   children: [
                     Icon(
@@ -210,7 +212,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                           : AppColors.sevent,
                       size: 20,
                     ),
-                    const SizedBox(width: 6),
+                    6.horizontalSpace,
                     AppText(
                       _passwordMatch
                           ? 'La contrasena coincide'

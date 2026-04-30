@@ -1,5 +1,4 @@
-import 'package:auronix_app/app/router/client/client_routes_path.dart';
-import 'package:auronix_app/app/router/driver/conductor_routes.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:auronix_app/shared/templates/appbar/bottom-appbar/cubit/bottom_nav_cubit.dart';
@@ -26,7 +25,7 @@ class ConductorBottomNav extends StatelessWidget {
           ),
           child: AppBottomNav(
             // ← atom/molecule de shared
-            role: Roles.rolUser,
+            role: Roles.rolDriver,
             currentIndex: navState.currentIndex,
             onTap: (index) {
               context.read<BottomNavCubit>().setIndex(index);
@@ -43,9 +42,10 @@ class ConductorBottomNav extends StatelessWidget {
     final cubit = context.read<BottomNavCubit>();
 
     final newIndex = switch (true) {
-      _ when location.startsWith(ClientRoutesPath.home) => 0,
-      _ when location.startsWith(ClientRoutesPath.messages) => 1,
-      _ when location.startsWith(ClientRoutesPath.saveTrips) => 2,
+      _ when location.startsWith(ConductorRoutesPath.home) => 0,
+      _ when location.startsWith(ConductorRoutesPath.trips) => 1,
+      _ when location.startsWith(ConductorRoutesPath.metrics) => 2,
+      _ when location.startsWith(ConductorRoutesPath.vehicle) => 3,
       _ => 0,
     };
 
@@ -58,10 +58,14 @@ class ConductorBottomNav extends StatelessWidget {
     switch (index) {
       case 0:
         context.go(ConductorRoutesPath.home);
+      // case 1:
+      //   context.go(ConductorRoutesPath.messages, extra: Roles.rolDriver);
       case 1:
-        context.go(ConductorRoutesPath.messages, extra: Roles.rolUser);
+        context.go(ConductorRoutesPath.trips);
       case 2:
-        context.go(ConductorRoutesPath.saveTrips);
+        context.go(ConductorRoutesPath.metrics);
+      case 3:
+        context.go(ConductorRoutesPath.vehicle);
     }
   }
 }

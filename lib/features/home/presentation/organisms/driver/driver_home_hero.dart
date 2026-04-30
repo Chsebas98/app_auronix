@@ -1,26 +1,26 @@
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/features/home/presentation/bloc/client-bloc/home_client_bloc.dart';
+import 'package:auronix_app/features/home/presentation/bloc/driver-bloc/home_driver_bloc.dart';
 import 'package:auronix_app/features/home/presentation/molecules/client/client_home_hero_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomeClientHero extends StatefulWidget {
-  const HomeClientHero({super.key});
+class DriverHomeHero extends StatefulWidget {
+  const DriverHomeHero({super.key});
 
   @override
-  State<HomeClientHero> createState() => _HomeClientHeroState();
+  State<DriverHomeHero> createState() => _DriverHomeHeroState();
 }
 
-class _HomeClientHeroState extends State<HomeClientHero> {
+class _DriverHomeHeroState extends State<DriverHomeHero> {
   @override
   void initState() {
     super.initState();
-    context.read<HomeClientBloc>().add(GetCurrentLocationEvent());
+    context.read<HomeDriverBloc>().add(GetCurrentLocationEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeClientBloc, HomeClientState>(
+    return BlocBuilder<HomeDriverBloc, HomeDriverState>(
       builder: (context, state) {
         final firstName = state.dataProfile.firstName.isNotEmpty
             ? FormsHelpers.getTextTransform(
@@ -34,7 +34,7 @@ class _HomeClientHeroState extends State<HomeClientHero> {
           address: state.currentAddress,
           isLoadingAddress: state.isLoadingAddress,
           onRefreshLocation: () =>
-              context.read<HomeClientBloc>().add(GetCurrentLocationEvent()),
+              context.read<HomeDriverBloc>().add(GetCurrentLocationEvent()),
         );
       },
     );

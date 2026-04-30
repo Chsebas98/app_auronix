@@ -1,5 +1,6 @@
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/shared/atoms/inputs/input_default/validation_rule.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -56,20 +57,22 @@ class DefaultValidationRulesWidget extends StatelessWidget {
     final rows = <Widget>[];
     for (int i = 0; i < widgets.length; i += 2) {
       if (i + 1 < widgets.length) {
-        // Par completo
         rows.add(
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [widgets[i], 8.horizontalSpace, widgets[i + 1]],
+            children: [
+              Expanded(child: widgets[i]),
+              Expanded(child: widgets[i + 1]),
+            ],
           ),
         );
       } else {
-        // Único sobrante: ocupa todo el ancho
+        // Impar sobrante — ocupa solo la mitad izquierda
         rows.add(
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [29.horizontalSpace, widgets[i]],
+            children: [
+              Expanded(child: widgets[i]),
+              const Expanded(child: SizedBox.shrink()),
+            ],
           ),
         );
       }
@@ -83,6 +86,7 @@ class DefaultValidationRulesWidget extends StatelessWidget {
   }
 }
 
+// Alinear icono + texto a la izquierda
 @visibleForTesting
 class DefaultRulePassedWidget extends StatelessWidget {
   const DefaultRulePassedWidget(this.name, {super.key});
@@ -91,16 +95,19 @@ class DefaultRulePassedWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min, // <-- no ocupa mas de lo necesario
       children: [
-        Icon(Icons.check_circle, color: AppColors.fifth, size: 22),
-        Text(
-          name,
-          maxLines: 2,
-          style: theme.textTheme.bodyMedium!.copyWith(color: AppColors.fifth),
+        Icon(Icons.check_circle, color: AppColors.fifth, size: 18),
+        const SizedBox(width: 4),
+        Flexible(
+          child: AutoSizeText(
+            name,
+            maxLines: 2,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium!.copyWith(color: AppColors.fifth),
+          ),
         ),
       ],
     );
@@ -115,17 +122,20 @@ class DefaultRuleNotPassedWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min, // <-- no ocupa mas de lo necesario
       children: [
-        Icon(Icons.cancel, color: AppColors.sevent, size: 0.05.sw),
-        Text(
-          name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodyMedium!.copyWith(color: AppColors.sevent),
+        Icon(Icons.cancel, color: AppColors.sevent, size: 18),
+        const SizedBox(width: 4),
+        Flexible(
+          child: AutoSizeText(
+            name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium!.copyWith(color: AppColors.sevent),
+          ),
         ),
       ],
     );

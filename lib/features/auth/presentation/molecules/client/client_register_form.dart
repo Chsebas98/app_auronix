@@ -1,4 +1,3 @@
-import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:auronix_app/core/core.dart';

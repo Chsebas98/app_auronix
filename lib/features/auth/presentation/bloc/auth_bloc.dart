@@ -94,16 +94,33 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
       rememberMe: event.rememberMe,
     );
 
-    result.fold(
-      (failure) {
-        debugPrint('[AuthBloc] Login conductor falló: ${failure.message}');
-        emit(AuthUnifiedFailure(failure: failure));
-      },
-      (creds) {
-        debugPrint('[AuthBloc] Login conductor exitoso');
-        emit(AuthUnifiedSuccess(credentials: creds));
-      },
+    await Future.delayed(const Duration(seconds: 2)); // Simula tiempo de login
+    debugPrint('[AuthBloc] Login conductor simulado exitoso');
+    emit(
+      AuthUnifiedSuccess(
+        credentials: AuthenticationCredentials(
+          tokenAccess: 'testToken',
+          tokenRefresh: 'testRefreshToken',
+          role: Roles.rolDriver,
+          username: 'testUser',
+          firstName: 'Test',
+          secondName: 'User',
+          lastName: 'Driver',
+          secondlastName: 'Test',
+          email: 'test@example.com',
+        ),
+      ),
     );
+    // result.fold(
+    //   (failure) {
+    //     debugPrint('[AuthBloc] Login conductor falló: ${failure.message}');
+    //     emit(AuthUnifiedFailure(failure: failure));
+    //   },
+    //   (creds) {
+    //     debugPrint('[AuthBloc] Login conductor exitoso');
+    //     emit(AuthUnifiedSuccess(credentials: creds));
+    //   },
+    // );
   }
 
   FutureOr<void> _onGoogleSignIn(
@@ -261,6 +278,24 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
       password: event.password,
     );
     debugPrint('[AuthBloc] Completar registro cliente resultado: $result');
+    await Future.delayed(
+      const Duration(seconds: 2),
+    ); // Simula tiempo de proceso
+    emit(
+      const AuthUnifiedSuccess(
+        credentials: AuthenticationCredentials(
+          tokenAccess: 'testtoken',
+          tokenRefresh: 'testrefresh',
+          role: Roles.rolUser,
+          username: 'testusername',
+          firstName: 'testfirstName',
+          secondName: 'testsecondName',
+          lastName: 'testlastName',
+          secondlastName: 'testsecondlastName',
+          email: 'testemail',
+        ),
+      ),
+    );
     // result.fold(
     //   (failure) {
     //     debugPrint('[AuthBloc] Completar registro cliente falló: ${failure.message}');
