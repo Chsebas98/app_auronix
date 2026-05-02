@@ -2,7 +2,7 @@ class ConductorRoutesPath {
   static const String base = '/driver';
 
   static const String home = '$base/home';
-  static const String trips = '$base/trips';
+  static const String startTrips = '$base/start-trips';
   static const String profile = '$base/profile';
   static const String metrics = '$base/metrics';
   static const String messages = '$base/messages';

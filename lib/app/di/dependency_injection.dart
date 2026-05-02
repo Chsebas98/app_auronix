@@ -10,6 +10,8 @@ import 'package:auronix_app/features/auth/data/datasources/auth_local_services.d
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/features/home/presentation/bloc/client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/features/home/presentation/bloc/driver-bloc/home_driver_bloc.dart';
+import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
+import 'package:auronix_app/features/trips/presentation/bloc/driver-bloc/driver_trip_bloc.dart';
 import 'package:auronix_app/shared/blocs/modals/modal_temp_cubit.dart';
 import 'package:auronix_app/shared/templates/appbar/bottom-appbar/cubit/bottom_nav_cubit.dart';
 import 'package:dio/dio.dart';
@@ -140,6 +142,8 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<HomeClientBloc>(() => HomeClientBloc());
   sl.registerFactory<HomeDriverBloc>(() => HomeDriverBloc());
+  sl.registerFactory<DriverTripBloc>(() => DriverTripBloc());
+  sl.registerFactory<ClientTripBloc>(() => ClientTripBloc());
 
   // ── 7. Globales de navegacion y modales ───────────────────────────────────
 

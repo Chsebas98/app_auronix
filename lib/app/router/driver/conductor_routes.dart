@@ -2,6 +2,7 @@ import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/features/home/presentation/pages/driver/driver_home_page.dart';
 import 'package:auronix_app/features/home/presentation/pages/driver/driver_metrics_page.dart';
 import 'package:auronix_app/features/home/presentation/templates/driver/conductor_shell_template.dart';
+import 'package:auronix_app/features/trips/presentation/pages/driver/driver_start_trip_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 
@@ -19,9 +20,9 @@ abstract final class ConductorRoutes {
               const NoTransitionPage(child: DriverHomePage()),
         ),
         GoRoute(
-          path: ConductorRoutesPath.trips,
+          path: ConductorRoutesPath.startTrips,
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DriverHomePage()),
+              const NoTransitionPage(child: DriverStartTripPage()),
         ),
         GoRoute(
           path: ConductorRoutesPath.metrics,

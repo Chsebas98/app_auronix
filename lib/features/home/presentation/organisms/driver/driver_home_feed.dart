@@ -45,48 +45,6 @@ class DriverHomeFeed extends StatelessWidget {
                     ),
                   ),
 
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      // child: const RecentTripsSectionWidget(),
-                      child: Container(
-                        height: 150,
-                        color: Colors.orangeAccent,
-                        child: Center(
-                          child: Text('Recent Trips Section Widget'),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      // child: const HowItWorksSectionWidget(),
-                      child: Container(
-                        height: 150,
-                        color: Colors.greenAccent,
-                        child: Center(
-                          child: Text('How It Works Section Widget'),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      // child: PaymentMethodsSectionWidget(),
-                      child: Container(
-                        height: 150,
-                        color: Colors.purpleAccent,
-                        child: Center(
-                          child: Text('Payment Methods Section Widget'),
-                        ),
-                      ),
-                    ),
-                  ),
-
                   SliverPadding(padding: EdgeInsets.only(bottom: 100.h)),
                 ],
               ),

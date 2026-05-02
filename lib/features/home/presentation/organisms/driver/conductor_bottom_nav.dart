@@ -43,7 +43,7 @@ class ConductorBottomNav extends StatelessWidget {
 
     final newIndex = switch (true) {
       _ when location.startsWith(ConductorRoutesPath.home) => 0,
-      _ when location.startsWith(ConductorRoutesPath.trips) => 1,
+      _ when location.startsWith(ConductorRoutesPath.startTrips) => 1,
       _ when location.startsWith(ConductorRoutesPath.metrics) => 2,
       _ when location.startsWith(ConductorRoutesPath.vehicle) => 3,
       _ => 0,
@@ -57,15 +57,15 @@ class ConductorBottomNav extends StatelessWidget {
   void _navigateToIndex(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go(ConductorRoutesPath.home);
+        context.push(ConductorRoutesPath.home);
       // case 1:
-      //   context.go(ConductorRoutesPath.messages, extra: Roles.rolDriver);
+      //   context.push(ConductorRoutesPath.messages, extra: Roles.rolDriver);
       case 1:
-        context.go(ConductorRoutesPath.trips);
+        context.push(ConductorRoutesPath.startTrips);
       case 2:
-        context.go(ConductorRoutesPath.metrics);
+        context.push(ConductorRoutesPath.metrics);
       case 3:
-        context.go(ConductorRoutesPath.vehicle);
+        context.push(ConductorRoutesPath.vehicle);
     }
   }
 }

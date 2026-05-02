@@ -6,3 +6,7 @@ sealed class ClientTripEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+
+class ClientTripInitEvent extends ClientTripEvent {
+  const ClientTripInitEvent();
+}

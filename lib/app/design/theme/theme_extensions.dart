@@ -22,6 +22,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     required this.skeletonBase,
     required this.skeletonHighlight,
     required this.earningsCard,
+    required this.mapCardBg,
   });
 
   final Color background;
@@ -40,6 +41,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
   final Color skeletonBase;
   final Color skeletonHighlight;
   final Color earningsCard;
+  final Color mapCardBg;
 
   // ── Instancias estáticas listas para usar en AppTheme ──────────────────────
 
@@ -60,6 +62,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     skeletonBase: AppColors.skeletonBaseLight,
     skeletonHighlight: AppColors.skeletonHighlightLight,
     earningsCard: AppColors.lightBackground,
+    mapCardBg: AppColors.lightCard,
   );
 
   static const dark = AppColorsTheme(
@@ -79,6 +82,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     skeletonBase: AppColors.skeletonBaseDark,
     skeletonHighlight: AppColors.skeletonHighlightDark,
     earningsCard: AppColors.darkCard,
+    mapCardBg: AppColors.darkCard,
   );
 
   // ── ThemeExtension overrides ───────────────────────────────────────────────
@@ -101,6 +105,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
     Color? skeletonBase,
     Color? skeletonHighlight,
     Color? earningsCard,
+    Color? mapCardBg,
   }) {
     return AppColorsTheme(
       background: background ?? this.background,
@@ -119,6 +124,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
       skeletonBase: skeletonBase ?? this.skeletonBase,
       skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
       earningsCard: earningsCard ?? this.earningsCard,
+      mapCardBg: mapCardBg ?? this.mapCardBg,
     );
   }
 
@@ -150,6 +156,7 @@ class AppColorsTheme extends ThemeExtension<AppColorsTheme> {
         t,
       )!,
       earningsCard: Color.lerp(earningsCard, other.earningsCard, t)!,
+      mapCardBg: Color.lerp(mapCardBg, other.mapCardBg, t)!,
     );
   }
 }

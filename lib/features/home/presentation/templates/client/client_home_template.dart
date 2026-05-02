@@ -1,4 +1,6 @@
-import 'package:auronix_app/features/home/presentation/atoms/client_home_floating_button.dart';
+import 'package:auronix_app/app/router/app_router.dart';
+import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/features/home/presentation/atoms/floating_button.dart';
 import 'package:auronix_app/features/home/presentation/organisms/client/client_home_drawer.dart';
 import 'package:auronix_app/features/home/presentation/organisms/client/client_home_feed.dart';
 import 'package:flutter/material.dart';
@@ -14,14 +16,18 @@ class ClientHomeTemplate extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       drawer: const ClientHomeDrawer(),
-      body: const Stack(
+      body: Stack(
         children: [
           ClientHomeFeed(),
           Positioned(
             bottom: 24,
             left: 24,
             right: 24,
-            child: ClientHomeFloatingButton(),
+            child: FloatingButton(
+              label: 'Solicitar Taxi Ahora',
+              onPressed: () =>
+                  AppRouter.push(ClientRoutesPath.selectDestination),
+            ),
           ),
         ],
       ),

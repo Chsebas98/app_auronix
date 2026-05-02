@@ -56,11 +56,11 @@ class ClientBottomNav extends StatelessWidget {
   void _navigateToIndex(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go(ClientRoutesPath.home);
+        context.push(ClientRoutesPath.home);
       case 1:
-        context.go(ClientRoutesPath.messages, extra: Roles.rolUser);
+        context.push(ClientRoutesPath.messages, extra: Roles.rolUser);
       case 2:
-        context.go(ClientRoutesPath.saveTrips);
+        context.push(ClientRoutesPath.saveTrips);
     }
   }
 }

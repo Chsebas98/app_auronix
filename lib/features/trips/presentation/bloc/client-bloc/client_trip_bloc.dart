@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -9,5 +11,11 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     on<ClientTripEvent>((event, emit) {
       // TODO: implement event handler
     });
+    on<ClientTripInitEvent>(_onClientTripInitEvent);
   }
+
+  FutureOr<void> _onClientTripInitEvent(
+    ClientTripInitEvent event,
+    Emitter<ClientTripState> emit,
+  ) async {}
 }
