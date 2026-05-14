@@ -1,6 +1,6 @@
 import 'package:auronix_app/app/core/network/types/request_extras.dart';
 import 'package:auronix_app/app/environments/environment.dart';
-import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -46,7 +46,7 @@ class AuthRemoteDatasource {
         ),
         data: {'email': email, 'password': password},
       );
-      debugPrint('✅ loginClient exitoso');
+      debugPrint('loginClient exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -70,7 +70,7 @@ class AuthRemoteDatasource {
           'ape1': creds.lastName,
         },
       );
-      debugPrint('✅ googleLogin exitoso');
+      debugPrint('googleLogin exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -91,16 +91,14 @@ class AuthRemoteDatasource {
         ),
         data: {'email': email, 'password': password, 'rol': rol},
       );
-      debugPrint('✅ verifyRegisterClient exitoso');
+      debugPrint('verifyRegisterClient exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
     }
   }
 
-  Future<Map<String, dynamic>> registerClient(
-    Map<String, dynamic> data,
-  ) async {
+  Future<Map<String, dynamic>> registerClient(Map<String, dynamic> data) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/auth/clients/register',
@@ -110,23 +108,21 @@ class AuthRemoteDatasource {
         ),
         data: data,
       );
-      debugPrint('✅ registerClient exitoso');
+      debugPrint('registerClient exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
     }
   }
 
-  Future<Map<String, dynamic>> refreshClientToken(
-    String refreshToken,
-  ) async {
+  Future<Map<String, dynamic>> refreshClientToken(String refreshToken) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/auth/clients/refresh-token',
         options: Options(contentType: 'application/json'),
         data: {'token_refresh': refreshToken},
       );
-      debugPrint('✅ refreshClientToken exitoso');
+      debugPrint('refreshClientToken exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -164,7 +160,7 @@ class AuthRemoteDatasource {
         ),
         data: {'ci_passport': ciPassport, 'password': password},
       );
-      debugPrint('✅ loginDriver exitoso');
+      debugPrint('loginDriver exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -183,29 +179,23 @@ class AuthRemoteDatasource {
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {
-          'ci_passport': ciPassport,
-          'password': password,
-          'email': email,
-        },
+        data: {'ci_passport': ciPassport, 'password': password, 'email': email},
       );
-      debugPrint('✅ registerDriver exitoso');
+      debugPrint('registerDriver exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
     }
   }
 
-  Future<Map<String, dynamic>> refreshDriverToken(
-    String refreshToken,
-  ) async {
+  Future<Map<String, dynamic>> refreshDriverToken(String refreshToken) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/auth/drivers/refresh-token',
         options: Options(contentType: 'application/json'),
         data: {'token_refresh': refreshToken},
       );
-      debugPrint('✅ refreshDriverToken exitoso');
+      debugPrint('refreshDriverToken exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);

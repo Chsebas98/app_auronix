@@ -7,9 +7,11 @@ sealed class SessionEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class CheckLoggedUserEvent extends SessionEvent {}
+final class CheckLoggedUserEvent extends SessionEvent {
+  const CheckLoggedUserEvent();
+}
 
-class LoginUserEvent extends SessionEvent {
+final class LoginUserEvent extends SessionEvent {
   final AuthenticationCredentials dataUser;
   const LoginUserEvent({required this.dataUser});
 
@@ -17,4 +19,6 @@ class LoginUserEvent extends SessionEvent {
   List<Object> get props => [dataUser];
 }
 
-class LoggoutUserEvent extends SessionEvent {}
+final class LoggoutUserEvent extends SessionEvent {
+  const LoggoutUserEvent();
+}

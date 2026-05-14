@@ -51,6 +51,9 @@ class AuthFormCubit extends Cubit<AuthFormState> {
 
   void changeCiPassport(String ciPassport) =>
       emit(state.copyWith(ciPassport: ciPassport.toUpperCase()));
+
+  void showDriverLogin() => emit(state.copyWith(showLoginConductorForm: true));
+  void hideDriverLogin() => emit(state.copyWith(showLoginConductorForm: false));
 }
 
 /// Monolithic state for auth form fields and UI flags.

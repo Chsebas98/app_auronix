@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:auronix_app/core/core.dart';
-import 'package:auronix_app/shared/dialogs/custom_dialog.dart';
+import 'package:auronix_app/shared/organisms/dialogs/custom_dialog.dart';
 
 class DialogRequest {
   final TypeDialog typeDialog;

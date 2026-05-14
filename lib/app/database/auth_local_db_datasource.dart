@@ -1,7 +1,7 @@
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/core/models/interfaces/core_enums.dart';
-import 'package:auronix_app/features/features.dart';
+import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 
 class AuthLocalDbDataSource {
   final AppDatabase _db;
@@ -11,28 +11,25 @@ class AuthLocalDbDataSource {
 
   /// Guardar usuario completo (login/registro inicial)
   Future<void> saveUser(AuthenticationCredentials creds) {
-    return _db.upsertUserMap(
-      {
-        DbConstants.colTokenAccess: creds.tokenAccess,
-        DbConstants.colTokenRefresh: creds.tokenRefresh,
-        DbConstants.colRole: creds.role.name,
-        DbConstants.colUsername: creds.username,
-        DbConstants.colFirstName: creds.firstName,
-        DbConstants.colSecondName:
-            (creds.secondName is String && (creds.secondName as String).isEmpty)
-            ? null
-            : creds.secondName?.toString(),
-        DbConstants.colLastName: creds.lastName,
-        DbConstants.colSecondLastName: creds.secondlastName,
-        DbConstants.colEmail: creds.email,
-        DbConstants.colPhotoUrl: creds.photoUrl,
-        DbConstants.colIsGoogleUser: creds.isGoogleUser ? 1 : 0,
-        DbConstants.colTokenExpiresAt: DateTime.now()
-            .add(const Duration(hours: 1))
-            .millisecondsSinceEpoch,
-      },
-      userType,
-    );
+    return _db.upsertUserMap({
+      DbConstants.colTokenAccess: creds.tokenAccess,
+      DbConstants.colTokenRefresh: creds.tokenRefresh,
+      DbConstants.colRole: creds.role.name,
+      DbConstants.colUsername: creds.username,
+      DbConstants.colFirstName: creds.firstName,
+      DbConstants.colSecondName:
+          (creds.secondName is String && (creds.secondName as String).isEmpty)
+          ? null
+          : creds.secondName?.toString(),
+      DbConstants.colLastName: creds.lastName,
+      DbConstants.colSecondLastName: creds.secondlastName,
+      DbConstants.colEmail: creds.email,
+      DbConstants.colPhotoUrl: creds.photoUrl,
+      DbConstants.colIsGoogleUser: creds.isGoogleUser ? 1 : 0,
+      DbConstants.colTokenExpiresAt: DateTime.now()
+          .add(const Duration(hours: 1))
+          .millisecondsSinceEpoch,
+    }, userType);
   }
 
   /// Actualizar solo tokens (después de refresh)

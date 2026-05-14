@@ -7,11 +7,15 @@ sealed class SessionState extends Equatable {
   List<Object> get props => [];
 }
 
-class SessionInitial extends SessionState {}
+final class SessionInitial extends SessionState {
+  const SessionInitial();
+}
 
-class SessionLoading extends SessionState {}
+final class SessionLoading extends SessionState {
+  const SessionLoading();
+}
 
-class SessionAuthenticated extends SessionState {
+final class SessionAuthenticated extends SessionState {
   final AuthenticationCredentials dataUser;
 
   const SessionAuthenticated({required this.dataUser});
@@ -20,45 +24,11 @@ class SessionAuthenticated extends SessionState {
   List<Object> get props => [dataUser];
 }
 
-class SessionAuthenticatedConductor extends SessionState {
-  final AuthenticationCredentials dataUser;
-
-  const SessionAuthenticatedConductor({required this.dataUser});
-
-  @override
-  List<Object> get props => [dataUser];
+final class SessionUnauthenticated extends SessionState {
+  const SessionUnauthenticated();
 }
 
-class SessionAuthenticatedAdmin extends SessionState {
-  final AuthenticationCredentials dataUser;
-
-  const SessionAuthenticatedAdmin({required this.dataUser});
-
-  @override
-  List<Object> get props => [dataUser];
-}
-
-class SessionAuthenticatedMember extends SessionState {
-  final AuthenticationCredentials dataUser;
-
-  const SessionAuthenticatedMember({required this.dataUser});
-
-  @override
-  List<Object> get props => [dataUser];
-}
-
-class SessionAuthenticatedGerente extends SessionState {
-  final AuthenticationCredentials dataUser;
-
-  const SessionAuthenticatedGerente({required this.dataUser});
-
-  @override
-  List<Object> get props => [dataUser];
-}
-
-class SessionUnauthenticated extends SessionState {}
-
-class SessionError extends SessionState {
+final class SessionError extends SessionState {
   final String message;
 
   const SessionError(this.message);
@@ -67,7 +37,7 @@ class SessionError extends SessionState {
   List<Object> get props => [message];
 }
 
-class SessionTokenExpired extends SessionState {
+final class SessionTokenExpired extends SessionState {
   final String message;
 
   const SessionTokenExpired({

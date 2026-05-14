@@ -33,6 +33,14 @@ final class AuthUnifiedVerified extends AuthUnifiedState {
   const AuthUnifiedVerified();
 }
 
+final class AuthUnifiedRegistering extends AuthUnifiedState {
+  final String email;
+  const AuthUnifiedRegistering({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 /// Auth operation failed.
 final class AuthUnifiedFailure extends AuthUnifiedState {
   final Failure failure;

@@ -1,6 +1,6 @@
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
-import 'package:auronix_app/features/client/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:dartz/dartz.dart';
 
 class LoginDriverUseCase {

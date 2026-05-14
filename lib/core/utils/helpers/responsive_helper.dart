@@ -10,7 +10,7 @@ class ResponsiveHelper {
   }
 
   static double maxContentWidth(BuildContext context) {
-    return isTablet(context) ? 600 : double.infinity;
+    return isTablet(context) ? 1024 : double.infinity;
   }
 
   static EdgeInsets contentPadding(BuildContext context) {
