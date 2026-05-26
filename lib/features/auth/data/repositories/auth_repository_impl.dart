@@ -4,6 +4,7 @@ import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasourc
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_driver_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
@@ -325,7 +326,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       debugPrint('🔐 [AuthUnified] Iniciando login conductor');
 
       final response = await _remote.loginDriver(
-        ciPassport: ciPassport,
+        identificacion: ciPassport,
         password: password,
       );
 
@@ -364,19 +365,13 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
   }
 
   @override
-  Future<Either<Failure, AuthenticationCredentials>> registerDriver({
-    required String ciPassport,
-    required String password,
-    required String email,
-  }) async {
+  Future<Either<Failure, AuthenticationCredentials>> registerDriver(
+    RegisterDriverRequest data,
+  ) async {
     try {
       debugPrint('[AuthUnified] Iniciando registro conductor');
 
-      final response = await _remote.registerDriver(
-        ciPassport: ciPassport,
-        password: password,
-        email: email,
-      );
+      final response = await _remote.registerDriver(data.toJson());
 
       if (!response['response']) {
         return Left(
@@ -389,7 +384,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       }
 
       final result = response['result'] as Map<String, dynamic>;
-      final credsResult = _conductorCredsFromResult(result, ciPassport);
+      final credsResult = _conductorCredsFromResult(result, data.cedula);
       if (credsResult.isLeft()) return credsResult;
 
       final creds = credsResult.getOrElse(

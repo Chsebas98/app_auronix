@@ -148,7 +148,7 @@ class AuthRemoteDatasource {
   // ──────────────────── DRIVER ────────────────────
 
   Future<Map<String, dynamic>> loginDriver({
-    required String ciPassport,
+    required String identificacion,
     required String password,
   }) async {
     try {
@@ -158,7 +158,7 @@ class AuthRemoteDatasource {
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {'ci_passport': ciPassport, 'password': password},
+        data: {'identificacion': identificacion, 'password': password},
       );
       debugPrint('loginDriver exitoso');
       return response.data as Map<String, dynamic>;
@@ -167,11 +167,9 @@ class AuthRemoteDatasource {
     }
   }
 
-  Future<Map<String, dynamic>> registerDriver({
-    required String ciPassport,
-    required String password,
-    required String email,
-  }) async {
+  Future<Map<String, dynamic>> registerDriver(
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/auth/drivers/register',
@@ -179,7 +177,7 @@ class AuthRemoteDatasource {
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {'ci_passport': ciPassport, 'password': password, 'email': email},
+        data: data,
       );
       debugPrint('registerDriver exitoso');
       return response.data as Map<String, dynamic>;

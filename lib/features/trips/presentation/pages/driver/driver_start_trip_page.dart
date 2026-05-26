@@ -9,9 +9,9 @@ class DriverStartTripPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          sl<DriverTripBloc>()..add(const DriverTripLoadNearbyEvent()),
+    return BlocProvider.value(
+      value: sl<DriverTripBloc>()
+        ..add(const DriverTripLoadNearbyEvent(userId: 0)),
       child: const DriverTripTemplate(),
     );
   }

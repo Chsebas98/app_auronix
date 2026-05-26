@@ -10,7 +10,11 @@ sealed class HomeDriverEvent extends Equatable {
 final class GetCurrentLocationEvent extends HomeDriverEvent {}
 
 final class HomeDriverInitEvent extends HomeDriverEvent {
-  const HomeDriverInitEvent();
+  final int userId;
+  const HomeDriverInitEvent({required this.userId});
+
+  @override
+  List<Object?> get props => [userId];
 }
 
 final class HomeDriverToggleAvailabilityEvent extends HomeDriverEvent {

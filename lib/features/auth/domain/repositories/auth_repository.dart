@@ -1,5 +1,6 @@
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_driver_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
@@ -42,11 +43,9 @@ abstract class AuthUnifiedRepository {
     bool rememberMe = false,
   });
 
-  Future<Either<Failure, AuthenticationCredentials>> registerDriver({
-    required String ciPassport,
-    required String password,
-    required String email,
-  });
+  Future<Either<Failure, AuthenticationCredentials>> registerDriver(
+    RegisterDriverRequest data,
+  );
 
   Future<Either<Failure, AuthenticationCredentials?>> getDriverSession();
 

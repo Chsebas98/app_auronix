@@ -11,6 +11,7 @@ import 'package:auronix_app/features/auth/domain/usecases/refresh_token_usecase.
 import 'package:auronix_app/features/auth/domain/usecases/register_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/register_driver_usecase.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_driver_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -208,11 +209,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
   ) async {
     emit(const AuthUnifiedLoading());
 
-    final result = await _registerDriver(
-      ciPassport: event.ciPassport,
-      password: event.password,
-      email: event.email,
-    );
+    final result = await _registerDriver(event.data);
 
     result.fold(
       (failure) {

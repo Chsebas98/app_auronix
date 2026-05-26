@@ -160,6 +160,8 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
                       onAccept: () => context.read<DriverTripBloc>().add(
                         DriverTripAcceptEvent(
                           requestId: state.selectedRequest!.id,
+                          tripId: int.tryParse(state.selectedRequest!.id) ?? 0,
+                          userId: 0,
                         ),
                       ),
                       onReject: () => context.read<DriverTripBloc>().add(

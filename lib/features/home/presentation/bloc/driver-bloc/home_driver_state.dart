@@ -21,10 +21,11 @@ final class HomeDriverState extends Equatable {
     this.dailyEarnings = 0.0,
     this.completedTrips = 0,
     this.earningsHistory = const [],
+    this.errorMessage,
   });
 
   final HomeDriverStatus status;
-  final AuthenticationCredentials dataProfile; // reemplaza con tu modelo
+  final AuthenticationCredentials dataProfile;
   final String currentAddress;
   final bool isLoadingAddress;
   final bool isAvailable;
@@ -33,6 +34,7 @@ final class HomeDriverState extends Equatable {
   final double dailyEarnings;
   final int completedTrips;
   final List<EarningsPoint> earningsHistory;
+  final String? errorMessage;
 
   bool get isReady => status == HomeDriverStatus.ready;
   bool get hasTripIncoming => status == HomeDriverStatus.tripIncoming;
@@ -49,6 +51,7 @@ final class HomeDriverState extends Equatable {
     double? dailyEarnings,
     int? completedTrips,
     List<EarningsPoint>? earningsHistory,
+    String? errorMessage,
   }) {
     return HomeDriverState(
       status: status ?? this.status,
@@ -61,6 +64,7 @@ final class HomeDriverState extends Equatable {
       dailyEarnings: dailyEarnings ?? this.dailyEarnings,
       completedTrips: completedTrips ?? this.completedTrips,
       earningsHistory: earningsHistory ?? this.earningsHistory,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
@@ -76,5 +80,6 @@ final class HomeDriverState extends Equatable {
     dailyEarnings,
     completedTrips,
     earningsHistory,
+    errorMessage,
   ];
 }

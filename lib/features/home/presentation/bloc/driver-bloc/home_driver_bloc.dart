@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/home/domain/models/interfaces/earnings_point.dart';
+import 'package:auronix_app/features/home/domain/usecases/get_driver_home_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,7 +9,11 @@ part 'home_driver_event.dart';
 part 'home_driver_state.dart';
 
 class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
-  HomeDriverBloc() : super(const HomeDriverState()) {
+  final GetDriverHomeUseCase _getDriverHome;
+
+  HomeDriverBloc({required GetDriverHomeUseCase getDriverHome})
+      : _getDriverHome = getDriverHome,
+        super(const HomeDriverState()) {
     on<HomeDriverInitEvent>(_onInit);
     on<GetCurrentLocationEvent>(_onGetCurrentLocationEvent);
     on<HomeDriverToggleAvailabilityEvent>(_onToggleAvailability);
@@ -25,22 +30,21 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
   ) async {
     emit(state.copyWith(status: HomeDriverStatus.loading));
 
-    // TODO: reemplazar con usecase real
-    await Future.delayed(const Duration(seconds: 1));
+    final result = await _getDriverHome(event.userId);
 
-    emit(
-      state.copyWith(
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: HomeDriverStatus.error,
+        errorMessage: failure.message,
+      )),
+      (data) => emit(state.copyWith(
         status: HomeDriverStatus.ready,
-        dailyEarnings: 245.80,
-        completedTrips: 14,
-        earningsHistory: [
-          const EarningsPoint(label: '8am', amount: 0, index: 0),
-          const EarningsPoint(label: '10am', amount: 45, index: 1),
-          const EarningsPoint(label: '11am', amount: 80, index: 2),
-          const EarningsPoint(label: '12pm', amount: 95, index: 3),
-          const EarningsPoint(label: '1pm', amount: 180, index: 4),
-        ],
-      ),
+        isAvailable: data.isAvailable,
+        currentAddress: data.currentAddress ?? '',
+        dailyEarnings: data.dailyEarnings,
+        completedTrips: data.completedTrips,
+        earningsHistory: data.earningsHistory,
+      )),
     );
   }
 
@@ -50,16 +54,11 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
   ) async {
     emit(state.copyWith(isLoadingAddress: true));
     try {
-      // Logica de geolocalizacion
-      await Future.delayed(
-        const Duration(seconds: 2),
-      ); // Simula delay de geolocalizacion
-      emit(
-        state.copyWith(
-          currentAddress: 'Direccion obtenida',
-          isLoadingAddress: false,
-        ),
-      );
+      await Future.delayed(const Duration(seconds: 2));
+      emit(state.copyWith(
+        currentAddress: 'Dirección obtenida',
+        isLoadingAddress: false,
+      ));
     } catch (_) {
       emit(state.copyWith(isLoadingAddress: false));
     }
@@ -76,34 +75,29 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
     HomeDriverLocationUpdatedEvent event,
     Emitter<HomeDriverState> emit,
   ) {
-    emit(
-      state.copyWith(currentAddress: event.address, isLoadingAddress: false),
-    );
+    emit(state.copyWith(
+        currentAddress: event.address, isLoadingAddress: false));
   }
 
   FutureOr<void> _onTripRequested(
     HomeDriverTripRequestedEvent event,
     Emitter<HomeDriverState> emit,
   ) {
-    emit(
-      state.copyWith(
-        incomingTrip: event.trip,
-        status: HomeDriverStatus.tripIncoming,
-      ),
-    );
+    emit(state.copyWith(
+      incomingTrip: event.trip,
+      status: HomeDriverStatus.tripIncoming,
+    ));
   }
 
   FutureOr<void> _onTripAccepted(
     HomeDriverTripAcceptedEvent event,
     Emitter<HomeDriverState> emit,
   ) {
-    emit(
-      state.copyWith(
-        activeTrip: state.incomingTrip,
-        incomingTrip: null,
-        status: HomeDriverStatus.tripActive,
-      ),
-    );
+    emit(state.copyWith(
+      activeTrip: state.incomingTrip,
+      incomingTrip: null,
+      status: HomeDriverStatus.tripActive,
+    ));
   }
 
   FutureOr<void> _onTripRejected(

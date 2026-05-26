@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+ando_context.txt
+consumir_endpoints_mvp.md
+/.claude
