@@ -24,7 +24,6 @@ class ClientBottomNav extends StatelessWidget {
             ),
           ),
           child: AppBottomNav(
-            // ← atom/molecule de shared
             role: Roles.rolUser,
             currentIndex: navState.currentIndex,
             onTap: (index) {
@@ -43,7 +42,7 @@ class ClientBottomNav extends StatelessWidget {
 
     final newIndex = switch (true) {
       _ when location.startsWith(ClientRoutesPath.home) => 0,
-      _ when location.startsWith(ClientRoutesPath.messages) => 1,
+      _ when location.startsWith(ClientRoutesPath.trips) => 1,
       _ when location.startsWith(ClientRoutesPath.saveTrips) => 2,
       _ => 0,
     };
@@ -56,11 +55,11 @@ class ClientBottomNav extends StatelessWidget {
   void _navigateToIndex(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.push(ClientRoutesPath.home);
+        context.go(ClientRoutesPath.home);
       case 1:
-        context.push(ClientRoutesPath.messages, extra: Roles.rolUser);
+        context.go(ClientRoutesPath.trips);
       case 2:
-        context.push(ClientRoutesPath.saveTrips);
+        context.go(ClientRoutesPath.saveTrips);
     }
   }
 }

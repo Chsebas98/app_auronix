@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
-import 'package:auronix_app/features/auth/domain/usecases/auth_complete_register_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/google_login_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/login_client_usecase.dart';
 import 'package:auronix_app/features/auth/domain/usecases/login_driver_usecase.dart';
@@ -12,6 +11,7 @@ import 'package:auronix_app/features/auth/domain/usecases/register_client_usecas
 import 'package:auronix_app/features/auth/domain/usecases/register_driver_usecase.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_driver_request.dart';
+import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -31,7 +31,6 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
   final RegisterDriverUseCase _registerDriver;
   final RefreshTokenUseCase _refreshToken;
   final LogoutUseCase _logout;
-  final AuthCompleteRegisterClientUsecase _completeRegisterClient;
   final RxSharedPreferences _prefs;
 
   AuthUnifiedBloc({
@@ -44,7 +43,6 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
        _registerDriver = RegisterDriverUseCase(repository),
        _refreshToken = RefreshTokenUseCase(repository),
        _logout = LogoutUseCase(repository),
-       _completeRegisterClient = AuthCompleteRegisterClientUsecase(repository),
        _prefs = prefs,
        super(const AuthUnifiedIdle()) {
     on<AuthLoginClientEvent>(_onLoginClient);
@@ -95,33 +93,17 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
       rememberMe: event.rememberMe,
     );
 
-    await Future.delayed(const Duration(seconds: 2)); // Simula tiempo de login
     debugPrint('[AuthBloc] Login conductor simulado exitoso');
-    emit(
-      AuthUnifiedSuccess(
-        credentials: AuthenticationCredentials(
-          tokenAccess: 'testToken',
-          tokenRefresh: 'testRefreshToken',
-          role: Roles.rolDriver,
-          username: 'testUser',
-          firstName: 'Test',
-          secondName: 'User',
-          lastName: 'Driver',
-          secondlastName: 'Test',
-          email: 'test@example.com',
-        ),
-      ),
+    result.fold(
+      (failure) {
+        debugPrint('[AuthBloc] Login conductor falló: ${failure.message}');
+        emit(AuthUnifiedFailure(failure: failure));
+      },
+      (creds) {
+        debugPrint('[AuthBloc] Login conductor exitoso');
+        emit(AuthUnifiedSuccess(credentials: creds));
+      },
     );
-    // result.fold(
-    //   (failure) {
-    //     debugPrint('[AuthBloc] Login conductor falló: ${failure.message}');
-    //     emit(AuthUnifiedFailure(failure: failure));
-    //   },
-    //   (creds) {
-    //     debugPrint('[AuthBloc] Login conductor exitoso');
-    //     emit(AuthUnifiedSuccess(credentials: creds));
-    //   },
-    // );
   }
 
   FutureOr<void> _onGoogleSignIn(
@@ -131,7 +113,13 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
     emit(const AuthUnifiedLoading());
 
     final googleResult = await _googleLogin.getGoogleCredentials();
+    debugPrint(
+      '[AuthBloc] Resultado obtención credenciales Google: $googleResult',
+    );
     final googleFailure = googleResult.fold<Failure?>((f) => f, (_) => null);
+    debugPrint(
+      '[AuthBloc] Fallo obtención credenciales Google: $googleFailure',
+    );
 
     if (googleFailure != null) {
       emit(AuthUnifiedFailure(failure: googleFailure));
@@ -193,14 +181,24 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
   ) async {
     emit(const AuthUnifiedLoading());
 
-    // final verifyResult = await _registerClient.verify(event.verifyRequest);
-    await Future.delayed(
-      const Duration(seconds: 3),
-    ); // Simula tiempo de verificación
-    debugPrint(
-      '[AuthBloc] Verificación registro cliente simulada para email: ${event.email}',
+    final result = await _registerClient.verify(
+      RegisterVerifyRequest(
+        email: event.email,
+        password: '',
+        rol: Roles.rolUser,
+      ),
     );
-    emit(AuthUnifiedRegistering(email: event.email));
+
+    result.fold(
+      (failure) {
+        debugPrint('[AuthBloc] Verificar email falló: ${failure.message}');
+        emit(AuthUnifiedFailure(failure: failure));
+      },
+      (_) {
+        debugPrint('[AuthBloc] Email disponible: ${event.email}');
+        emit(AuthUnifiedRegistering(email: event.email));
+      },
+    );
   }
 
   FutureOr<void> _onRegisterDriver(
@@ -267,42 +265,31 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
   ) async {
     emit(const AuthUnifiedLoading());
 
-    final result = await _completeRegisterClient(
-      name: event.name,
-      email: event.email,
-      gender: event.gender,
-      phone: event.phone,
-      password: event.password,
-    );
-    debugPrint('[AuthBloc] Completar registro cliente resultado: $result');
-    await Future.delayed(
-      const Duration(seconds: 2),
-    ); // Simula tiempo de proceso
-    emit(
-      const AuthUnifiedSuccess(
-        credentials: AuthenticationCredentials(
-          tokenAccess: 'testtoken',
-          tokenRefresh: 'testrefresh',
-          role: Roles.rolUser,
-          username: 'testusername',
-          firstName: 'testfirstName',
-          secondName: 'testsecondName',
-          lastName: 'testlastName',
-          secondlastName: 'testsecondlastName',
-          email: 'testemail',
-        ),
+    final names = ResponseHelpers.parseFullName(event.name);
+
+    final result = await _registerClient.complete(
+      RegisterRequest(
+        email: event.email,
+        password: event.password,
+        username: event.email.split('@').first,
+        nombre1: names.firstName,
+        nombre2: names.secondName ?? '',
+        ape1: names.lastName,
+        ape2: names.secondLastName ?? '',
+        rol: Roles.rolUser,
       ),
     );
-    // result.fold(
-    //   (failure) {
-    //     debugPrint('[AuthBloc] Completar registro cliente falló: ${failure.message}');
-    //     emit(AuthUnifiedFailure(failure: failure));
-    //   },
-    //   (creds) {
-    //     debugPrint('[AuthBloc] Completar registro cliente exitoso');
-    //     emit(AuthUnifiedSuccess(credentials: creds));
-    //   },
-    // );
+
+    result.fold(
+      (failure) {
+        debugPrint('[AuthBloc] Registro cliente falló: ${failure.message}');
+        emit(AuthUnifiedFailure(failure: failure));
+      },
+      (creds) {
+        debugPrint('[AuthBloc] Registro cliente exitoso');
+        emit(AuthUnifiedSuccess(credentials: creds));
+      },
+    );
   }
 
   FutureOr<void> _onLogout(

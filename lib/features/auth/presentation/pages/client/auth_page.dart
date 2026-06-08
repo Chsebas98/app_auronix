@@ -108,6 +108,10 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
               case Roles.rolMember:
                 throw UnimplementedError('Rol socio no implementado');
               case Roles.rolUser:
+                context.read<DialogCubit>().hideTop();
+                context.read<SessionBloc>().add(
+                  LoginUserEvent(dataUser: state.credentials),
+                );
                 AppRouter.goAndClear(ClientRoutesPath.home);
             }
         }

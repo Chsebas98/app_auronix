@@ -1,12 +1,30 @@
+import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
+import 'package:auronix_app/app/router/router.dart';
+import 'package:auronix_app/core/models/interfaces/core_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class AllowPermitsScreen extends StatelessWidget {
   const AllowPermitsScreen({Key? key}) : super(key: key);
+
+  String _homeRouteForSession(BuildContext context) {
+    final session = context.read<SessionBloc>().state;
+    if (session is SessionAuthenticated) {
+      return switch (session.dataUser.role) {
+        Roles.rolDriver => ConductorRoutesPath.home,
+        Roles.rolUser => ClientRoutesPath.home,
+        _ => Routes.root,
+      };
+    }
+    return Routes.root;
+  }
 
   Future<void> _requestPermission(BuildContext context) async {
     final theme = Theme.of(context);
@@ -18,7 +36,7 @@ class AllowPermitsScreen extends StatelessWidget {
 
     if (status.isGranted && context.mounted) {
       debugPrint('Permiso concedido → Navegando a home');
-      // context.go(ClientRoutesPath.home);
+      context.go(_homeRouteForSession(context));
     } else if (status.isDenied && context.mounted) {
       debugPrint('Permiso denegado');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -46,15 +64,13 @@ class AllowPermitsScreen extends StatelessWidget {
         debugPrint('Abriendo configuración...');
         await openAppSettings();
 
-        // Opcional: Verificar de nuevo después de volver de settings
-        Future.delayed(const Duration(milliseconds: 500), () async {
-          if (context.mounted) {
-            final newStatus = await Permission.locationWhenInUse.status;
-            if (newStatus.isGranted && context.mounted) {
-              // context.go(ClientRoutesPath.home);
-            }
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (context.mounted) {
+          final newStatus = await Permission.locationWhenInUse.status;
+          if (newStatus.isGranted && context.mounted) {
+            context.go(_homeRouteForSession(context));
           }
-        });
+        }
       }
     }
   }

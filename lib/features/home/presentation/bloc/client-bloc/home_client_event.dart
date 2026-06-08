@@ -8,7 +8,11 @@ sealed class HomeClientEvent extends Equatable {
 }
 
 final class HomeClientInitEvent extends HomeClientEvent {
-  const HomeClientInitEvent();
+  final AuthenticationCredentials credentials;
+  const HomeClientInitEvent({required this.credentials});
+
+  @override
+  List<Object?> get props => [credentials];
 }
 
 final class GetCurrentLocationEvent extends HomeClientEvent {
@@ -16,7 +20,7 @@ final class GetCurrentLocationEvent extends HomeClientEvent {
 }
 
 final class HomeClientProfileLoadedEvent extends HomeClientEvent {
-  final dynamic profile; // reemplaza con tu modelo UserProfile
+  final AuthenticationCredentials profile;
   const HomeClientProfileLoadedEvent({required this.profile});
 
   @override
@@ -24,7 +28,7 @@ final class HomeClientProfileLoadedEvent extends HomeClientEvent {
 }
 
 final class HomeClientTripUpdatedEvent extends HomeClientEvent {
-  final dynamic trip; // reemplaza con tu modelo Trip
+  final dynamic trip;
   const HomeClientTripUpdatedEvent({required this.trip});
 
   @override

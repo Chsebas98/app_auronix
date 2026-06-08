@@ -65,9 +65,11 @@ class AuthRemoteDatasource {
         ),
         data: {
           'email': creds.email,
+          'googleId': creds.username,
           'googleToken': creds.tokenAccess,
           'nombre1': creds.firstName,
           'ape1': creds.lastName,
+          'photo_url': creds.photoUrl,
         },
       );
       debugPrint('googleLogin exitoso');
@@ -80,7 +82,6 @@ class AuthRemoteDatasource {
   Future<Map<String, dynamic>> verifyRegisterClient({
     required String email,
     required String password,
-    required String rol,
   }) async {
     try {
       final response = await _dio.post(
@@ -89,7 +90,7 @@ class AuthRemoteDatasource {
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {'email': email, 'password': password, 'rol': rol},
+        data: {'email': email, 'password': password},
       );
       debugPrint('verifyRegisterClient exitoso');
       return response.data as Map<String, dynamic>;
@@ -120,7 +121,7 @@ class AuthRemoteDatasource {
       final response = await _dio.post(
         '$_baseUrl/auth/clients/refresh-token',
         options: Options(contentType: 'application/json'),
-        data: {'token_refresh': refreshToken},
+        data: {'refreshToken': refreshToken},
       );
       debugPrint('refreshClientToken exitoso');
       return response.data as Map<String, dynamic>;
@@ -135,9 +136,9 @@ class AuthRemoteDatasource {
   ) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/auth/logout',
+        '$_baseUrl/auth/clients/logout',
         options: Options(contentType: 'application/json'),
-        data: {'email': email, 'role': mnemonic},
+        data: {'email': email},
       );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
@@ -191,7 +192,7 @@ class AuthRemoteDatasource {
       final response = await _dio.post(
         '$_baseUrl/auth/drivers/refresh-token',
         options: Options(contentType: 'application/json'),
-        data: {'token_refresh': refreshToken},
+        data: {'refreshToken': refreshToken},
       );
       debugPrint('refreshDriverToken exitoso');
       return response.data as Map<String, dynamic>;

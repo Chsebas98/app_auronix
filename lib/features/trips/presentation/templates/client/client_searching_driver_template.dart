@@ -1,6 +1,8 @@
+import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/core/utils/helpers/jwt_helpers.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/buttons/app_button.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
@@ -121,14 +123,19 @@ class ClientSearchingDriverTemplate extends StatelessWidget {
                       label: 'CANCELAR BÚSQUEDA',
                       variant: AppButtonVariant.outlined,
                       expand: true,
-                      onPressed: () =>
-                          context.read<ClientTripBloc>().add(
-                                ClientTripCancelEvent(
-                                  userId: 0,
-                                  tripId: state.activeTrip?.id ?? 0,
-                                  motivo: 'Cancelado por el usuario',
-                                ),
+                      onPressed: () {
+                        final session = context.read<SessionBloc>().state;
+                        final userId = session is SessionAuthenticated
+                            ? JwtHelpers.getUserId(session.dataUser.tokenAccess) ?? 0
+                            : 0;
+                        context.read<ClientTripBloc>().add(
+                              ClientTripCancelEvent(
+                                userId: userId,
+                                tripId: state.activeTrip?.id ?? 0,
+                                motivo: 'Cancelado por el usuario',
                               ),
+                            );
+                      },
                     ),
                     16.verticalSpace,
                   ],

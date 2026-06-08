@@ -1,4 +1,6 @@
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
+import 'package:auronix_app/app/environments/environment.dart';
+import 'package:auronix_app/app/environments/flavors/env_dev_config.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
@@ -95,10 +97,12 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
   Future<Either<Failure, AuthenticationCredentials>> loginWithGoogle() async {
     try {
       await _ensureGoogleInitialized();
+      debugPrint('[AuthUnified] GoogleSignIn inicializado');
 
       final googleAccount = await _googleSignIn.authenticate();
+      debugPrint('[AuthUnified] Google account obtenida: ${googleAccount}');
       final googleAuth = googleAccount.authentication;
-
+      debugPrint('[AuthUnified] Google authentication obtenida: ${googleAuth}');
       if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
         return const Left(
           AuthFailure(message: 'El token no se obtuvo correctamente'),
@@ -113,7 +117,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
         tokenRefresh: '',
         tokenAccess: googleAuth.idToken!,
         role: Roles.rolUser,
-        username: '',
+        username: googleAccount.id,
         firstName: firstName,
         secondName: '',
         lastName: lastName ?? '',
@@ -122,7 +126,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
         photoUrl: googleAccount.photoUrl ?? '',
         isGoogleUser: true,
       );
-
+      debugPrint('[AuthUnified] Credenciales Google obtenidas: ${authModel}');
       await _clientDb.saveUser(authModel);
       return Right(authModel);
     } catch (e) {
@@ -157,13 +161,12 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       final result = response['result'] as Map<String, dynamic>;
       final tokenAccess = result['token_access'] as String?;
       final tokenRefresh = result['token_refresh'] as String?;
-      final userData = result['user'] as Map<String, dynamic>?;
 
-      if (tokenAccess == null || tokenRefresh == null || userData == null) {
+      if (tokenAccess == null || tokenRefresh == null) {
         return const Left(
           ServerFailure(
             message: 'Respuesta inválida del servidor',
-            detail: 'Tokens o datos de usuario faltantes',
+            detail: 'Tokens faltantes en la respuesta',
             statusCode: 500,
           ),
         );
@@ -172,7 +175,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       final creds = googleCreds.copyWith(
         tokenAccess: tokenAccess,
         tokenRefresh: tokenRefresh,
-        username: userData['username'] as String? ?? '',
+        username: result['username'] as String? ?? googleCreds.username,
       );
 
       await _clientDb.saveUser(creds);
@@ -199,7 +202,6 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       final response = await _remote.verifyRegisterClient(
         email: registerData.email,
         password: registerData.password,
-        rol: RoleHelpers.getMnemonicoByRole(registerData.rol),
       );
 
       if (!response['response']) {
@@ -468,9 +470,20 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
   // ──────────────────── HELPERS ────────────────────
 
+  // Web OAuth client IDs (type 3) extraídos de google-services.json por flavor.
+  // Requerido por google_sign_in v7.x: Credential Manager en Android necesita
+  // serverClientId para emitir el ID token. Sin él lanza GetCredentialResponse error.
+  static const _devServerClientId =
+      '451995583792-urgesf9bm8hfi60vvvvaehibft822usp.apps.googleusercontent.com';
+  static const _prodServerClientId =
+      '820427140460-mhlc0400lsqh7oimeo0ivp0u9j9egm2d.apps.googleusercontent.com';
+
   Future<void> _ensureGoogleInitialized() async {
     if (_googleInitialized) return;
-    await _googleSignIn.initialize();
+    final serverClientId = Environment().config is EnvDevConfig
+        ? _devServerClientId
+        : _prodServerClientId;
+    await _googleSignIn.initialize(serverClientId: serverClientId);
     _googleInitialized = true;
   }
 
@@ -479,13 +492,12 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
   ) {
     final tokenAccess = result['token_access'] as String?;
     final tokenRefresh = result['token_refresh'] as String?;
-    final userData = result['user'] as Map<String, dynamic>?;
 
-    if (tokenAccess == null || tokenRefresh == null || userData == null) {
+    if (tokenAccess == null || tokenRefresh == null) {
       return const Left(
         ServerFailure(
           message: 'Respuesta inválida del servidor',
-          detail: 'Tokens o datos de usuario faltantes',
+          detail: 'Tokens faltantes en la respuesta',
           statusCode: 500,
         ),
       );
@@ -495,14 +507,14 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       AuthenticationCredentials(
         tokenAccess: tokenAccess,
         tokenRefresh: tokenRefresh,
-        email: userData['email'] as String? ?? '',
-        username: userData['username'] as String? ?? '',
-        firstName: userData['nombre1'] as String? ?? '',
-        lastName: userData['ape1'] as String? ?? '',
-        secondName: userData['nombre2'] as String? ?? '',
-        secondlastName: userData['ape2'] as String? ?? '',
-        photoUrl: userData['photo_url'] as String? ?? '',
-        role: RoleHelpers.mapRole(userData['role']),
+        email: result['email'] as String? ?? '',
+        username: result['username'] as String? ?? '',
+        firstName: result['first_name'] as String? ?? '',
+        secondName: result['second_name'] as String? ?? '',
+        lastName: result['last_name'] as String? ?? '',
+        secondlastName: result['second_last_name'] as String? ?? '',
+        photoUrl: result['photo_url'] as String? ?? '',
+        role: RoleHelpers.mapRole(result['role']),
       ),
     );
   }
@@ -513,13 +525,12 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
   ) {
     final tokenAccess = result['token_access'] as String?;
     final tokenRefresh = result['token_refresh'] as String?;
-    final userData = result['user'] as Map<String, dynamic>?;
 
-    if (tokenAccess == null || tokenRefresh == null || userData == null) {
+    if (tokenAccess == null || tokenRefresh == null) {
       return const Left(
         ServerFailure(
           message: 'Respuesta inválida del servidor',
-          detail: 'Tokens o datos de usuario faltantes',
+          detail: 'Tokens faltantes en la respuesta',
           statusCode: 500,
         ),
       );
@@ -529,14 +540,14 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       AuthenticationCredentials(
         tokenAccess: tokenAccess,
         tokenRefresh: tokenRefresh,
-        email: userData['email'] as String? ?? '',
-        username: userData['username'] as String? ?? ciPassport,
-        firstName: userData['nombre1'] as String? ?? '',
-        lastName: userData['ape1'] as String? ?? '',
-        secondName: userData['nombre2'] as String? ?? '',
-        secondlastName: userData['ape2'] as String? ?? '',
-        photoUrl: userData['photo_url'] as String? ?? '',
-        role: RoleHelpers.mapRole(userData['role']),
+        email: result['email'] as String? ?? '',
+        username: result['username'] as String? ?? ciPassport,
+        firstName: result['first_name'] as String? ?? '',
+        secondName: result['second_name'] as String? ?? '',
+        lastName: result['last_name'] as String? ?? '',
+        secondlastName: result['second_last_name'] as String? ?? '',
+        photoUrl: result['photo_url'] as String? ?? '',
+        role: RoleHelpers.mapRole(result['role']),
       ),
     );
   }

@@ -9,6 +9,8 @@ import 'package:auronix_app/app/environments/environment.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/client/data/datasources/remote/client_profile_remote_datasource.dart';
+import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
+import 'package:auronix_app/features/client/presentation/bloc/client_profile_bloc.dart';
 import 'package:auronix_app/features/client/data/repositories/client_profile_repository_impl.dart';
 import 'package:auronix_app/features/client/domain/repositories/client_profile_repository.dart';
 import 'package:auronix_app/features/client/domain/usecases/get_client_profile_usecase.dart';
@@ -176,6 +178,10 @@ Future<void> initDependencies() async {
 
   // ── 9. Trips — datasources + repositorio + usecases ──────────────────────
 
+  sl.registerLazySingleton<PlacesService>(
+    () => PlacesService(apiKey: Environment().config!.googleMapsApiKey),
+  );
+
   sl.registerLazySingleton<ClientTripRemoteDatasource>(
     () => ClientTripRemoteDatasource(dio: sl<Dio>()),
   );
@@ -274,6 +280,13 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<UpdateClientProfileUseCase>(
     () => UpdateClientProfileUseCase(sl<ClientProfileRepository>()),
+  );
+
+  sl.registerFactory<ClientProfileBloc>(
+    () => ClientProfileBloc(
+      getProfile: sl<GetClientProfileUseCase>(),
+      updateProfile: sl<UpdateClientProfileUseCase>(),
+    ),
   );
 
   // ── 12. Globales de navegación y modales ──────────────────────────────────
