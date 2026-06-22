@@ -58,11 +58,19 @@ final class DriverTripAcceptEvent extends DriverTripEvent {
 }
 
 final class DriverTripRejectEvent extends DriverTripEvent {
-  const DriverTripRejectEvent({required this.requestId});
+  final int userId;
+  final int tripId;
   final String requestId;
+  final String? motivo;
+  const DriverTripRejectEvent({
+    required this.userId,
+    required this.tripId,
+    required this.requestId,
+    this.motivo,
+  });
 
   @override
-  List<Object?> get props => [requestId];
+  List<Object?> get props => [userId, tripId, requestId];
 }
 
 final class DriverTripStartEvent extends DriverTripEvent {

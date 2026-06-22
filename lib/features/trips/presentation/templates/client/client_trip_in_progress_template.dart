@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
@@ -5,10 +7,19 @@ import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},
+  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]}
+]''';
 
 class ClientTripInProgressTemplate extends StatefulWidget {
   const ClientTripInProgressTemplate({super.key});
@@ -20,21 +31,10 @@ class ClientTripInProgressTemplate extends StatefulWidget {
 
 class _ClientTripInProgressTemplateState
     extends State<ClientTripInProgressTemplate> {
-  final _mapController = MapController();
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
-  }
+  final Completer<GoogleMapController> _mapCompleter = Completer();
 
   @override
   Widget build(BuildContext context) {
-    final isLight = context.isLight;
-    final tileUrl = isLight
-        ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
     return BlocListener<ClientTripBloc, ClientTripState>(
       listenWhen: (prev, curr) =>
           curr.status == ClientTripStatus.completed &&
@@ -45,62 +45,83 @@ class _ClientTripInProgressTemplateState
         builder: (context, state) {
           final trip = state.activeTrip;
           final origin = LatLng(
-            trip?.origenLatitud ?? state.origenLatitud ?? 4.7110,
-            trip?.origenLongitud ?? state.origenLongitud ?? -74.0721,
+            trip?.origenLatitud ?? state.origenLatitud ?? -0.1807,
+            trip?.origenLongitud ?? state.origenLongitud ?? -78.4678,
           );
           final destination = LatLng(
-            trip?.destinoLatitud ?? state.destinoLatitud ?? 4.7200,
-            trip?.destinoLongitud ?? state.destinoLongitud ?? -74.0650,
+            trip?.destinoLatitud ?? state.destinoLatitud ?? -0.1750,
+            trip?.destinoLongitud ?? state.destinoLongitud ?? -78.4600,
+          );
+
+          final bounds = LatLngBounds(
+            southwest: LatLng(
+              origin.latitude < destination.latitude
+                  ? origin.latitude
+                  : destination.latitude,
+              origin.longitude < destination.longitude
+                  ? origin.longitude
+                  : destination.longitude,
+            ),
+            northeast: LatLng(
+              origin.latitude > destination.latitude
+                  ? origin.latitude
+                  : destination.latitude,
+              origin.longitude > destination.longitude
+                  ? origin.longitude
+                  : destination.longitude,
+            ),
           );
 
           return Scaffold(
             body: Stack(
               children: [
-                // ── Mapa ────────────────────────────────────────────────
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: origin,
-                    initialZoom: 13.5,
+                // ── Google Map ──────────────────────────────────────
+                GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: origin,
+                    zoom: 13.5,
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: tileUrl,
-                      subdomains:
-                          isLight ? const [] : const ['a', 'b', 'c'],
-                      userAgentPackageName: 'com.auronix.app',
+                  style: context.isDark ? _darkMapStyle : null,
+                  onMapCreated: (controller) {
+                    if (!_mapCompleter.isCompleted) {
+                      _mapCompleter.complete(controller);
+                    }
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      controller.animateCamera(
+                        CameraUpdate.newLatLngBounds(bounds, 80),
+                      );
+                    });
+                  },
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId('origin'),
+                      position: origin,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueAzure),
                     ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: [origin, destination],
-                          strokeWidth: 4,
-                          color: AppColors.fifth,
-                        ),
-                      ],
+                    Marker(
+                      markerId: const MarkerId('destination'),
+                      position: destination,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueRed),
                     ),
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: origin,
-                          width: 36.r,
-                          height: 36.r,
-                          child: Icon(Icons.trip_origin_rounded,
-                              color: AppColors.fifth, size: 28.r),
-                        ),
-                        Marker(
-                          point: destination,
-                          width: 36.r,
-                          height: 36.r,
-                          child: Icon(Icons.location_on_rounded,
-                              color: AppColors.sevent, size: 32.r),
-                        ),
-                      ],
+                  },
+                  polylines: {
+                    Polyline(
+                      polylineId: const PolylineId('route'),
+                      points: [origin, destination],
+                      width: 4,
+                      color: AppColors.fifth,
                     ),
-                  ],
+                  },
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
                 ),
 
-                // ── Status card ──────────────────────────────────────────
+                // ── Status card ──────────────────────────────────────
                 Positioned(
                   top: 0,
                   left: 0,
@@ -116,7 +137,7 @@ class _ClientTripInProgressTemplateState
                           borderRadius: BorderRadius.circular(12.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.black.withValues(alpha: 0.12),
+                              color: Colors.black.withValues(alpha: 0.12),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -129,8 +150,8 @@ class _ClientTripInProgressTemplateState
                               height: 40.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.third
-                                    .withValues(alpha: 0.15),
+                                color:
+                                    AppColors.third.withValues(alpha: 0.15),
                               ),
                               child: Icon(Icons.directions_car_rounded,
                                   color: AppColors.third, size: 22.r),
@@ -138,7 +159,8 @@ class _ClientTripInProgressTemplateState
                             12.horizontalSpace,
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   AppText(
                                     'VIAJE EN CURSO',
@@ -152,7 +174,8 @@ class _ClientTripInProgressTemplateState
                                         state.destinoDireccion ??
                                         '--',
                                     variant: AppTextVariant.bodySmall,
-                                    color: context.appColors.textSecondary,
+                                    color:
+                                        context.appColors.textSecondary,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -166,7 +189,7 @@ class _ClientTripInProgressTemplateState
                   ),
                 ),
 
-                // ── Código de viaje ──────────────────────────────────────
+                // ── Código de viaje ──────────────────────────────────
                 if (trip?.codigoViaje != null)
                   Positioned(
                     bottom: 32.h,
@@ -180,7 +203,7 @@ class _ClientTripInProgressTemplateState
                         borderRadius: BorderRadius.circular(12.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 10,
                             offset: const Offset(0, -2),
                           ),

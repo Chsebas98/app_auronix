@@ -38,38 +38,14 @@ class ClientSearchingDriverTemplate extends StatelessWidget {
             backgroundColor: context.appColors.background,
             body: SafeArea(
               child: Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Spacer(),
 
                     // ── Animación de búsqueda ─────────────────────────
-                    SizedBox(
-                      width: 160.r,
-                      height: 160.r,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          _PulseRing(size: 160.r, delay: 0),
-                          _PulseRing(size: 120.r, delay: 400),
-                          Container(
-                            width: 72.r,
-                            height: 72.r,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.third,
-                            ),
-                            child: Icon(
-                              Icons.directions_car_rounded,
-                              color: AppColors.secondary,
-                              size: 36.r,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    const _SearchingAnimation(),
                     32.verticalSpace,
 
                     AppText(
@@ -94,13 +70,15 @@ class ClientSearchingDriverTemplate extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: context.appColors.card,
                           borderRadius: BorderRadius.circular(12.r),
-                          border:
-                              Border.all(color: context.appColors.border),
+                          border: Border.all(color: context.appColors.border),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.location_on_rounded,
-                                color: AppColors.sevent, size: 18.r),
+                            Icon(
+                              Icons.location_on_rounded,
+                              color: AppColors.sevent,
+                              size: 18.r,
+                            ),
                             10.horizontalSpace,
                             Expanded(
                               child: AppText(
@@ -126,15 +104,18 @@ class ClientSearchingDriverTemplate extends StatelessWidget {
                       onPressed: () {
                         final session = context.read<SessionBloc>().state;
                         final userId = session is SessionAuthenticated
-                            ? JwtHelpers.getUserId(session.dataUser.tokenAccess) ?? 0
+                            ? JwtHelpers.getUserId(
+                                    session.dataUser.tokenAccess,
+                                  ) ??
+                                  0
                             : 0;
                         context.read<ClientTripBloc>().add(
-                              ClientTripCancelEvent(
-                                userId: userId,
-                                tripId: state.activeTrip?.id ?? 0,
-                                motivo: 'Cancelado por el usuario',
-                              ),
-                            );
+                          ClientTripCancelEvent(
+                            userId: userId,
+                            tripId: state.activeTrip?.id ?? 0,
+                            motivo: 'Cancelado por el usuario',
+                          ),
+                        );
                       },
                     ),
                     16.verticalSpace,
@@ -144,6 +125,40 @@ class ClientSearchingDriverTemplate extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// Para Rive: cuando searching_car.riv esté listo, reemplazar este widget
+// por RiveAssetAnimation(assetPath: 'assets/images/rive/searching_car.riv', animName: '...')
+class _SearchingAnimation extends StatelessWidget {
+  const _SearchingAnimation();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 160.r,
+      height: 160.r,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          _PulseRing(size: 160.r, delay: 0),
+          _PulseRing(size: 120.r, delay: 400),
+          Container(
+            width: 72.r,
+            height: 72.r,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.third,
+            ),
+            child: Icon(
+              Icons.directions_car_rounded,
+              color: AppColors.secondary,
+              size: 36.r,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -171,12 +186,14 @@ class _PulseRingState extends State<_PulseRing>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
-    _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
-    _opacity = Tween<double>(begin: 0.6, end: 0.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
+    _scale = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _opacity = Tween<double>(
+      begin: 0.6,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _ctrl.repeat();
     });
@@ -199,10 +216,7 @@ class _PulseRingState extends State<_PulseRing>
           height: widget.size * _scale.value,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.third,
-              width: 2,
-            ),
+            border: Border.all(color: AppColors.third, width: 2),
           ),
         ),
       ),

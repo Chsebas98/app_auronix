@@ -1,6 +1,8 @@
+import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
+import 'package:auronix_app/core/utils/helpers/jwt_helpers.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/driver-bloc/driver_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/buttons/app_button.dart';
 import 'package:auronix_app/shared/atoms/inputs/input_default/app_text_field.dart';
@@ -141,16 +143,25 @@ class _DriverRateTripTemplateState extends State<DriverRateTripTemplate> {
                       expand: true,
                       onPressed: _selectedStars == 0
                           ? null
-                          : () => context.read<DriverTripBloc>().add(
-                                DriverTripRatePassengerEvent(
-                                  userId: 0,
-                                  tripId: state.activeTrip?.id ?? 0,
-                                  calificacion: _selectedStars,
-                                  comentario: _commentController.text.isEmpty
-                                      ? null
-                                      : _commentController.text,
-                                ),
-                              ),
+                          : () {
+                              final session = context.read<SessionBloc>().state;
+                              final userId = session is SessionAuthenticated
+                                  ? JwtHelpers.getUserId(
+                                          session.dataUser.tokenAccess) ??
+                                      0
+                                  : 0;
+                              context.read<DriverTripBloc>().add(
+                                    DriverTripRatePassengerEvent(
+                                      userId: userId,
+                                      tripId: state.activeTrip?.id ?? 0,
+                                      calificacion: _selectedStars,
+                                      comentario:
+                                          _commentController.text.isEmpty
+                                              ? null
+                                              : _commentController.text,
+                                    ),
+                                  );
+                            },
                     ),
                     16.verticalSpace,
 

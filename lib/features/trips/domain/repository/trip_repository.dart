@@ -43,6 +43,12 @@ abstract class TripRepository {
     required int tripId,
   });
 
+  Future<Either<Failure, void>> rejectTrip({
+    required int userId,
+    required int tripId,
+    String? motivo,
+  });
+
   Future<Either<Failure, TripEntity>> startTrip({
     required int userId,
     required int tripId,

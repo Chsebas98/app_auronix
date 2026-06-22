@@ -1,16 +1,27 @@
+import 'dart:async';
+
+import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
+import 'package:auronix_app/core/utils/helpers/jwt_helpers.dart';
 import 'package:auronix_app/features/trips/domain/models/request/trip_request.dart';
-import 'package:auronix_app/features/trips/presentation/atoms/driver_car_marker.dart';
-import 'package:auronix_app/features/trips/presentation/atoms/trip_request_marker.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/driver-bloc/driver_trip_bloc.dart';
 import 'package:auronix_app/features/trips/presentation/molecules/driver/trip_request_bottom_card.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},
+  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]}
+]''';
 
 class DriverNearbyMap extends StatefulWidget {
   const DriverNearbyMap({super.key});
@@ -20,115 +31,123 @@ class DriverNearbyMap extends StatefulWidget {
 }
 
 class _DriverNearbyMapState extends State<DriverNearbyMap> {
-  final _mapController = MapController();
+  final Completer<GoogleMapController> _mapCompleter = Completer();
 
-  // Light → OpenStreetMap default (beige/colores naturales como la imagen)
-  static const _lightTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-  // Dark → CartoDB dark matter
-  static const _darkTileUrl =
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
+  int _getUserId() {
+    final session = context.read<SessionBloc>().state;
+    if (session is SessionAuthenticated) {
+      return JwtHelpers.getUserId(session.dataUser.tokenAccess) ?? 0;
+    }
+    return 0;
   }
 
-  void _onMarkerTap(BuildContext context, TripRequest request) {
+  Future<void> _onMarkerTap(
+      BuildContext context, TripRequest request) async {
     context.read<DriverTripBloc>().add(
-      DriverTripSelectRequestEvent(request: request),
-    );
-    _mapController.move(request.position, 15.0);
+          DriverTripSelectRequestEvent(request: request),
+        );
+    if (_mapCompleter.isCompleted) {
+      final controller = await _mapCompleter.future;
+      controller.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(request.position.latitude, request.position.longitude),
+          15,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLight = context.isLight;
-    final tileUrl = isLight ? _lightTileUrl : _darkTileUrl;
-    final headerBg = isLight
+    final headerBg = context.isLight
         ? AppColors.white.withValues(alpha: 0.92)
         : AppColors.darkBackground.withValues(alpha: 0.85);
-    final headerText = context.appColors.text;
 
-    return BlocBuilder<DriverTripBloc, DriverTripState>(
+    return BlocListener<DriverTripBloc, DriverTripState>(
+      listenWhen: (prev, curr) =>
+          prev.driverPosition == null && curr.driverPosition != null,
+      listener: (context, state) async {
+        if (_mapCompleter.isCompleted && state.driverPosition != null) {
+          final controller = await _mapCompleter.future;
+          controller.animateCamera(
+            CameraUpdate.newLatLngZoom(
+              LatLng(state.driverPosition!.latitude,
+                  state.driverPosition!.longitude),
+              14.5,
+            ),
+          );
+        }
+      },
+      child: BlocBuilder<DriverTripBloc, DriverTripState>(
       builder: (context, state) {
-        final driverPos =
-            state.driverPosition ?? const LatLng(4.7110, -74.0721);
+        final driverPos = state.driverPosition != null
+            ? LatLng(state.driverPosition!.latitude,
+                state.driverPosition!.longitude)
+            : const LatLng(-0.1807, -78.4678);
+
+        final markers = <Marker>{};
+
+        for (final request in state.nearbyRequests) {
+          markers.add(
+            Marker(
+              markerId: MarkerId('request_${request.id}'),
+              position: LatLng(
+                  request.position.latitude, request.position.longitude),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                state.selectedRequest?.id == request.id
+                    ? BitmapDescriptor.hueYellow
+                    : BitmapDescriptor.hueOrange,
+              ),
+              onTap: () => _onMarkerTap(context, request),
+            ),
+          );
+        }
 
         return Stack(
           children: [
-            // ── Mapa ──────────────────────────────────────────────────────
-            FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: driverPos,
-                initialZoom: 14.5,
-                onTap: (_, __) {
-                  if (state.hasSelectedRequest) {
-                    context.read<DriverTripBloc>().add(
-                      const DriverTripDismissRequestEvent(),
-                    );
-                  }
-                },
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: driverPos,
+                zoom: 14.5,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: tileUrl,
-                  // subdomains solo para CartoDB
-                  subdomains: isLight ? const [] : const ['a', 'b', 'c'],
-                  userAgentPackageName: 'com.auronix.app',
-                ),
-                MarkerLayer(
-                  markers: [
-                    // Marcador del conductor
-                    Marker(
-                      point: driverPos,
-                      width: 56.r,
-                      height: 56.r,
-                      child: const DriverCarMarker(),
-                    ),
-                    // Solicitudes cercanas
-                    ...state.nearbyRequests.map((request) {
-                      final isSelected =
-                          state.selectedRequest?.id == request.id;
-                      return Marker(
-                        point: request.position,
-                        width: 48.r,
-                        height: 48.r,
-                        child: TripRequestMarker(
-                          isSelected: isSelected,
-                          onTap: () => _onMarkerTap(context, request),
-                        ),
+              style: context.isDark ? _darkMapStyle : null,
+              onMapCreated: (controller) {
+                if (!_mapCompleter.isCompleted) {
+                  _mapCompleter.complete(controller);
+                }
+              },
+              onTap: (_) {
+                if (state.hasSelectedRequest) {
+                  context.read<DriverTripBloc>().add(
+                        const DriverTripDismissRequestEvent(),
                       );
-                    }),
-                  ],
-                ),
-              ],
+                }
+              },
+              markers: markers,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: false,
             ),
 
-            // ── Header ────────────────────────────────────────────────────
             Positioned(
               top: 0,
               left: 0,
               right: 0,
               child: SafeArea(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 10.h,
-                    ),
+                        horizontal: 16.w, vertical: 10.h),
                     decoration: BoxDecoration(
                       color: headerBg,
                       borderRadius: BorderRadius.circular(10.r),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -137,7 +156,7 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
                     child: AppText(
                       'SOLICITUDES CERCANAS',
                       variant: AppTextVariant.titleSmall,
-                      color: headerText,
+                      color: context.appColors.text,
                       fontWeight: FontWeight.w800,
                       align: TextAlign.center,
                     ),
@@ -146,7 +165,6 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
               ),
             ),
 
-            // ── Bottom card animada ────────────────────────────────────────
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
@@ -156,25 +174,39 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
               child: state.selectedRequest != null
                   ? TripRequestBottomCard(
                       request: state.selectedRequest!,
-                      isLoading: state.status == DriverTripStatus.accepting,
-                      onAccept: () => context.read<DriverTripBloc>().add(
-                        DriverTripAcceptEvent(
-                          requestId: state.selectedRequest!.id,
-                          tripId: int.tryParse(state.selectedRequest!.id) ?? 0,
-                          userId: 0,
-                        ),
-                      ),
-                      onReject: () => context.read<DriverTripBloc>().add(
-                        DriverTripRejectEvent(
-                          requestId: state.selectedRequest!.id,
-                        ),
-                      ),
+                      isLoading:
+                          state.status == DriverTripStatus.accepting,
+                      onAccept: () {
+                        final userId = _getUserId();
+                        context.read<DriverTripBloc>().add(
+                              DriverTripAcceptEvent(
+                                requestId: state.selectedRequest!.id,
+                                tripId: int.tryParse(
+                                        state.selectedRequest!.id) ??
+                                    0,
+                                userId: userId,
+                              ),
+                            );
+                      },
+                      onReject: () {
+                        final userId = _getUserId();
+                        context.read<DriverTripBloc>().add(
+                              DriverTripRejectEvent(
+                                userId: userId,
+                                tripId: int.tryParse(
+                                        state.selectedRequest!.id) ??
+                                    0,
+                                requestId: state.selectedRequest!.id,
+                              ),
+                            );
+                      },
                     )
                   : const SizedBox.shrink(),
             ),
           ],
         );
       },
+    ),
     );
   }
 }

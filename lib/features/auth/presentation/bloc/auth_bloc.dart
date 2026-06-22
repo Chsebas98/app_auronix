@@ -118,7 +118,7 @@ class AuthUnifiedBloc extends Bloc<AuthUnifiedEvent, AuthUnifiedState> {
     );
     final googleFailure = googleResult.fold<Failure?>((f) => f, (_) => null);
     debugPrint(
-      '[AuthBloc] Fallo obtención credenciales Google: $googleFailure',
+      '[AuthBloc] Fallo obtención credenciales Google: ${googleFailure?.message}',
     );
 
     if (googleFailure != null) {

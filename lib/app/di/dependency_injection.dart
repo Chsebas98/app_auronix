@@ -33,6 +33,7 @@ import 'package:auronix_app/features/trips/domain/usecases/client/get_trip_statu
 import 'package:auronix_app/features/trips/domain/usecases/client/rate_driver_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/client/request_trip_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/accept_trip_usecase.dart';
+import 'package:auronix_app/features/trips/domain/usecases/driver/reject_trip_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/complete_trip_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/get_available_trips_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/rate_passenger_usecase.dart';
@@ -230,6 +231,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AcceptTripUseCase>(
     () => AcceptTripUseCase(sl<TripRepository>()),
   );
+  sl.registerLazySingleton<RejectTripUseCase>(
+    () => RejectTripUseCase(sl<TripRepository>()),
+  );
   sl.registerLazySingleton<StartTripUseCase>(
     () => StartTripUseCase(sl<TripRepository>()),
   );
@@ -246,6 +250,7 @@ Future<void> initDependencies() async {
     () => DriverTripBloc(
       getAvailableTrips: sl<GetAvailableTripsUseCase>(),
       acceptTrip: sl<AcceptTripUseCase>(),
+      rejectTrip: sl<RejectTripUseCase>(),
       startTrip: sl<StartTripUseCase>(),
       completeTrip: sl<CompleteTripUseCase>(),
       ratePassenger: sl<RatePassengerUseCase>(),

@@ -1,15 +1,28 @@
+import 'dart:async';
+
+import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
+import 'package:auronix_app/core/utils/helpers/jwt_helpers.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/driver-bloc/driver_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/buttons/app_button.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},
+  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]}
+]''';
 
 class DriverTripInProgressTemplate extends StatefulWidget {
   const DriverTripInProgressTemplate({super.key});
@@ -21,24 +34,18 @@ class DriverTripInProgressTemplate extends StatefulWidget {
 
 class _DriverTripInProgressTemplateState
     extends State<DriverTripInProgressTemplate> {
-  final _mapController = MapController();
+  final Completer<GoogleMapController> _mapCompleter = Completer();
 
-  static const _lightTileUrl =
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  static const _darkTileUrl =
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
+  int _getUserId() {
+    final session = context.read<SessionBloc>().state;
+    if (session is SessionAuthenticated) {
+      return JwtHelpers.getUserId(session.dataUser.tokenAccess) ?? 0;
+    }
+    return 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLight = context.isLight;
-    final tileUrl = isLight ? _lightTileUrl : _darkTileUrl;
-
     return BlocListener<DriverTripBloc, DriverTripState>(
       listenWhen: (prev, curr) =>
           curr.status == DriverTripStatus.completed &&
@@ -50,70 +57,83 @@ class _DriverTripInProgressTemplateState
           final trip = state.activeTrip;
           final origin = trip != null
               ? LatLng(trip.origenLatitud, trip.origenLongitud)
-              : const LatLng(4.7110, -74.0721);
+              : const LatLng(-0.1807, -78.4678);
           final destination = trip != null
               ? LatLng(trip.destinoLatitud, trip.destinoLongitud)
-              : const LatLng(4.7200, -74.0650);
+              : const LatLng(-0.1750, -78.4600);
 
           final isStarting = state.status == DriverTripStatus.starting;
           final isCompleting = state.status == DriverTripStatus.completing;
           final isInProgress = state.status == DriverTripStatus.inProgress;
           final cardBg = context.appColors.mapCardBg;
 
+          final bounds = LatLngBounds(
+            southwest: LatLng(
+              origin.latitude < destination.latitude
+                  ? origin.latitude
+                  : destination.latitude,
+              origin.longitude < destination.longitude
+                  ? origin.longitude
+                  : destination.longitude,
+            ),
+            northeast: LatLng(
+              origin.latitude > destination.latitude
+                  ? origin.latitude
+                  : destination.latitude,
+              origin.longitude > destination.longitude
+                  ? origin.longitude
+                  : destination.longitude,
+            ),
+          );
+
           return Scaffold(
             body: Stack(
               children: [
-                // ── Mapa ───────────────────────────────────────────────────
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: origin,
-                    initialZoom: 13.5,
+                GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: origin,
+                    zoom: 13.5,
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: tileUrl,
-                      subdomains:
-                          isLight ? const [] : const ['a', 'b', 'c'],
-                      userAgentPackageName: 'com.auronix.app',
+                  style: context.isDark ? _darkMapStyle : null,
+                  onMapCreated: (controller) {
+                    if (!_mapCompleter.isCompleted) {
+                      _mapCompleter.complete(controller);
+                    }
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      controller.animateCamera(
+                        CameraUpdate.newLatLngBounds(bounds, 80),
+                      );
+                    });
+                  },
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId('origin'),
+                      position: origin,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueAzure),
                     ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: [origin, destination],
-                          strokeWidth: 4,
-                          color: AppColors.fifth,
-                        ),
-                      ],
+                    Marker(
+                      markerId: const MarkerId('destination'),
+                      position: destination,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueRed),
                     ),
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: origin,
-                          width: 40.r,
-                          height: 40.r,
-                          child: Icon(
-                            Icons.trip_origin_rounded,
-                            color: AppColors.fifth,
-                            size: 32.r,
-                          ),
-                        ),
-                        Marker(
-                          point: destination,
-                          width: 40.r,
-                          height: 40.r,
-                          child: Icon(
-                            Icons.location_on_rounded,
-                            color: AppColors.sevent,
-                            size: 36.r,
-                          ),
-                        ),
-                      ],
+                  },
+                  polylines: {
+                    Polyline(
+                      polylineId: const PolylineId('route'),
+                      points: [origin, destination],
+                      width: 4,
+                      color: AppColors.fifth,
                     ),
-                  ],
+                  },
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
                 ),
 
-                // ── Info card ──────────────────────────────────────────────
                 Positioned(
                   top: 0,
                   left: 0,
@@ -129,7 +149,7 @@ class _DriverTripInProgressTemplateState
                           borderRadius: BorderRadius.circular(12.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.black.withValues(alpha: 0.15),
+                              color: Colors.black.withValues(alpha: 0.15),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -191,7 +211,6 @@ class _DriverTripInProgressTemplateState
                   ),
                 ),
 
-                // ── Action button ──────────────────────────────────────────
                 Positioned(
                   bottom: 32.h,
                   left: 24.w,
@@ -202,26 +221,33 @@ class _DriverTripInProgressTemplateState
                           variant: AppButtonVariant.filled,
                           isLoading: isCompleting,
                           expand: true,
-                          onPressed: () => context.read<DriverTripBloc>().add(
-                                DriverTripCompleteEvent(
-                                  userId: 0,
-                                  tripId: trip?.id ?? 0,
-                                  distanciaFinalKm: trip?.distanciaKm ?? 0,
-                                  duracionMinutos: 10,
-                                ),
-                              ),
+                          onPressed: () {
+                            final userId = _getUserId();
+                            context.read<DriverTripBloc>().add(
+                                  DriverTripCompleteEvent(
+                                    userId: userId,
+                                    tripId: trip?.id ?? 0,
+                                    distanciaFinalKm:
+                                        trip?.distanciaKm ?? 0,
+                                    duracionMinutos: 10,
+                                  ),
+                                );
+                          },
                         )
                       : AppButton(
                           label: 'INICIAR VIAJE',
                           variant: AppButtonVariant.filled,
                           isLoading: isStarting,
                           expand: true,
-                          onPressed: () => context.read<DriverTripBloc>().add(
-                                DriverTripStartEvent(
-                                  userId: 0,
-                                  tripId: trip?.id ?? 0,
-                                ),
-                              ),
+                          onPressed: () {
+                            final userId = _getUserId();
+                            context.read<DriverTripBloc>().add(
+                                  DriverTripStartEvent(
+                                    userId: userId,
+                                    tripId: trip?.id ?? 0,
+                                  ),
+                                );
+                          },
                         ),
                 ),
               ],

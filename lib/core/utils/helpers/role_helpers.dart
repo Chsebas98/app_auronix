@@ -37,16 +37,21 @@ class RoleHelpers {
 
   /// Helper privado para mapeo centralizado
   static Roles _mapFromNemonico(String? nemonico) {
-    switch (nemonico) {
+    switch (nemonico?.toUpperCase()) {
       case 'ROL_CLIENT':
+      case 'ROLE_CLIENT':
         return Roles.rolUser;
       case 'ROL_DRIVER':
+      case 'ROLE_DRIVER':
         return Roles.rolDriver;
       case 'ROL_ADMIN':
+      case 'ROLE_ADMIN':
         return Roles.rolAdmin;
       case 'ROL_GERENTE':
+      case 'ROLE_GERENTE':
         return Roles.rolGerente;
       case 'ROL_MEMBER':
+      case 'ROLE_MEMBER':
         return Roles.rolMember;
       default:
         return Roles.rolUser;

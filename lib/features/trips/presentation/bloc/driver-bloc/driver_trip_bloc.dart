@@ -9,9 +9,12 @@ import 'package:auronix_app/features/trips/domain/usecases/driver/accept_trip_us
 import 'package:auronix_app/features/trips/domain/usecases/driver/complete_trip_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/get_available_trips_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/rate_passenger_usecase.dart';
+import 'package:auronix_app/features/trips/domain/usecases/driver/reject_trip_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/driver/start_trip_usecase.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 part 'driver_trip_event.dart';
@@ -20,6 +23,7 @@ part 'driver_trip_state.dart';
 class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   final GetAvailableTripsUseCase _getAvailableTrips;
   final AcceptTripUseCase _acceptTrip;
+  final RejectTripUseCase _rejectTrip;
   final StartTripUseCase _startTrip;
   final CompleteTripUseCase _completeTrip;
   final RatePassengerUseCase _ratePassenger;
@@ -30,12 +34,14 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   DriverTripBloc({
     required GetAvailableTripsUseCase getAvailableTrips,
     required AcceptTripUseCase acceptTrip,
+    required RejectTripUseCase rejectTrip,
     required StartTripUseCase startTrip,
     required CompleteTripUseCase completeTrip,
     required RatePassengerUseCase ratePassenger,
     required DriverTripSocket socket,
   })  : _getAvailableTrips = getAvailableTrips,
         _acceptTrip = acceptTrip,
+        _rejectTrip = rejectTrip,
         _startTrip = startTrip,
         _completeTrip = completeTrip,
         _ratePassenger = ratePassenger,
@@ -59,6 +65,28 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   ) async {
     emit(state.copyWith(status: DriverTripStatus.loading));
 
+    try {
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {
+        pos = await Geolocator.getLastKnownPosition();
+      }
+      if (pos != null) {
+        emit(state.copyWith(
+          driverPosition: LatLng(pos.latitude, pos.longitude),
+        ));
+        debugPrint('[DriverTrip] GPS: ${pos.latitude}, ${pos.longitude}');
+      }
+    } catch (e) {
+      debugPrint('[DriverTrip] GPS error: $e');
+    }
+
     final result = await _getAvailableTrips(event.userId);
 
     result.fold(
@@ -66,10 +94,13 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
         status: DriverTripStatus.error,
         errorMessage: failure.message,
       )),
-      (entities) => emit(state.copyWith(
-        status: DriverTripStatus.ready,
-        nearbyRequests: entities.map(_entityToRequest).toList(),
-      )),
+      (entities) {
+        debugPrint('[DriverTrip] viajes disponibles: ${entities.length}');
+        emit(state.copyWith(
+          status: DriverTripStatus.ready,
+          nearbyRequests: entities.map(_entityToRequest).toList(),
+        ));
+      },
     );
   }
 
@@ -132,10 +163,16 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   FutureOr<void> _onReject(
     DriverTripRejectEvent event,
     Emitter<DriverTripState> emit,
-  ) {
+  ) async {
     final updated =
         state.nearbyRequests.where((r) => r.id != event.requestId).toList();
     emit(state.copyWith(nearbyRequests: updated, clearSelected: true));
+
+    await _rejectTrip(
+      userId: event.userId,
+      tripId: event.tripId,
+      motivo: event.motivo,
+    );
   }
 
   TripRequest _entityToRequest(TripEntity e) => TripRequest(

@@ -1,6 +1,7 @@
 import 'package:auronix_app/app/environments/environment.dart';
 import 'package:auronix_app/features/trips/data/models/trip_response_model.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ClientTripRemoteDatasource {
   static String get _baseUrl => Environment().config!.apiBaseUrl;
@@ -25,19 +26,22 @@ class ClientTripRemoteDatasource {
     required double distanciaEstimadaKm,
     int? metodoPagoId,
   }) async {
+    final data = {
+      'origenLatitud': origenLatitud,
+      'origenLongitud': origenLongitud,
+      'origenDireccion': origenDireccion,
+      'destinoLatitud': destinoLatitud,
+      'destinoLongitud': destinoLongitud,
+      'destinoDireccion': destinoDireccion,
+      'distanciaEstimadaKm': distanciaEstimadaKm,
+      if (metodoPagoId != null) 'metodoPagoId': metodoPagoId,
+    };
+    debugPrint('[TripRequest] data enviada: $data');
+
     final response = await _dio.post(
       '$_baseUrl/trips/request',
       options: _headers(userId),
-      data: {
-        'origen_latitud': origenLatitud,
-        'origen_longitud': origenLongitud,
-        'origen_direccion': origenDireccion,
-        'destino_latitud': destinoLatitud,
-        'destino_longitud': destinoLongitud,
-        'destino_direccion': destinoDireccion,
-        'distancia_estimada_km': distanciaEstimadaKm,
-        'metodo_pago_id': metodoPagoId,
-      },
+      data: data,
     );
     final body = response.data as Map<String, dynamic>;
     return TripResponseModel.fromJson(body['result'] as Map<String, dynamic>);

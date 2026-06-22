@@ -1,8 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-/// Predicción de lugar con coordenadas incluidas (Nominatim devuelve todo en
-/// una sola llamada — no se necesita getDetails separado).
 class PlacePrediction {
   final String placeId;
   final String description;
@@ -10,6 +10,7 @@ class PlacePrediction {
   final String secondaryText;
   final double latitude;
   final double longitude;
+  final double distanceKm;
 
   const PlacePrediction({
     required this.placeId,
@@ -18,31 +19,36 @@ class PlacePrediction {
     required this.secondaryText,
     required this.latitude,
     required this.longitude,
+    this.distanceKm = 0,
   });
 
-  factory PlacePrediction.fromNominatim(Map<String, dynamic> json) {
-    final displayName = json['display_name'] as String? ?? '';
-    final name = json['name'] as String? ?? '';
+  PlacePrediction copyWith({double? distanceKm}) => PlacePrediction(
+        placeId: placeId,
+        description: description,
+        mainText: mainText,
+        secondaryText: secondaryText,
+        latitude: latitude,
+        longitude: longitude,
+        distanceKm: distanceKm ?? this.distanceKm,
+      );
 
-    // Separar nombre principal del resto de la dirección
-    final parts = displayName.split(',');
-    final mainText = name.isNotEmpty ? name : (parts.isNotEmpty ? parts[0].trim() : displayName);
-    final secondary = parts.length > 1
-        ? parts.sublist(1).map((s) => s.trim()).where((s) => s.isNotEmpty).join(', ')
-        : '';
+  factory PlacePrediction.fromGooglePlaces(Map<String, dynamic> json) {
+    final mainText =
+        (json['structured_formatting']?['main_text'] as String?) ?? '';
+    final secondaryText =
+        (json['structured_formatting']?['secondary_text'] as String?) ?? '';
 
     return PlacePrediction(
-      placeId: json['place_id'].toString(),
-      description: displayName,
+      placeId: json['place_id'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       mainText: mainText,
-      secondaryText: secondary,
-      latitude: double.tryParse(json['lat'] as String? ?? '0') ?? 0,
-      longitude: double.tryParse(json['lon'] as String? ?? '0') ?? 0,
+      secondaryText: secondaryText,
+      latitude: 0,
+      longitude: 0,
     );
   }
 }
 
-/// Detalles de lugar (mantenido para compatibilidad con el template).
 class PlaceDetails {
   final double latitude;
   final double longitude;
@@ -55,29 +61,20 @@ class PlaceDetails {
   });
 }
 
-/// Servicio de búsqueda de lugares usando Nominatim (OpenStreetMap).
-/// - Gratuito, sin API key, sin billing
-/// - Probado: retorna resultados correctos para Ecuador
-/// - Rate limit: 1 req/s → usar debounce ≥ 600 ms en el caller
 class PlacesService {
-  static const _baseUrl = 'https://nominatim.openstreetmap.org';
+  static const _baseUrl = 'https://maps.googleapis.com/maps/api';
+
+  final String _apiKey;
 
   final Dio _dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {
-        // Nominatim requiere User-Agent identificado
-        'User-Agent': 'auronix-app/1.0 (contact@auronix.com)',
-        'Accept-Language': 'es',
-      },
     ),
   );
 
-  PlacesService({String? apiKey});  // apiKey ignorado — usamos Nominatim
+  PlacesService({required String apiKey}) : _apiKey = apiKey;
 
-  /// Búsqueda de lugares en Ecuador por texto.
-  /// Retorna lat/lng directamente en cada predicción.
   Future<List<PlacePrediction>> autocomplete(
     String input, {
     double? lat,
@@ -85,59 +82,134 @@ class PlacesService {
   }) async {
     if (input.trim().length < 2) return [];
     try {
+      final params = <String, dynamic>{
+        'input': input.trim(),
+        'key': _apiKey,
+        'components': 'country:ec',
+        'language': 'es',
+        if (lat != null && lng != null) 'location': '$lat,$lng',
+        if (lat != null && lng != null) 'radius': '50000',
+      };
+
       final response = await _dio.get(
-        '$_baseUrl/search',
-        queryParameters: {
-          'q': input.trim(),
-          'countrycodes': 'ec',
-          'format': 'json',
-          'limit': '8',
-          'accept-language': 'es',
-          'addressdetails': '0',
-          'dedupe': '1',
-          // Bias opcional hacia la posición GPS (solo hint, no restringe)
-          if (lat != null && lng != null) 'viewbox': '${lng - 1},${lat + 1},${lng + 1},${lat - 1}',
-          if (lat != null && lng != null) 'bounded': '0',
-        },
+        '$_baseUrl/place/autocomplete/json',
+        queryParameters: params,
       );
 
-      final list = response.data as List<dynamic>;
-      debugPrint('[PlacesService] Nominatim: ${list.length} resultados para "$input"');
+      final predictions =
+          (response.data['predictions'] as List<dynamic>?) ?? [];
+      debugPrint(
+          '[PlacesService] Google Places: ${predictions.length} resultados para "$input"');
 
-      return list
-          .map((e) => PlacePrediction.fromNominatim(e as Map<String, dynamic>))
-          .where((p) => p.latitude != 0 && p.longitude != 0)
-          .toList();
+      final results = <PlacePrediction>[];
+      for (final p in predictions) {
+        final pred =
+            PlacePrediction.fromGooglePlaces(p as Map<String, dynamic>);
+        if (pred.placeId.isEmpty) continue;
+
+        final details = await getDetails(pred.placeId);
+        if (details == null) continue;
+
+        var enriched = PlacePrediction(
+          placeId: pred.placeId,
+          description: pred.description.isNotEmpty
+              ? pred.description
+              : details.formattedAddress,
+          mainText: pred.mainText,
+          secondaryText: pred.secondaryText.isNotEmpty
+              ? pred.secondaryText
+              : details.formattedAddress,
+          latitude: details.latitude,
+          longitude: details.longitude,
+        );
+
+        if (lat != null && lng != null) {
+          final d =
+              _haversineKm(lat, lng, details.latitude, details.longitude);
+          enriched = enriched.copyWith(distanceKm: d);
+        }
+        results.add(enriched);
+      }
+
+      if (lat != null && lng != null) {
+        results.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+      }
+
+      return results.take(8).toList();
     } catch (e) {
-      debugPrint('[PlacesService] Nominatim error: $e');
+      debugPrint('[PlacesService] Google Places error: $e');
       return [];
     }
   }
 
-  /// Las coordenadas ya vienen en [PlacePrediction] — este método existe solo
-  /// por compatibilidad. En Nominatim no se necesita una segunda llamada.
   Future<PlaceDetails?> getDetails(String placeId) async {
     try {
       final response = await _dio.get(
-        '$_baseUrl/details',
+        '$_baseUrl/place/details/json',
         queryParameters: {
           'place_id': placeId,
-          'format': 'json',
-          'accept-language': 'es',
+          'key': _apiKey,
+          'fields': 'geometry,formatted_address,name',
+          'language': 'es',
         },
       );
-      final data = response.data as Map<String, dynamic>;
-      final centroid = data['centroid'] as Map<String, dynamic>?;
-      final coords = centroid?['coordinates'] as List<dynamic>?;
-      if (coords == null || coords.length < 2) return null;
+
+      final result = response.data['result'] as Map<String, dynamic>?;
+      if (result == null) return null;
+
+      final location =
+          result['geometry']?['location'] as Map<String, dynamic>?;
+      if (location == null) return null;
+
       return PlaceDetails(
-        latitude: (coords[1] as num).toDouble(),
-        longitude: (coords[0] as num).toDouble(),
-        formattedAddress: data['localname'] as String? ?? '',
+        latitude: (location['lat'] as num).toDouble(),
+        longitude: (location['lng'] as num).toDouble(),
+        formattedAddress: result['formatted_address'] as String? ??
+            result['name'] as String? ??
+            '',
       );
     } catch (e) {
       debugPrint('[PlacesService] getDetails error: $e');
       return null;
     }
   }
+
+  Future<String?> reverseGeocode(double lat, double lng) async {
+    try {
+      final response = await _dio.get(
+        '$_baseUrl/geocode/json',
+        queryParameters: {
+          'latlng': '$lat,$lng',
+          'key': _apiKey,
+          'language': 'es',
+          'result_type': 'street_address|route|premise',
+        },
+      );
+
+      final results =
+          (response.data['results'] as List<dynamic>?) ?? [];
+      if (results.isEmpty) return null;
+
+      return results.first['formatted_address'] as String?;
+    } catch (e) {
+      debugPrint('[PlacesService] reverseGeocode error: $e');
+      return null;
+    }
+  }
+
+  static double _haversineKm(
+    double lat1, double lng1, double lat2, double lng2,
+  ) {
+    const r = 6371.0;
+    final dLat = _toRad(lat2 - lat1);
+    final dLng = _toRad(lng2 - lng1);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRad(lat1)) *
+            math.cos(_toRad(lat2)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  }
+
+  static double _toRad(double deg) => deg * (math.pi / 180);
 }

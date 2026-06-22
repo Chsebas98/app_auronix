@@ -3,18 +3,28 @@ import 'dart:async';
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
+import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/core/utils/helpers/jwt_helpers.dart';
+import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/buttons/app_button.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},
+  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]}
+]''';
 
 class ClientConfirmTripTemplate extends StatefulWidget {
   const ClientConfirmTripTemplate({super.key});
@@ -26,150 +36,163 @@ class ClientConfirmTripTemplate extends StatefulWidget {
 
 class _ClientConfirmTripTemplateState
     extends State<ClientConfirmTripTemplate> {
-  static const _precioKm = 1.8; // USD por km
+  static const _precioKm = 1.8;
+  static const _maxPickupDistanceM = 200.0;
 
-  final _mapController = MapController();
+  final Completer<GoogleMapController> _mapCompleter = Completer();
+  final _places = sl<PlacesService>();
 
-  // Estado local del pickup
-  LatLng? _pickupPos;
-  String _pickupAddress = 'Obteniendo dirección...';
+  // GPS real del usuario (para validar radio)
+  double _gpsLat = 0;
+  double _gpsLng = 0;
+
+  // Posición del pin (centro del mapa)
+  double _pickupLat = 0;
+  double _pickupLng = 0;
+  String _pickupAddress = 'Mueve el mapa para ajustar';
   bool _isGeocodingPickup = false;
 
-  // Destino (viene del estado del bloc)
-  LatLng? _destPos;
+  // Destino
+  double _destLat = 0;
+  double _destLng = 0;
   String _destAddress = '';
 
   double _distanceKm = 0;
+  double _pickupDistanceM = 0;
   Timer? _geocodeTimer;
 
+  bool get _isOutOfRange => _pickupDistanceM > _maxPickupDistanceM;
+  bool get _hasRoute => _destLat != 0 || _destLng != 0;
+
+  bool _initialized = false;
+
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initFromState());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _initFromState();
+    }
   }
 
   @override
   void dispose() {
     _geocodeTimer?.cancel();
-    _mapController.dispose();
     super.dispose();
   }
 
   Future<void> _initFromState() async {
     final state = context.read<ClientTripBloc>().state;
 
-    // Destino desde el estado del bloc
     if (state.destinoLatitud != null && state.destinoLongitud != null) {
-      _destPos = LatLng(state.destinoLatitud!, state.destinoLongitud!);
+      _destLat = state.destinoLatitud!;
+      _destLng = state.destinoLongitud!;
       _destAddress = state.destinoDireccion ?? '';
     }
 
-    // Origen: usar el del bloc si existe, si no GPS
     if (state.origenLatitud != null &&
         state.origenLongitud != null &&
         (state.origenLatitud != 0 || state.origenLongitud != 0)) {
-      _setPickup(
-        LatLng(state.origenLatitud!, state.origenLongitud!),
-        state.origenDireccion ?? 'Mi ubicación actual',
-        geocode: false,
-      );
+      _gpsLat = state.origenLatitud!;
+      _gpsLng = state.origenLongitud!;
+      _pickupLat = _gpsLat;
+      _pickupLng = _gpsLng;
+      _pickupAddress = state.origenDireccion ?? 'Mi ubicación actual';
     } else {
-      await _getGpsPickup();
+      await _fetchGps();
     }
 
+    _recalculate();
     if (mounted) setState(() {});
-  }
 
-  Future<void> _getGpsPickup() async {
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) return;
-
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 8),
+    if (_pickupLat != 0 && _mapCompleter.isCompleted) {
+      final controller = await _mapCompleter.future;
+      controller.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(_pickupLat, _pickupLng),
+          16,
         ),
       );
+    }
+  }
 
-      if (!mounted) return;
-      final pickup = LatLng(pos.latitude, pos.longitude);
-      _setPickup(pickup, 'Mi ubicación actual', geocode: true);
-
-      // Centrar el mapa en el pickup
-      _mapController.move(pickup, 15.0);
+  Future<void> _fetchGps() async {
+    try {
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {
+        pos = await Geolocator.getLastKnownPosition();
+      }
+      if (pos == null) return;
+      _gpsLat = pos.latitude;
+      _gpsLng = pos.longitude;
+      _pickupLat = _gpsLat;
+      _pickupLng = _gpsLng;
     } catch (_) {}
   }
 
-  void _setPickup(LatLng pos, String address, {bool geocode = false}) {
-    _pickupPos = pos;
-    _pickupAddress = address;
-    _recalculateDistance();
-    if (geocode) _reverseGeocodePickup(pos);
-    if (mounted) setState(() {});
+  void _onCameraMove(CameraPosition position) {
+    _pickupLat = position.target.latitude;
+    _pickupLng = position.target.longitude;
   }
 
-  void _recalculateDistance() {
-    if (_pickupPos == null || _destPos == null) return;
-    final d = const Distance();
-    _distanceKm = d.as(LengthUnit.Kilometer, _pickupPos!, _destPos!);
-  }
-
-  /// El usuario tapa el mapa → mueve el indicador de recogida al punto tapeado.
-  void _onMapTap(TapPosition tapPos, LatLng point) {
-    if (!mounted) return;
-    _setPickup(point, 'Actualizando dirección...', geocode: false);
-    _scheduleReverseGeocode(point);
-  }
-
-  void _scheduleReverseGeocode(LatLng point) {
+  void _onCameraIdle() {
+    _recalculate();
+    setState(() {
+      _pickupAddress = 'Obteniendo dirección...';
+      _isGeocodingPickup = true;
+    });
     _geocodeTimer?.cancel();
     _geocodeTimer = Timer(const Duration(milliseconds: 600), () {
-      _reverseGeocodePickup(point);
+      _reverseGeocode();
     });
   }
 
-  Future<void> _reverseGeocodePickup(LatLng pos) async {
-    if (!mounted) return;
-    setState(() => _isGeocodingPickup = true);
-    try {
-      final placemarks =
-          await placemarkFromCoordinates(pos.latitude, pos.longitude);
-      if (!mounted) return;
-      if (placemarks.isNotEmpty) {
-        final p = placemarks.first;
-        final parts = [
-          if (p.street?.isNotEmpty == true) p.street,
-          if (p.locality?.isNotEmpty == true) p.locality,
-        ];
-        _pickupAddress =
-            parts.isNotEmpty ? parts.join(', ') : 'Punto de recogida';
-      }
-    } catch (_) {
-      _pickupAddress =
-          '${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}';
-    } finally {
-      if (mounted) setState(() => _isGeocodingPickup = false);
+  void _recalculate() {
+    if (_gpsLat != 0 && _pickupLat != 0) {
+      _pickupDistanceM = Geolocator.distanceBetween(
+        _gpsLat, _gpsLng, _pickupLat, _pickupLng,
+      );
+    }
+    if (_hasRoute && _pickupLat != 0) {
+      _distanceKm = Geolocator.distanceBetween(
+            _pickupLat, _pickupLng, _destLat, _destLng,
+          ) /
+          1000;
     }
   }
 
-  void _onRequestTrip(BuildContext context, ClientTripState state) {
-    if (_pickupPos == null || _destPos == null) return;
+  Future<void> _reverseGeocode() async {
+    final address = await _places.reverseGeocode(_pickupLat, _pickupLng);
+    if (!mounted) return;
+    setState(() {
+      _pickupAddress = address ??
+          '${_pickupLat.toStringAsFixed(4)}, ${_pickupLng.toStringAsFixed(4)}';
+      _isGeocodingPickup = false;
+    });
+  }
+
+  void _onRequestTrip(BuildContext context) {
+    if (!_hasRoute || _isOutOfRange) return;
 
     final session = context.read<SessionBloc>().state;
     final userId = session is SessionAuthenticated
         ? JwtHelpers.getUserId(session.dataUser.tokenAccess) ?? 0
         : 0;
 
-    // Actualizar ruta en el estado con las coordenadas finales
     context.read<ClientTripBloc>().add(
           ClientTripSetRouteEvent(
-            origenLatitud: _pickupPos!.latitude,
-            origenLongitud: _pickupPos!.longitude,
+            origenLatitud: _pickupLat,
+            origenLongitud: _pickupLng,
             origenDireccion: _pickupAddress,
-            destinoLatitud: _destPos!.latitude,
-            destinoLongitud: _destPos!.longitude,
+            destinoLatitud: _destLat,
+            destinoLongitud: _destLng,
             destinoDireccion: _destAddress,
             distanciaEstimadaKm: _distanceKm,
           ),
@@ -178,11 +201,11 @@ class _ClientConfirmTripTemplateState
     context.read<ClientTripBloc>().add(
           ClientTripRequestEvent(
             userId: userId,
-            origenLatitud: _pickupPos!.latitude,
-            origenLongitud: _pickupPos!.longitude,
+            origenLatitud: _pickupLat,
+            origenLongitud: _pickupLng,
             origenDireccion: _pickupAddress,
-            destinoLatitud: _destPos!.latitude,
-            destinoLongitud: _destPos!.longitude,
+            destinoLatitud: _destLat,
+            destinoLongitud: _destLng,
             destinoDireccion: _destAddress,
             distanciaEstimadaKm: _distanceKm,
           ),
@@ -191,85 +214,93 @@ class _ClientConfirmTripTemplateState
 
   @override
   Widget build(BuildContext context) {
-    final isLight = context.isLight;
-    final tileUrl = isLight
-        ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    final precio = _distanceKm * _precioKm;
+    final initialTarget = _pickupLat != 0
+        ? LatLng(_pickupLat, _pickupLng)
+        : const LatLng(-0.1807, -78.4678);
 
     return BlocListener<ClientTripBloc, ClientTripState>(
       listenWhen: (prev, curr) =>
           curr.status == ClientTripStatus.searching &&
           prev.status != ClientTripStatus.searching,
-      listener: (_, __) => context.pushReplacement('/client/searching-driver'),
+      listener: (_, __) =>
+          context.pushReplacement('/client/searching-driver'),
       child: BlocBuilder<ClientTripBloc, ClientTripState>(
         builder: (context, state) {
           final isRequesting = state.status == ClientTripStatus.requesting;
-          final hasRoute = _pickupPos != null && _destPos != null;
-          final precio = _distanceKm * _precioKm;
 
           return Scaffold(
             backgroundColor: context.appColors.background,
             body: Stack(
               children: [
-                // ── Mapa interactivo ──────────────────────────────────
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: _pickupPos ??
-                        (_destPos ?? const LatLng(4.7110, -74.0721)),
-                    initialZoom: 15.0,
-                    onTap: _onMapTap,
+                // ── Google Map ───────────────────────────────────
+                GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: initialTarget,
+                    zoom: 16,
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: tileUrl,
-                      subdomains:
-                          isLight ? const [] : const ['a', 'b', 'c'],
-                      userAgentPackageName: 'com.auronix.app',
-                    ),
-                    // Línea de ruta
-                    if (hasRoute)
-                      PolylineLayer(
-                        polylines: [
-                          Polyline(
-                            points: [_pickupPos!, _destPos!],
-                            strokeWidth: 4.5,
-                            color: AppColors.fifth,
+                  style: context.isDark ? _darkMapStyle : null,
+                  onMapCreated: (controller) {
+                    if (!_mapCompleter.isCompleted) {
+                      _mapCompleter.complete(controller);
+                    }
+                    if (_pickupLat != 0) {
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        controller.animateCamera(
+                          CameraUpdate.newLatLngZoom(
+                            LatLng(_pickupLat, _pickupLng),
+                            16,
                           ),
-                        ],
+                        );
+                      });
+                    }
+                  },
+                  onCameraMove: _onCameraMove,
+                  onCameraIdle: _onCameraIdle,
+                  markers: {
+                    if (_destLat != 0)
+                      Marker(
+                        markerId: const MarkerId('destination'),
+                        position: LatLng(_destLat, _destLng),
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueRed),
                       ),
-                    // Marcadores
-                    MarkerLayer(
-                      markers: [
-                        // Pickup (origen) — tapeando el mapa se mueve
-                        if (_pickupPos != null)
-                          Marker(
-                            point: _pickupPos!,
-                            width: 52.r,
-                            height: 64.r,
-                            alignment: Alignment.bottomCenter,
-                            child: _PickupMarker(
-                                isLoading: _isGeocodingPickup),
-                          ),
-                        // Destino — fijo
-                        if (_destPos != null)
-                          Marker(
-                            point: _destPos!,
-                            width: 36.r,
-                            height: 44.r,
-                            alignment: Alignment.bottomCenter,
-                            child: Icon(
-                              Icons.location_on_rounded,
-                              color: AppColors.sevent,
-                              size: 36.r,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
+                  },
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
                 ),
 
-                // ── AppBar transparente ───────────────────────────────
+                // ── Pin fijo al centro ──────────────────────────
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 36.h),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 48.r,
+                          color: _isOutOfRange
+                              ? AppColors.sevent
+                              : AppColors.fifth,
+                        ),
+                        Container(
+                          width: 6.r,
+                          height: 6.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black26,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── AppBar transparente ─────────────────────────
                 Positioned(
                   top: 0,
                   left: 0,
@@ -287,7 +318,7 @@ class _ClientConfirmTripTemplateState
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.black.withValues(alpha: 0.15),
+                                  color: Colors.black.withValues(alpha: 0.15),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -302,7 +333,8 @@ class _ClientConfirmTripTemplateState
                         ),
                         Expanded(
                           child: Container(
-                            margin: EdgeInsets.only(right: 16.w, top: 12.h, bottom: 12.h),
+                            margin: EdgeInsets.only(
+                                right: 16.w, top: 12.h, bottom: 12.h),
                             padding: EdgeInsets.symmetric(
                                 horizontal: 14.w, vertical: 10.h),
                             decoration: BoxDecoration(
@@ -310,14 +342,14 @@ class _ClientConfirmTripTemplateState
                               borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.black.withValues(alpha: 0.12),
+                                  color: Colors.black.withValues(alpha: 0.12),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                             child: AppText(
-                              'Toca el mapa para ajustar recogida',
+                              'Selecciona punto de recogida',
                               variant: AppTextVariant.bodySmall,
                               color: context.appColors.textSecondary,
                             ),
@@ -328,7 +360,37 @@ class _ClientConfirmTripTemplateState
                   ),
                 ),
 
-                // ── Card inferior con detalles + botón ────────────────
+                // ── Warning fuera de rango ──────────────────────
+                if (_isOutOfRange)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 70.h,
+                    left: 16.w,
+                    right: 16.w,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 14.w, vertical: 10.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.sevent.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded,
+                              color: AppColors.white, size: 18.r),
+                          8.horizontalSpace,
+                          Expanded(
+                            child: AppText(
+                              'Estás muy lejos de tu ubicación actual (máx ${_maxPickupDistanceM.round()}m)',
+                              variant: AppTextVariant.bodySmall,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // ── Card inferior ───────────────────────────────
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -340,7 +402,7 @@ class _ClientConfirmTripTemplateState
                           BorderRadius.vertical(top: Radius.circular(20.r)),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 16,
                           offset: const Offset(0, -4),
                         ),
@@ -349,11 +411,11 @@ class _ClientConfirmTripTemplateState
                     child: SafeArea(
                       top: false,
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                        padding:
+                            EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // ── Handle ─────────────────────────────────
                             Container(
                               width: 40.w,
                               height: 4.h,
@@ -363,15 +425,13 @@ class _ClientConfirmTripTemplateState
                               ),
                             ),
                             12.verticalSpace,
-
-                            // ── Pickup row ─────────────────────────────
                             _AddressRow(
                               icon: Icons.my_location_rounded,
-                              color: AppColors.fifth,
+                              color: _isOutOfRange
+                                  ? AppColors.sevent
+                                  : AppColors.fifth,
                               label: 'Recogida',
-                              address: _isGeocodingPickup
-                                  ? 'Obteniendo dirección...'
-                                  : _pickupAddress,
+                              address: _pickupAddress,
                               isLoading: _isGeocodingPickup,
                             ),
                             8.verticalSpace,
@@ -380,32 +440,30 @@ class _ClientConfirmTripTemplateState
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Container(
-                                    width: 2, height: 16.h,
+                                    width: 2,
+                                    height: 16.h,
                                     color: context.appColors.border),
                               ),
                             ),
                             8.verticalSpace,
-
-                            // ── Destino row ────────────────────────────
                             _AddressRow(
                               icon: Icons.location_on_rounded,
                               color: AppColors.sevent,
                               label: 'Destino',
-                              address: _destAddress.isEmpty
-                                  ? '--'
-                                  : _destAddress,
+                              address:
+                                  _destAddress.isEmpty ? '--' : _destAddress,
                             ),
                             16.verticalSpace,
-                            Divider(color: context.appColors.divider),
+                            Divider(color: context.appColors.border),
                             12.verticalSpace,
-
-                            // ── Métricas ───────────────────────────────
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
                               children: [
                                 _MetricChip(
                                   icon: Icons.straighten_rounded,
-                                  value: '${_distanceKm.toStringAsFixed(1)} km',
+                                  value:
+                                      '${_distanceKm.toStringAsFixed(1)} km',
                                   label: 'Distancia',
                                 ),
                                 _MetricChip(
@@ -424,16 +482,14 @@ class _ClientConfirmTripTemplateState
                               ],
                             ),
                             20.verticalSpace,
-
-                            // ── Botón solicitar ────────────────────────
                             AppButton(
                               label: 'SOLICITAR VIAJE',
                               variant: AppButtonVariant.filled,
                               expand: true,
                               isLoading: isRequesting,
-                              isDisabled: !hasRoute,
-                              onPressed: hasRoute
-                                  ? () => _onRequestTrip(context, state)
+                              isDisabled: !_hasRoute || _isOutOfRange,
+                              onPressed: _hasRoute && !_isOutOfRange
+                                  ? () => _onRequestTrip(context)
                                   : null,
                             ),
                             8.verticalSpace,
@@ -452,55 +508,7 @@ class _ClientConfirmTripTemplateState
   }
 }
 
-// ── Marcador animado de recogida ─────────────────────────────────────────────
-
-class _PickupMarker extends StatelessWidget {
-  const _PickupMarker({required this.isLoading});
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Icon(
-          Icons.location_on_rounded,
-          color: AppColors.fifth,
-          size: 52.r,
-          shadows: [
-            Shadow(
-              color: AppColors.fifth.withValues(alpha: 0.4),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        Positioned(
-          top: 6.r,
-          child: Container(
-            width: 24.r,
-            height: 24.r,
-            decoration: BoxDecoration(
-              color: AppColors.fifth,
-              shape: BoxShape.circle,
-            ),
-            child: isLoading
-                ? Padding(
-                    padding: EdgeInsets.all(5.r),
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.white,
-                    ),
-                  )
-                : Icon(Icons.my_location_rounded,
-                    color: AppColors.white, size: 14.r),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Rows y chips ─────────────────────────────────────────────────────────────
+// ── Sub-widgets ─────────────────────────────────────────────────────────────
 
 class _AddressRow extends StatelessWidget {
   const _AddressRow({
@@ -536,8 +544,7 @@ class _AddressRow extends StatelessWidget {
                       width: 120.w,
                       child: LinearProgressIndicator(
                         color: AppColors.third,
-                        backgroundColor:
-                            context.appColors.border,
+                        backgroundColor: context.appColors.border,
                       ),
                     )
                   : AppText(address,

@@ -69,7 +69,7 @@ class AuthRemoteDatasource {
           'googleToken': creds.tokenAccess,
           'nombre1': creds.firstName,
           'ape1': creds.lastName,
-          'photo_url': creds.photoUrl,
+          'photoUrl': creds.photoUrl,
         },
       );
       debugPrint('googleLogin exitoso');
@@ -153,17 +153,21 @@ class AuthRemoteDatasource {
     required String password,
   }) async {
     try {
+      final data = {'identificacion': identificacion, 'password': password};
+      debugPrint('[loginDriver] data enviada: $data');
+
       final response = await _dio.post(
         '$_baseUrl/auth/drivers/login',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {'identificacion': identificacion, 'password': password},
+        data: data,
       );
-      debugPrint('loginDriver exitoso');
+      debugPrint('[loginDriver] response: ${response.data}');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
+      debugPrint('[loginDriver] error response: ${e.response?.data}');
       return _handleDioException(e);
     }
   }

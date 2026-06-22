@@ -523,6 +523,9 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
     Map<String, dynamic> result,
     String ciPassport,
   ) {
+    debugPrint('[AuthUnified] driver result keys: ${result.keys.toList()}');
+    debugPrint('[AuthUnified] driver role raw: ${result['role']}');
+
     final tokenAccess = result['token_access'] as String?;
     final tokenRefresh = result['token_refresh'] as String?;
 

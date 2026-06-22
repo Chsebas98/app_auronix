@@ -42,6 +42,15 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
   ) async {
     emit(state.copyWith(isLoadingAddress: true));
     try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        emit(state.copyWith(
+          currentAddress: 'Activa el GPS para ver tu ubicación',
+          isLoadingAddress: false,
+        ));
+        return;
+      }
+
       final permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
@@ -52,12 +61,25 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
         return;
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 8),
-        ),
-      );
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {
+        position = await Geolocator.getLastKnownPosition();
+      }
+
+      if (position == null) {
+        emit(state.copyWith(
+          currentAddress: 'No se pudo obtener la ubicación',
+          isLoadingAddress: false,
+        ));
+        return;
+      }
 
       String address = '${position.latitude.toStringAsFixed(4)}, '
           '${position.longitude.toStringAsFixed(4)}';
@@ -81,6 +103,8 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
 
       emit(state.copyWith(
         currentAddress: address,
+        currentLat: position.latitude,
+        currentLng: position.longitude,
         isLoadingAddress: false,
       ));
     } catch (e) {

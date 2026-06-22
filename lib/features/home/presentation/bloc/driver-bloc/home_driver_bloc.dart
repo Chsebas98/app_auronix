@@ -39,6 +39,12 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
       )),
       (data) => emit(state.copyWith(
         status: HomeDriverStatus.ready,
+        dataProfile: state.dataProfile.copyWith(
+          firstName: data.firstName,
+          lastName: data.lastName,
+          username: data.username,
+          photoUrl: data.photoUrl,
+        ),
         isAvailable: data.isAvailable,
         currentAddress: data.currentAddress ?? '',
         dailyEarnings: data.dailyEarnings,

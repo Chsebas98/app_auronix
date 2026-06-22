@@ -141,6 +141,21 @@ class TripRepositoryImpl implements TripRepository {
   }
 
   @override
+  Future<Either<Failure, void>> rejectTrip({
+    required int userId,
+    required int tripId,
+    String? motivo,
+  }) async {
+    try {
+      await _driverRemote.rejectTrip(
+          userId: userId, tripId: tripId, motivo: motivo);
+      return const Right(null);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  @override
   Future<Either<Failure, TripEntity>> startTrip({
     required int userId,
     required int tripId,
