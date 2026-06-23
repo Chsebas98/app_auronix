@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:auronix_app/features/home/data/datasources/remote/home_driver_remote_datasource.dart';
 import 'package:auronix_app/features/home/domain/models/interfaces/earnings_point.dart';
 import 'package:auronix_app/features/home/domain/usecases/get_driver_home_usecase.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'home_driver_event.dart';
@@ -10,9 +12,13 @@ part 'home_driver_state.dart';
 
 class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
   final GetDriverHomeUseCase _getDriverHome;
+  final HomeDriverRemoteDatasource _remote;
 
-  HomeDriverBloc({required GetDriverHomeUseCase getDriverHome})
-      : _getDriverHome = getDriverHome,
+  HomeDriverBloc({
+    required GetDriverHomeUseCase getDriverHome,
+    required HomeDriverRemoteDatasource remote,
+  })  : _getDriverHome = getDriverHome,
+        _remote = remote,
         super(const HomeDriverState()) {
     on<HomeDriverInitEvent>(_onInit);
     on<GetCurrentLocationEvent>(_onGetCurrentLocationEvent);
@@ -73,8 +79,24 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
   FutureOr<void> _onToggleAvailability(
     HomeDriverToggleAvailabilityEvent event,
     Emitter<HomeDriverState> emit,
-  ) {
-    emit(state.copyWith(isAvailable: !state.isAvailable));
+  ) async {
+    final newValue = !state.isAvailable;
+    try {
+      final success = await _remote.setAvailability(newValue);
+      if (success) {
+        emit(state.copyWith(isAvailable: newValue));
+        debugPrint('[DriverHome] disponibilidad: $newValue');
+      } else {
+        emit(state.copyWith(
+          errorMessage: 'No se pudo cambiar la disponibilidad',
+        ));
+      }
+    } catch (e) {
+      debugPrint('[DriverHome] setAvailability error: $e');
+      emit(state.copyWith(
+        errorMessage: 'Error al cambiar disponibilidad',
+      ));
+    }
   }
 
   FutureOr<void> _onLocationUpdated(

@@ -179,17 +179,20 @@ class AppDatabase {
   ) async {
     final db = await database;
 
+    // Garantizar máximo 1 registro por user_type
+    await db.delete(
+      DbConstants.tableUser,
+      where: '${DbConstants.colUserType} = ?',
+      whereArgs: [userType],
+    );
+
     final row = <String, Object?>{
       ...data,
       DbConstants.colUserType: userType,
       DbConstants.colCreatedAt: DateTime.now().millisecondsSinceEpoch,
     };
 
-    await db.insert(
-      DbConstants.tableUser,
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(DbConstants.tableUser, row);
   }
 
   Future<Map<String, Object?>?> getUserMap(String userType) async {

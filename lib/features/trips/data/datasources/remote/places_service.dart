@@ -197,6 +197,69 @@ class PlacesService {
     }
   }
 
+  Future<List<List<double>>> getRoutePoints({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '$_baseUrl/directions/json',
+        queryParameters: {
+          'origin': '$originLat,$originLng',
+          'destination': '$destLat,$destLng',
+          'key': _apiKey,
+          'mode': 'driving',
+        },
+      );
+
+      final routes =
+          (response.data['routes'] as List<dynamic>?) ?? [];
+      if (routes.isEmpty) return [];
+
+      final polyline =
+          routes.first['overview_polyline']?['points'] as String?;
+      if (polyline == null) return [];
+
+      return _decodePolyline(polyline);
+    } catch (e) {
+      debugPrint('[PlacesService] getRoutePoints error: $e');
+      return [];
+    }
+  }
+
+  static List<List<double>> _decodePolyline(String encoded) {
+    final points = <List<double>>[];
+    int index = 0;
+    int lat = 0;
+    int lng = 0;
+
+    while (index < encoded.length) {
+      int shift = 0;
+      int result = 0;
+      int b;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1F) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1F) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+
+      points.add([lat / 1e5, lng / 1e5]);
+    }
+    return points;
+  }
+
   static double _haversineKm(
     double lat1, double lng1, double lat2, double lng2,
   ) {

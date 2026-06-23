@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
@@ -219,12 +220,28 @@ class _ClientConfirmTripTemplateState
         ? LatLng(_pickupLat, _pickupLng)
         : const LatLng(-0.1807, -78.4678);
 
-    return BlocListener<ClientTripBloc, ClientTripState>(
-      listenWhen: (prev, curr) =>
-          curr.status == ClientTripStatus.searching &&
-          prev.status != ClientTripStatus.searching,
-      listener: (_, __) =>
-          context.pushReplacement('/client/searching-driver'),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ClientTripBloc, ClientTripState>(
+          listenWhen: (prev, curr) =>
+              curr.status == ClientTripStatus.searching &&
+              prev.status != ClientTripStatus.searching,
+          listener: (_, __) =>
+              context.pushReplacement('/client/searching-driver'),
+        ),
+        BlocListener<ClientTripBloc, ClientTripState>(
+          listenWhen: (prev, curr) =>
+              curr.status == ClientTripStatus.error &&
+              prev.status != ClientTripStatus.error,
+          listener: (context, state) {
+            context.read<DialogCubit>().hideAll();
+            context.read<DialogCubit>().showMessage(
+                  title: 'Error',
+                  message: state.errorMessage ?? 'Ha ocurrido un error',
+                );
+          },
+        ),
+      ],
       child: BlocBuilder<ClientTripBloc, ClientTripState>(
         builder: (context, state) {
           final isRequesting = state.status == ClientTripStatus.requesting;

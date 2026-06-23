@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
+import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,48 @@ class ClientTripInProgressTemplate extends StatefulWidget {
 class _ClientTripInProgressTemplateState
     extends State<ClientTripInProgressTemplate> {
   final Completer<GoogleMapController> _mapCompleter = Completer();
+  bool _positionListening = false;
+  List<LatLng> _routePoints = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_positionListening) {
+      _positionListening = true;
+      final bloc = context.read<ClientTripBloc>();
+      if (bloc.isClosed) return;
+      final state = bloc.state;
+      final tripId = state.activeTrip?.id;
+      if (tripId != null) {
+        bloc.add(ClientTripListenPositionEvent(tripId: tripId));
+      }
+      _loadRoute(state);
+    }
+  }
+
+  Future<void> _loadRoute(ClientTripState state) async {
+    final trip = state.activeTrip;
+    final oLat = trip?.origenLatitud ?? state.origenLatitud;
+    final oLng = trip?.origenLongitud ?? state.origenLongitud;
+    final dLat = trip?.destinoLatitud ?? state.destinoLatitud;
+    final dLng = trip?.destinoLongitud ?? state.destinoLongitud;
+
+    if (oLat == null || oLng == null || dLat == null || dLng == null) return;
+
+    final points = await sl<PlacesService>().getRoutePoints(
+      originLat: oLat,
+      originLng: oLng,
+      destLat: dLat,
+      destLng: dLng,
+    );
+
+    if (mounted && points.isNotEmpty) {
+      setState(() {
+        _routePoints =
+            points.map((p) => LatLng(p[0], p[1])).toList();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,11 +149,23 @@ class _ClientTripInProgressTemplateState
                       icon: BitmapDescriptor.defaultMarkerWithHue(
                           BitmapDescriptor.hueRed),
                     ),
+                    if (state.hasDriverPosition)
+                      Marker(
+                        markerId: const MarkerId('driver'),
+                        position: LatLng(
+                            state.driverLat!, state.driverLng!),
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueYellow),
+                        infoWindow:
+                            const InfoWindow(title: 'Conductor'),
+                      ),
                   },
                   polylines: {
                     Polyline(
                       polylineId: const PolylineId('route'),
-                      points: [origin, destination],
+                      points: _routePoints.isNotEmpty
+                          ? _routePoints
+                          : [origin, destination],
                       width: 4,
                       color: AppColors.fifth,
                     ),

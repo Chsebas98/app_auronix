@@ -7,7 +7,8 @@ final class DriverTripState extends Equatable {
     this.selectedRequest,
     this.activeTrip,
     this.completedTrip,
-    this.driverPosition,
+    this.driverLat,
+    this.driverLng,
     this.errorMessage,
   });
 
@@ -16,10 +17,12 @@ final class DriverTripState extends Equatable {
   final TripRequest? selectedRequest;
   final TripEntity? activeTrip;
   final CompleteTripResult? completedTrip;
-  final LatLng? driverPosition;
+  final double? driverLat;
+  final double? driverLng;
   final String? errorMessage;
 
   bool get hasSelectedRequest => selectedRequest != null;
+  bool get hasDriverPosition => driverLat != null && driverLng != null;
 
   DriverTripState copyWith({
     DriverTripStatus? status,
@@ -28,7 +31,8 @@ final class DriverTripState extends Equatable {
     bool clearSelected = false,
     TripEntity? activeTrip,
     CompleteTripResult? completedTrip,
-    LatLng? driverPosition,
+    double? driverLat,
+    double? driverLng,
     String? errorMessage,
   }) {
     return DriverTripState(
@@ -38,7 +42,8 @@ final class DriverTripState extends Equatable {
           clearSelected ? null : selectedRequest ?? this.selectedRequest,
       activeTrip: activeTrip ?? this.activeTrip,
       completedTrip: completedTrip ?? this.completedTrip,
-      driverPosition: driverPosition ?? this.driverPosition,
+      driverLat: driverLat ?? this.driverLat,
+      driverLng: driverLng ?? this.driverLng,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -50,7 +55,8 @@ final class DriverTripState extends Equatable {
         selectedRequest,
         activeTrip,
         completedTrip,
-        driverPosition,
+        driverLat,
+        driverLng,
         errorMessage,
       ];
 }

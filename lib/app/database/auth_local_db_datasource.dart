@@ -2,6 +2,7 @@ import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/core/models/interfaces/core_enums.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthLocalDbDataSource {
   final AppDatabase _db;
@@ -11,6 +12,7 @@ class AuthLocalDbDataSource {
 
   /// Guardar usuario completo (login/registro inicial)
   Future<void> saveUser(AuthenticationCredentials creds) {
+    debugPrint('[DB] saveUser type=$userType role=${creds.role.name} email=${creds.email}');
     return _db.upsertUserMap({
       DbConstants.colTokenAccess: creds.tokenAccess,
       DbConstants.colTokenRefresh: creds.tokenRefresh,

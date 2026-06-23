@@ -24,6 +24,8 @@ import 'package:auronix_app/features/home/presentation/bloc/client-bloc/home_cli
 import 'package:auronix_app/features/home/presentation/bloc/driver-bloc/home_driver_bloc.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/client_trip_remote_datasource.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/driver_trip_remote_datasource.dart';
+import 'package:auronix_app/features/trips/data/datasources/socket/client_position_listener.dart';
+import 'package:auronix_app/features/trips/data/datasources/socket/driver_position_sender.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/driver_trip_socket.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/trip_status_socket.dart';
 import 'package:auronix_app/features/trips/data/repository/trip_repository_impl.dart';
@@ -141,7 +143,7 @@ Future<void> initDependencies() async {
   // ── 6. Auth — blocs ───────────────────────────────────────────────────────
 
   sl.registerLazySingleton<SessionBloc>(
-    () => SessionBloc(sl<AuthUnifiedRepository>()),
+    () => SessionBloc(sl<AuthUnifiedRepository>(), sl<RxSharedPreferences>()),
   );
 
   sl.registerFactory<AuthUnifiedBloc>(
@@ -174,7 +176,10 @@ Future<void> initDependencies() async {
   sl.registerFactory<HomeClientBloc>(() => HomeClientBloc());
 
   sl.registerFactory<HomeDriverBloc>(
-    () => HomeDriverBloc(getDriverHome: sl<GetDriverHomeUseCase>()),
+    () => HomeDriverBloc(
+      getDriverHome: sl<GetDriverHomeUseCase>(),
+      remote: sl<HomeDriverRemoteDatasource>(),
+    ),
   );
 
   // ── 9. Trips — datasources + repositorio + usecases ──────────────────────
@@ -204,6 +209,14 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<TripStatusSocket>(
     () => TripStatusSocket(serverUrl: wsBaseUrl),
+  );
+
+  sl.registerFactory<DriverPositionSender>(
+    () => DriverPositionSender(serverUrl: wsBaseUrl),
+  );
+
+  sl.registerFactory<ClientPositionListener>(
+    () => ClientPositionListener(serverUrl: wsBaseUrl),
   );
 
   sl.registerLazySingleton<TripRepository>(
@@ -255,6 +268,7 @@ Future<void> initDependencies() async {
       completeTrip: sl<CompleteTripUseCase>(),
       ratePassenger: sl<RatePassengerUseCase>(),
       socket: sl<DriverTripSocket>(),
+      positionSender: sl<DriverPositionSender>(),
     ),
   );
 
@@ -264,6 +278,7 @@ Future<void> initDependencies() async {
       cancelTrip: sl<CancelTripUseCase>(),
       rateDriver: sl<RateDriverUseCase>(),
       socket: sl<TripStatusSocket>(),
+      positionListener: sl<ClientPositionListener>(),
     ),
   );
 

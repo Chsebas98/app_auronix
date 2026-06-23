@@ -1,4 +1,5 @@
-import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'dart:async';
+
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
@@ -6,10 +7,20 @@ import 'package:auronix_app/shared/atoms/buttons/app_button.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},
+  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]}
+]''';
 
 class ClientTripTemplate extends StatefulWidget {
   const ClientTripTemplate({super.key});
@@ -19,26 +30,42 @@ class ClientTripTemplate extends StatefulWidget {
 }
 
 class _ClientTripTemplateState extends State<ClientTripTemplate> {
-  final _mapController = MapController();
-
-  static const _lightTileUrl =
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  static const _darkTileUrl =
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
-  static const _bogota = LatLng(4.7110, -74.0721);
+  final Completer<GoogleMapController> _mapCompleter = Completer();
+  LatLng _currentPos = const LatLng(-0.1807, -78.4678);
 
   @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {
+        pos = await Geolocator.getLastKnownPosition();
+      }
+      if (pos != null && mounted) {
+        setState(() => _currentPos = LatLng(pos!.latitude, pos.longitude));
+        if (_mapCompleter.isCompleted) {
+          final controller = await _mapCompleter.future;
+          controller.animateCamera(
+            CameraUpdate.newLatLngZoom(_currentPos, 14.5),
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLight = context.isLight;
-    final tileUrl = isLight ? _lightTileUrl : _darkTileUrl;
-
     return MultiBlocListener(
       listeners: [
         BlocListener<ClientTripBloc, ClientTripState>(
@@ -59,23 +86,24 @@ class _ClientTripTemplateState extends State<ClientTripTemplate> {
       child: Scaffold(
         body: Stack(
           children: [
-            // ── Mapa de fondo ─────────────────────────────────────────────
-            FlutterMap(
-              mapController: _mapController,
-              options: const MapOptions(
-                initialCenter: _bogota,
-                initialZoom: 14.0,
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _currentPos,
+                zoom: 14.5,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: tileUrl,
-                  subdomains: isLight ? const [] : const ['a', 'b', 'c'],
-                  userAgentPackageName: 'com.auronix.app',
-                ),
-              ],
+              style: context.isDark ? _darkMapStyle : null,
+              onMapCreated: (controller) {
+                if (!_mapCompleter.isCompleted) {
+                  _mapCompleter.complete(controller);
+                }
+              },
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: false,
             ),
 
-            // ── Barra de búsqueda ─────────────────────────────────────────
             Positioned(
               top: 0,
               left: 0,
@@ -95,7 +123,7 @@ class _ClientTripTemplateState extends State<ClientTripTemplate> {
                         borderRadius: BorderRadius.circular(12.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.12),
+                            color: Colors.black.withValues(alpha: 0.12),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -122,7 +150,6 @@ class _ClientTripTemplateState extends State<ClientTripTemplate> {
               ),
             ),
 
-            // ── Botón inferior ────────────────────────────────────────────
             Positioned(
               bottom: 32.h,
               left: 24.w,

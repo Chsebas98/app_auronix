@@ -130,7 +130,6 @@ class _ClientSelectDestinationTemplateState
         originLat: _originLat,
         originLng: _originLng,
         originAddress: _originAddress,
-        parentContext: context,
       ),
     );
   }

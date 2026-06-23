@@ -1,7 +1,9 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
+import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/l10n/app_localizations.dart';
 import 'package:auronix_app/l10n/gen/app_localizations.dart';
 import 'package:auronix_app/shared/shared.dart';
@@ -72,8 +74,12 @@ class _OnBoardingController extends StatelessWidget {
     return BlocListener<SessionBloc, SessionState>(
       listener: (context, state) {
         if (state is SessionAuthenticated) {
-          debugPrint('Usuario autenticado → navegando a /home');
-          AppRouter.go(ClientRoutesPath.home);
+          final role = state.dataUser.role;
+          final home = role == Roles.rolDriver
+              ? ConductorRoutesPath.home
+              : ClientRoutesPath.home;
+          debugPrint('Usuario autenticado (${role.name}) → navegando a $home');
+          AppRouter.go(home);
         } else if (state is SessionUnauthenticated) {
           debugPrint('Usuario no autenticado → navegando a /auth');
           AppRouter.go(Routes.auth);

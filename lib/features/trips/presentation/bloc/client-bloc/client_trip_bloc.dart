@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auronix_app/features/trips/data/datasources/socket/client_position_listener.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/trip_status_socket.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_entity.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_socket_events.dart';
@@ -8,6 +9,7 @@ import 'package:auronix_app/features/trips/domain/usecases/client/rate_driver_us
 import 'package:auronix_app/features/trips/domain/usecases/client/request_trip_usecase.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 part 'client_trip_event.dart';
 part 'client_trip_state.dart';
@@ -17,18 +19,22 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
   final CancelTripUseCase _cancelTrip;
   final RateDriverUseCase _rateDriver;
   final TripStatusSocket _socket;
+  final ClientPositionListener _positionListener;
 
   StreamSubscription<TripStatusEvent>? _socketSub;
+  StreamSubscription<DriverPositionUpdate>? _positionSub;
 
   ClientTripBloc({
     required RequestTripUseCase requestTrip,
     required CancelTripUseCase cancelTrip,
     required RateDriverUseCase rateDriver,
     required TripStatusSocket socket,
+    required ClientPositionListener positionListener,
   })  : _requestTrip = requestTrip,
         _cancelTrip = cancelTrip,
         _rateDriver = rateDriver,
         _socket = socket,
+        _positionListener = positionListener,
         super(const ClientTripState()) {
     on<ClientTripSetRouteEvent>(_onSetRoute);
     on<ClientTripRequestEvent>(_onRequest);
@@ -36,6 +42,8 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     on<ClientTripStatusUpdatedEvent>(_onStatusUpdated);
     on<ClientTripCancelEvent>(_onCancel);
     on<ClientTripRateDriverEvent>(_onRateDriver);
+    on<ClientTripListenPositionEvent>(_onListenPosition);
+    on<ClientTripDriverPositionEvent>(_onDriverPosition);
     on<ClientTripResetEvent>(_onReset);
   }
 
@@ -160,19 +168,45 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     );
   }
 
+  FutureOr<void> _onListenPosition(
+    ClientTripListenPositionEvent event,
+    Emitter<ClientTripState> emit,
+  ) {
+    _positionSub?.cancel();
+    _positionSub = _positionListener.connect(event.tripId).listen(
+      (update) => add(ClientTripDriverPositionEvent(
+        latitude: update.latitude,
+        longitude: update.longitude,
+      )),
+    );
+    debugPrint('[ClientTrip] listening driver position for trip ${event.tripId}');
+  }
+
+  FutureOr<void> _onDriverPosition(
+    ClientTripDriverPositionEvent event,
+    Emitter<ClientTripState> emit,
+  ) {
+    emit(state.copyWith(
+      driverLat: event.latitude,
+      driverLng: event.longitude,
+    ));
+  }
+
   FutureOr<void> _onReset(
     ClientTripResetEvent event,
     Emitter<ClientTripState> emit,
   ) {
     _socketSub?.cancel();
     _socket.disconnect();
+    _positionSub?.cancel();
+    _positionListener.disconnect();
     emit(const ClientTripState());
   }
 
+  // ignore: must_call_super
   @override
-  Future<void> close() {
-    _socketSub?.cancel();
-    _socket.disconnect();
-    return super.close();
+  Future<void> close() async {
+    // Singleton gestionado por GetIt — no cerrar para evitar
+    // "Cannot add new events after calling close"
   }
 }

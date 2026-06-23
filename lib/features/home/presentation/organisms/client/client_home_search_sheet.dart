@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
+import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 
 class ClientHomeSearchSheet extends StatefulWidget {
   const ClientHomeSearchSheet({
@@ -18,13 +17,11 @@ class ClientHomeSearchSheet extends StatefulWidget {
     required this.originLat,
     required this.originLng,
     required this.originAddress,
-    required this.parentContext,
   });
 
   final double originLat;
   final double originLng;
   final String originAddress;
-  final BuildContext parentContext;
 
   @override
   State<ClientHomeSearchSheet> createState() => _ClientHomeSearchSheetState();
@@ -89,21 +86,21 @@ class _ClientHomeSearchSheetState extends State<ClientHomeSearchSheet> {
   void _onSelectPrediction(PlacePrediction prediction) {
     Navigator.of(context).pop();
 
-    widget.parentContext.read<ClientTripBloc>().add(
-          ClientTripSetRouteEvent(
-            origenLatitud: widget.originLat,
-            origenLongitud: widget.originLng,
-            origenDireccion: widget.originAddress,
-            destinoLatitud: prediction.latitude,
-            destinoLongitud: prediction.longitude,
-            destinoDireccion: prediction.description,
-            distanciaEstimadaKm: prediction.distanceKm > 0
-                ? prediction.distanceKm
-                : 2.5,
-          ),
-        );
+    sl<ClientTripBloc>().add(
+      ClientTripSetRouteEvent(
+        origenLatitud: widget.originLat,
+        origenLongitud: widget.originLng,
+        origenDireccion: widget.originAddress,
+        destinoLatitud: prediction.latitude,
+        destinoLongitud: prediction.longitude,
+        destinoDireccion: prediction.description,
+        distanciaEstimadaKm: prediction.distanceKm > 0
+            ? prediction.distanceKm
+            : 2.5,
+      ),
+    );
 
-    widget.parentContext.push(ClientRoutesPath.confirmTrip);
+    AppRouter.push(ClientRoutesPath.confirmTrip);
   }
 
   @override

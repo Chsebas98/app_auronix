@@ -17,17 +17,24 @@ class DriverTripRemoteDatasource {
       );
 
   Future<List<TripResponseModel>> getAvailableTrips(int userId) async {
-    debugPrint('[DriverTrip] getAvailableTrips userId=$userId');
-    final response = await _dio.post(
-      '$_baseUrl/trips/get-available',
-      options: _headers(userId),
-      data: {},
-    );
-    final body = response.data as Map<String, dynamic>;
-    final list = body['result'] as List<dynamic>? ?? [];
-    return list
-        .map((e) => TripResponseModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    debugPrint('[DriverTrip] getAvailableTrips userId=$userId url=$_baseUrl/trips/get-available');
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/trips/get-available',
+        options: _headers(userId),
+        data: {},
+      );
+      final body = response.data as Map<String, dynamic>;
+      debugPrint('[DriverTrip] getAvailableTrips response: ${body['response']} message: ${body['message']}');
+      final list = body['result'] as List<dynamic>? ?? [];
+      debugPrint('[DriverTrip] getAvailableTrips count: ${list.length}');
+      return list
+          .map((e) => TripResponseModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('[DriverTrip] getAvailableTrips ERROR: $e');
+      rethrow;
+    }
   }
 
   Future<TripResponseModel> acceptTrip({

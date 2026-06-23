@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auronix_app/features/trips/data/datasources/socket/driver_position_sender.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/driver_trip_socket.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/complete_trip_result.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_entity.dart';
@@ -15,7 +16,6 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
 
 part 'driver_trip_event.dart';
 part 'driver_trip_state.dart';
@@ -28,8 +28,10 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   final CompleteTripUseCase _completeTrip;
   final RatePassengerUseCase _ratePassenger;
   final DriverTripSocket _socket;
+  final DriverPositionSender _positionSender;
 
   StreamSubscription<TripRequestEvent>? _socketSub;
+  int _driverId = 0;
 
   DriverTripBloc({
     required GetAvailableTripsUseCase getAvailableTrips,
@@ -39,6 +41,7 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     required CompleteTripUseCase completeTrip,
     required RatePassengerUseCase ratePassenger,
     required DriverTripSocket socket,
+    required DriverPositionSender positionSender,
   })  : _getAvailableTrips = getAvailableTrips,
         _acceptTrip = acceptTrip,
         _rejectTrip = rejectTrip,
@@ -46,6 +49,7 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
         _completeTrip = completeTrip,
         _ratePassenger = ratePassenger,
         _socket = socket,
+        _positionSender = positionSender,
         super(const DriverTripState()) {
     on<DriverTripLoadNearbyEvent>(_onLoadNearby);
     on<DriverTripConnectSocketEvent>(_onConnectSocket);
@@ -79,7 +83,8 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
       }
       if (pos != null) {
         emit(state.copyWith(
-          driverPosition: LatLng(pos.latitude, pos.longitude),
+          driverLat: pos.latitude,
+          driverLng: pos.longitude,
         ));
         debugPrint('[DriverTrip] GPS: ${pos.latitude}, ${pos.longitude}');
       }
@@ -108,6 +113,7 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     DriverTripConnectSocketEvent event,
     Emitter<DriverTripState> emit,
   ) {
+    _driverId = event.driverId;
     _socketSub?.cancel();
     _socketSub = _socket.connect(event.driverId).listen(
       (socketEvent) => add(DriverTripSocketReceivedEvent(event: socketEvent)),
@@ -141,6 +147,7 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     DriverTripAcceptEvent event,
     Emitter<DriverTripState> emit,
   ) async {
+    debugPrint('[DriverTrip] accept userId=${event.userId} tripId=${event.tripId}');
     emit(state.copyWith(status: DriverTripStatus.accepting));
 
     final result = await _acceptTrip(
@@ -149,14 +156,22 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: DriverTripStatus.error,
-        errorMessage: failure.message,
-      )),
-      (_) => emit(state.copyWith(
-        status: DriverTripStatus.accepted,
-        clearSelected: true,
-      )),
+      (failure) {
+        debugPrint('[DriverTrip] accept FAILED: ${failure.message}');
+        emit(state.copyWith(
+          status: DriverTripStatus.error,
+          errorMessage: failure.message,
+        ));
+      },
+      (trip) {
+        debugPrint('[DriverTrip] accept OK → trip ${trip.id} estado: ${trip.estado}');
+        _positionSender.start(_driverId);
+        emit(state.copyWith(
+          status: DriverTripStatus.accepted,
+          activeTrip: trip,
+          clearSelected: true,
+        ));
+      },
     );
   }
 
@@ -185,7 +200,8 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
         destinationAddress: e.destinoDireccion,
         destinationEta: '',
         estimatedFare: e.precioTotal,
-        position: LatLng(e.origenLatitud, e.origenLongitud),
+        latitude: e.origenLatitud,
+        longitude: e.origenLongitud,
       );
 
   TripRequest _socketEventToRequest(TripRequestEvent e) => TripRequest(
@@ -198,7 +214,8 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
         destinationAddress: e.destinoDireccion,
         destinationEta: '',
         estimatedFare: e.precioTotal,
-        position: LatLng(e.origenLatitud, e.origenLongitud),
+        latitude: e.origenLatitud,
+        longitude: e.origenLongitud,
       );
 
   FutureOr<void> _onStart(
@@ -239,10 +256,13 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
         status: DriverTripStatus.error,
         errorMessage: failure.message,
       )),
-      (result) => emit(state.copyWith(
-        status: DriverTripStatus.completed,
-        completedTrip: result,
-      )),
+      (result) {
+        _positionSender.stop();
+        emit(state.copyWith(
+          status: DriverTripStatus.completed,
+          completedTrip: result,
+        ));
+      },
     );
   }
 
@@ -268,10 +288,9 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     );
   }
 
+  // ignore: must_call_super
   @override
-  Future<void> close() {
-    _socketSub?.cancel();
-    _socket.disconnect();
-    return super.close();
+  Future<void> close() async {
+    // Singleton gestionado por GetIt — no cerrar
   }
 }

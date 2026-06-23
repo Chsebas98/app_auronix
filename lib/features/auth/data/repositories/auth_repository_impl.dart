@@ -79,6 +79,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
       await _clientDb.saveUser(creds);
       await _local.setRememberMe(rememberMe);
+      await _prefs.setString(StaticVariables.lastActiveRole, 'CLIENT');
 
       debugPrint('[AuthUnified] Login cliente completado');
       return Right(creds);
@@ -180,6 +181,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
       await _clientDb.saveUser(creds);
       await _local.setRememberMe(true);
+      await _prefs.setString(StaticVariables.lastActiveRole, 'CLIENT');
 
       debugPrint('[AuthUnified] Google login/registro completado');
       return Right(creds);
@@ -352,6 +354,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
       await _driverDb.saveUser(creds);
       await _prefs.setBool(StaticVariables.rememberConductorKey, rememberMe);
+      await _prefs.setString(StaticVariables.lastActiveRole, 'DRIVER');
 
       debugPrint('[AuthUnified] Login conductor completado');
       return Right(creds);

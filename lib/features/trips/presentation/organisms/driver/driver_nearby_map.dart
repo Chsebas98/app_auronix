@@ -32,6 +32,39 @@ class DriverNearbyMap extends StatefulWidget {
 
 class _DriverNearbyMapState extends State<DriverNearbyMap> {
   final Completer<GoogleMapController> _mapCompleter = Completer();
+  BitmapDescriptor _carIcon = BitmapDescriptor.defaultMarker;
+  bool _iconLoaded = false;
+
+  Future<void> _loadCarIcon() async {
+    try {
+      final icon = await BitmapDescriptor.asset(
+        ImageConfiguration(
+          size: const Size(48, 48),
+          devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+        ),
+        'assets/images/png/car_marker.png',
+      );
+      if (mounted) setState(() => _carIcon = icon);
+    } catch (e) {
+      debugPrint('[DriverMap] car icon error: $e');
+      if (mounted) {
+        setState(
+          () => _carIcon = BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueYellow,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_iconLoaded) {
+      _iconLoaded = true;
+      _loadCarIcon();
+    }
+  }
 
   int _getUserId() {
     final session = context.read<SessionBloc>().state;
@@ -41,16 +74,15 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
     return 0;
   }
 
-  Future<void> _onMarkerTap(
-      BuildContext context, TripRequest request) async {
+  Future<void> _onMarkerTap(BuildContext context, TripRequest request) async {
     context.read<DriverTripBloc>().add(
-          DriverTripSelectRequestEvent(request: request),
-        );
+      DriverTripSelectRequestEvent(request: request),
+    );
     if (_mapCompleter.isCompleted) {
       final controller = await _mapCompleter.future;
       controller.animateCamera(
         CameraUpdate.newLatLngZoom(
-          LatLng(request.position.latitude, request.position.longitude),
+          LatLng(request.latitude, request.longitude),
           15,
         ),
       );
@@ -65,148 +97,164 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
 
     return BlocListener<DriverTripBloc, DriverTripState>(
       listenWhen: (prev, curr) =>
-          prev.driverPosition == null && curr.driverPosition != null,
+          !prev.hasDriverPosition && curr.hasDriverPosition,
       listener: (context, state) async {
-        if (_mapCompleter.isCompleted && state.driverPosition != null) {
+        if (_mapCompleter.isCompleted && state.hasDriverPosition) {
           final controller = await _mapCompleter.future;
           controller.animateCamera(
             CameraUpdate.newLatLngZoom(
-              LatLng(state.driverPosition!.latitude,
-                  state.driverPosition!.longitude),
+              LatLng(state.driverLat!, state.driverLng!),
               14.5,
             ),
           );
         }
       },
       child: BlocBuilder<DriverTripBloc, DriverTripState>(
-      builder: (context, state) {
-        final driverPos = state.driverPosition != null
-            ? LatLng(state.driverPosition!.latitude,
-                state.driverPosition!.longitude)
-            : const LatLng(-0.1807, -78.4678);
+        builder: (context, state) {
+          final driverPos = state.hasDriverPosition
+              ? LatLng(state.driverLat!, state.driverLng!)
+              : const LatLng(-0.1807, -78.4678);
 
-        final markers = <Marker>{};
+          final markers = <Marker>{};
 
-        for (final request in state.nearbyRequests) {
-          markers.add(
-            Marker(
-              markerId: MarkerId('request_${request.id}'),
-              position: LatLng(
-                  request.position.latitude, request.position.longitude),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                state.selectedRequest?.id == request.id
-                    ? BitmapDescriptor.hueYellow
-                    : BitmapDescriptor.hueOrange,
-              ),
-              onTap: () => _onMarkerTap(context, request),
-            ),
+          debugPrint(
+            '[DriverMap] nearbyRequests: ${state.nearbyRequests.length}',
           );
-        }
-
-        return Stack(
-          children: [
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: driverPos,
-                zoom: 14.5,
+          for (final request in state.nearbyRequests) {
+            debugPrint(
+              '[DriverMap] marker ${request.id} at ${request.latitude}, ${request.longitude}',
+            );
+            markers.add(
+              Marker(
+                markerId: MarkerId('request_${request.id}'),
+                position: LatLng(request.latitude, request.longitude),
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueOrange,
+                ),
+                infoWindow: InfoWindow(
+                  title: 'Viaje #${request.id}',
+                  snippet:
+                      '${request.distanceKm.toStringAsFixed(1)} km - \$${request.estimatedFare.toStringAsFixed(2)}',
+                ),
+                onTap: () => _onMarkerTap(context, request),
               ),
-              style: context.isDark ? _darkMapStyle : null,
-              onMapCreated: (controller) {
-                if (!_mapCompleter.isCompleted) {
-                  _mapCompleter.complete(controller);
-                }
-              },
-              onTap: (_) {
-                if (state.hasSelectedRequest) {
-                  context.read<DriverTripBloc>().add(
-                        const DriverTripDismissRequestEvent(),
-                      );
-                }
-              },
-              markers: markers,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              compassEnabled: false,
-            ),
+            );
+          }
 
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 16.w, vertical: 10.h),
-                    decoration: BoxDecoration(
-                      color: headerBg,
-                      borderRadius: BorderRadius.circular(10.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+          return Stack(
+            children: [
+              GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: driverPos,
+                  zoom: 14.5,
+                ),
+                style: context.isDark ? _darkMapStyle : null,
+                onMapCreated: (controller) {
+                  if (!_mapCompleter.isCompleted) {
+                    _mapCompleter.complete(controller);
+                  }
+                },
+                onTap: (_) {
+                  if (state.hasSelectedRequest) {
+                    context.read<DriverTripBloc>().add(
+                      const DriverTripDismissRequestEvent(),
+                    );
+                  }
+                },
+                markers: {
+                  if (state.hasDriverPosition)
+                    Marker(
+                      markerId: const MarkerId('driver'),
+                      position: driverPos,
+                      icon: _carIcon,
+                      zIndexInt: 10,
                     ),
-                    child: AppText(
-                      'SOLICITUDES CERCANAS',
-                      variant: AppTextVariant.titleSmall,
-                      color: context.appColors.text,
-                      fontWeight: FontWeight.w800,
-                      align: TextAlign.center,
+                  ...markers,
+                },
+                myLocationEnabled: false,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                compassEnabled: false,
+              ),
+
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 10.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: headerBg,
+                        borderRadius: BorderRadius.circular(10.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: AppText(
+                        'SOLICITUDES CERCANAS',
+                        variant: AppTextVariant.titleSmall,
+                        color: context.appColors.text,
+                        fontWeight: FontWeight.w800,
+                        align: TextAlign.center,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              bottom: state.hasSelectedRequest ? 0 : -300.h,
-              left: 0,
-              right: 0,
-              child: state.selectedRequest != null
-                  ? TripRequestBottomCard(
-                      request: state.selectedRequest!,
-                      isLoading:
-                          state.status == DriverTripStatus.accepting,
-                      onAccept: () {
-                        final userId = _getUserId();
-                        context.read<DriverTripBloc>().add(
-                              DriverTripAcceptEvent(
-                                requestId: state.selectedRequest!.id,
-                                tripId: int.tryParse(
-                                        state.selectedRequest!.id) ??
-                                    0,
-                                userId: userId,
-                              ),
-                            );
-                      },
-                      onReject: () {
-                        final userId = _getUserId();
-                        context.read<DriverTripBloc>().add(
-                              DriverTripRejectEvent(
-                                userId: userId,
-                                tripId: int.tryParse(
-                                        state.selectedRequest!.id) ??
-                                    0,
-                                requestId: state.selectedRequest!.id,
-                              ),
-                            );
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        );
-      },
-    ),
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                bottom: state.hasSelectedRequest ? 0 : -300.h,
+                left: 0,
+                right: 0,
+                child: state.selectedRequest != null
+                    ? TripRequestBottomCard(
+                        request: state.selectedRequest!,
+                        isLoading: state.status == DriverTripStatus.accepting,
+                        onAccept: () {
+                          final userId = _getUserId();
+                          context.read<DriverTripBloc>().add(
+                            DriverTripAcceptEvent(
+                              requestId: state.selectedRequest!.id,
+                              tripId:
+                                  int.tryParse(state.selectedRequest!.id) ?? 0,
+                              userId: userId,
+                            ),
+                          );
+                        },
+                        onReject: () {
+                          final userId = _getUserId();
+                          context.read<DriverTripBloc>().add(
+                            DriverTripRejectEvent(
+                              userId: userId,
+                              tripId:
+                                  int.tryParse(state.selectedRequest!.id) ?? 0,
+                              requestId: state.selectedRequest!.id,
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

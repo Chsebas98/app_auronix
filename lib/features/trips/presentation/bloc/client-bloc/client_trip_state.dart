@@ -25,13 +25,14 @@ final class ClientTripState extends Equatable {
     this.destinoLongitud,
     this.destinoDireccion,
     this.distanciaEstimadaKm,
+    this.driverLat,
+    this.driverLng,
   });
 
   final ClientTripStatus status;
   final TripEntity? activeTrip;
   final String? errorMessage;
 
-  // Ruta seleccionada (antes de confirmar el viaje)
   final double? origenLatitud;
   final double? origenLongitud;
   final String? origenDireccion;
@@ -40,10 +41,14 @@ final class ClientTripState extends Equatable {
   final String? destinoDireccion;
   final double? distanciaEstimadaKm;
 
+  final double? driverLat;
+  final double? driverLng;
+
   bool get isSearching => status == ClientTripStatus.searching;
   bool get hasActiveTrip => activeTrip != null;
   bool get hasRoute =>
       origenDireccion != null && destinoDireccion != null;
+  bool get hasDriverPosition => driverLat != null && driverLng != null;
 
   ClientTripState copyWith({
     ClientTripStatus? status,
@@ -57,6 +62,8 @@ final class ClientTripState extends Equatable {
     double? destinoLongitud,
     String? destinoDireccion,
     double? distanciaEstimadaKm,
+    double? driverLat,
+    double? driverLng,
   }) {
     return ClientTripState(
       status: status ?? this.status,
@@ -69,6 +76,8 @@ final class ClientTripState extends Equatable {
       destinoLongitud: destinoLongitud ?? this.destinoLongitud,
       destinoDireccion: destinoDireccion ?? this.destinoDireccion,
       distanciaEstimadaKm: distanciaEstimadaKm ?? this.distanciaEstimadaKm,
+      driverLat: driverLat ?? this.driverLat,
+      driverLng: driverLng ?? this.driverLng,
     );
   }
 
@@ -84,5 +93,7 @@ final class ClientTripState extends Equatable {
         destinoLongitud,
         destinoDireccion,
         distanciaEstimadaKm,
+        driverLat,
+        driverLng,
       ];
 }

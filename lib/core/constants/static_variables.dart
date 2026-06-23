@@ -4,4 +4,5 @@ class StaticVariables {
   static const String rememberConductorKey = 'rememberConductorKey';
   static const String needsProfileComplete = 'needs_profile_complete';
   static const String tokenKey = 'tokenKey';
+  static const String lastActiveRole = 'last_active_role';
 }

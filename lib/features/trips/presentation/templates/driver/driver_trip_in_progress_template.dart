@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
+import 'package:auronix_app/app/di/dependency_injection.dart';
+import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/core/utils/helpers/jwt_helpers.dart';
@@ -35,6 +38,36 @@ class DriverTripInProgressTemplate extends StatefulWidget {
 class _DriverTripInProgressTemplateState
     extends State<DriverTripInProgressTemplate> {
   final Completer<GoogleMapController> _mapCompleter = Completer();
+  List<LatLng> _routePoints = [];
+  bool _routeLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_routeLoaded) {
+      _routeLoaded = true;
+      _loadRoute();
+    }
+  }
+
+  Future<void> _loadRoute() async {
+    final state = context.read<DriverTripBloc>().state;
+    final trip = state.activeTrip;
+    if (trip == null) return;
+
+    final points = await sl<PlacesService>().getRoutePoints(
+      originLat: trip.origenLatitud,
+      originLng: trip.origenLongitud,
+      destLat: trip.destinoLatitud,
+      destLng: trip.destinoLongitud,
+    );
+
+    if (mounted && points.isNotEmpty) {
+      setState(() {
+        _routePoints = points.map((p) => LatLng(p[0], p[1])).toList();
+      });
+    }
+  }
 
   int _getUserId() {
     final session = context.read<SessionBloc>().state;
@@ -42,6 +75,102 @@ class _DriverTripInProgressTemplateState
       return JwtHelpers.getUserId(session.dataUser.tokenAccess) ?? 0;
     }
     return 0;
+  }
+
+  void _showCodeVerification(BuildContext context, dynamic trip) {
+    final expectedCode = trip?.codigoViaje ?? '';
+    final codeCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.appColors.background,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          24.w,
+          24.h,
+          24.w,
+          MediaQuery.of(sheetCtx).viewInsets.bottom + 24.h,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppText(
+              'Verificar código del pasajero',
+              variant: AppTextVariant.titleMedium,
+              color: context.appColors.text,
+              fontWeight: FontWeight.w700,
+            ),
+            16.verticalSpace,
+            AppText(
+              'Solicita el código al pasajero para iniciar el viaje.',
+              variant: AppTextVariant.bodySmall,
+              color: context.appColors.textSecondary,
+              align: TextAlign.center,
+            ),
+            20.verticalSpace,
+            TextField(
+              controller: codeCtrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 3,
+                color: context.appColors.text,
+              ),
+              decoration: InputDecoration(
+                hintText: 'VJ-XXXXX',
+                hintStyle: TextStyle(
+                  color: context.appColors.textSecondary,
+                  fontSize: 20.sp,
+                ),
+                filled: true,
+                fillColor: context.appColors.input,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: context.appColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: context.appColors.border),
+                ),
+              ),
+            ),
+            24.verticalSpace,
+            AppButton(
+              label: 'VERIFICAR E INICIAR',
+              variant: AppButtonVariant.filled,
+              expand: true,
+              onPressed: () {
+                final input = codeCtrl.text.trim().toUpperCase();
+                if (input == expectedCode.toUpperCase()) {
+                  Navigator.of(sheetCtx).pop();
+                  final userId = _getUserId();
+                  context.read<DriverTripBloc>().add(
+                        DriverTripStartEvent(
+                          userId: userId,
+                          tripId: trip?.id ?? 0,
+                        ),
+                      );
+                } else {
+                  context.read<DialogCubit>().showMessage(
+                        title: 'Código incorrecto',
+                        message:
+                            'El código ingresado no coincide con el del pasajero.',
+                      );
+                }
+              },
+            ),
+            12.verticalSpace,
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -122,7 +251,9 @@ class _DriverTripInProgressTemplateState
                   polylines: {
                     Polyline(
                       polylineId: const PolylineId('route'),
-                      points: [origin, destination],
+                      points: _routePoints.isNotEmpty
+                          ? _routePoints
+                          : [origin, destination],
                       width: 4,
                       color: AppColors.fifth,
                     ),
@@ -239,15 +370,8 @@ class _DriverTripInProgressTemplateState
                           variant: AppButtonVariant.filled,
                           isLoading: isStarting,
                           expand: true,
-                          onPressed: () {
-                            final userId = _getUserId();
-                            context.read<DriverTripBloc>().add(
-                                  DriverTripStartEvent(
-                                    userId: userId,
-                                    tripId: trip?.id ?? 0,
-                                  ),
-                                );
-                          },
+                          onPressed: () =>
+                              _showCodeVerification(context, trip),
                         ),
                 ),
               ],

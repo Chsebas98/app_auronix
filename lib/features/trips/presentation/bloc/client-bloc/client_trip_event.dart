@@ -101,6 +101,26 @@ final class ClientTripSetRouteEvent extends ClientTripEvent {
   List<Object?> get props => [origenDireccion, destinoDireccion];
 }
 
+final class ClientTripDriverPositionEvent extends ClientTripEvent {
+  final double latitude;
+  final double longitude;
+  const ClientTripDriverPositionEvent({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  @override
+  List<Object?> get props => [latitude, longitude];
+}
+
+final class ClientTripListenPositionEvent extends ClientTripEvent {
+  final int tripId;
+  const ClientTripListenPositionEvent({required this.tripId});
+
+  @override
+  List<Object?> get props => [tripId];
+}
+
 final class ClientTripResetEvent extends ClientTripEvent {
   const ClientTripResetEvent();
 }
