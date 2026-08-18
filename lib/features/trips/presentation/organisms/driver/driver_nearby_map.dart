@@ -143,39 +143,44 @@ class _DriverNearbyMapState extends State<DriverNearbyMap> {
 
           return Stack(
             children: [
-              GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: driverPos,
-                  zoom: 14.5,
+              // RepaintBoundary: aísla el AndroidView del mapa para que
+              // las animaciones de diálogos encima (DialogCubit) no
+              // disparen su frame callback de offset a mitad de layout.
+              RepaintBoundary(
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: driverPos,
+                    zoom: 14.5,
+                  ),
+                  style: context.isDark ? _darkMapStyle : null,
+                  onMapCreated: (controller) {
+                    if (!_mapCompleter.isCompleted) {
+                      _mapCompleter.complete(controller);
+                    }
+                  },
+                  onTap: (_) {
+                    if (state.hasSelectedRequest) {
+                      context.read<DriverTripBloc>().add(
+                        const DriverTripDismissRequestEvent(),
+                      );
+                    }
+                  },
+                  markers: {
+                    if (state.hasDriverPosition)
+                      Marker(
+                        markerId: const MarkerId('driver'),
+                        position: driverPos,
+                        icon: _carIcon,
+                        zIndexInt: 10,
+                      ),
+                    ...markers,
+                  },
+                  myLocationEnabled: false,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
                 ),
-                style: context.isDark ? _darkMapStyle : null,
-                onMapCreated: (controller) {
-                  if (!_mapCompleter.isCompleted) {
-                    _mapCompleter.complete(controller);
-                  }
-                },
-                onTap: (_) {
-                  if (state.hasSelectedRequest) {
-                    context.read<DriverTripBloc>().add(
-                      const DriverTripDismissRequestEvent(),
-                    );
-                  }
-                },
-                markers: {
-                  if (state.hasDriverPosition)
-                    Marker(
-                      markerId: const MarkerId('driver'),
-                      position: driverPos,
-                      icon: _carIcon,
-                      zIndexInt: 10,
-                    ),
-                  ...markers,
-                },
-                myLocationEnabled: false,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-                compassEnabled: false,
               ),
 
               Positioned(

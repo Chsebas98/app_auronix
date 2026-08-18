@@ -251,43 +251,48 @@ class _ClientConfirmTripTemplateState
             body: Stack(
               children: [
                 // ── Google Map ───────────────────────────────────
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: initialTarget,
-                    zoom: 16,
+                // RepaintBoundary: aísla el AndroidView del mapa para que
+                // las animaciones de diálogos encima (DialogCubit) no
+                // disparen su frame callback de offset a mitad de layout.
+                RepaintBoundary(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: initialTarget,
+                      zoom: 16,
+                    ),
+                    style: context.isDark ? _darkMapStyle : null,
+                    onMapCreated: (controller) {
+                      if (!_mapCompleter.isCompleted) {
+                        _mapCompleter.complete(controller);
+                      }
+                      if (_pickupLat != 0) {
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          controller.animateCamera(
+                            CameraUpdate.newLatLngZoom(
+                              LatLng(_pickupLat, _pickupLng),
+                              16,
+                            ),
+                          );
+                        });
+                      }
+                    },
+                    onCameraMove: _onCameraMove,
+                    onCameraIdle: _onCameraIdle,
+                    markers: {
+                      if (_destLat != 0)
+                        Marker(
+                          markerId: const MarkerId('destination'),
+                          position: LatLng(_destLat, _destLng),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(
+                              BitmapDescriptor.hueRed),
+                        ),
+                    },
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
+                    compassEnabled: false,
                   ),
-                  style: context.isDark ? _darkMapStyle : null,
-                  onMapCreated: (controller) {
-                    if (!_mapCompleter.isCompleted) {
-                      _mapCompleter.complete(controller);
-                    }
-                    if (_pickupLat != 0) {
-                      Future.delayed(const Duration(milliseconds: 300), () {
-                        controller.animateCamera(
-                          CameraUpdate.newLatLngZoom(
-                            LatLng(_pickupLat, _pickupLng),
-                            16,
-                          ),
-                        );
-                      });
-                    }
-                  },
-                  onCameraMove: _onCameraMove,
-                  onCameraIdle: _onCameraIdle,
-                  markers: {
-                    if (_destLat != 0)
-                      Marker(
-                        markerId: const MarkerId('destination'),
-                        position: LatLng(_destLat, _destLng),
-                        icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueRed),
-                      ),
-                  },
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                  compassEnabled: false,
                 ),
 
                 // ── Pin fijo al centro ──────────────────────────

@@ -51,7 +51,10 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
         return;
       }
 
-      final permission = await Geolocator.checkPermission();
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         emit(state.copyWith(

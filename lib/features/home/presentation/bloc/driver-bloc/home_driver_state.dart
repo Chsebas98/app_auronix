@@ -14,6 +14,8 @@ final class HomeDriverState extends Equatable {
     this.status = HomeDriverStatus.initial,
     this.dataProfile = const AuthenticationCredentials.empty(),
     this.currentAddress = '',
+    this.currentLat = 0,
+    this.currentLng = 0,
     this.isLoadingAddress = false,
     this.isAvailable = false,
     this.incomingTrip,
@@ -27,6 +29,8 @@ final class HomeDriverState extends Equatable {
   final HomeDriverStatus status;
   final AuthenticationCredentials dataProfile;
   final String currentAddress;
+  final double currentLat;
+  final double currentLng;
   final bool isLoadingAddress;
   final bool isAvailable;
   final dynamic incomingTrip;
@@ -44,6 +48,8 @@ final class HomeDriverState extends Equatable {
     HomeDriverStatus? status,
     AuthenticationCredentials? dataProfile,
     String? currentAddress,
+    double? currentLat,
+    double? currentLng,
     bool? isLoadingAddress,
     bool? isAvailable,
     dynamic incomingTrip,
@@ -57,6 +63,8 @@ final class HomeDriverState extends Equatable {
       status: status ?? this.status,
       dataProfile: dataProfile ?? this.dataProfile,
       currentAddress: currentAddress ?? this.currentAddress,
+      currentLat: currentLat ?? this.currentLat,
+      currentLng: currentLng ?? this.currentLng,
       isLoadingAddress: isLoadingAddress ?? this.isLoadingAddress,
       isAvailable: isAvailable ?? this.isAvailable,
       incomingTrip: incomingTrip ?? this.incomingTrip,
@@ -73,6 +81,8 @@ final class HomeDriverState extends Equatable {
     status,
     dataProfile,
     currentAddress,
+    currentLat,
+    currentLng,
     isLoadingAddress,
     isAvailable,
     incomingTrip,

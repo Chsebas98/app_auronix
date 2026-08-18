@@ -120,61 +120,66 @@ class _ClientTripInProgressTemplateState
             body: Stack(
               children: [
                 // ── Google Map ──────────────────────────────────────
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: origin,
-                    zoom: 13.5,
-                  ),
-                  style: context.isDark ? _darkMapStyle : null,
-                  onMapCreated: (controller) {
-                    if (!_mapCompleter.isCompleted) {
-                      _mapCompleter.complete(controller);
-                    }
-                    Future.delayed(const Duration(milliseconds: 300), () {
-                      controller.animateCamera(
-                        CameraUpdate.newLatLngBounds(bounds, 80),
-                      );
-                    });
-                  },
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('origin'),
-                      position: origin,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueAzure),
+                // RepaintBoundary: aísla el AndroidView del mapa para que
+                // las animaciones de diálogos encima (DialogCubit) no
+                // disparen su frame callback de offset a mitad de layout.
+                RepaintBoundary(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: origin,
+                      zoom: 13.5,
                     ),
-                    Marker(
-                      markerId: const MarkerId('destination'),
-                      position: destination,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueRed),
-                    ),
-                    if (state.hasDriverPosition)
+                    style: context.isDark ? _darkMapStyle : null,
+                    onMapCreated: (controller) {
+                      if (!_mapCompleter.isCompleted) {
+                        _mapCompleter.complete(controller);
+                      }
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        controller.animateCamera(
+                          CameraUpdate.newLatLngBounds(bounds, 80),
+                        );
+                      });
+                    },
+                    markers: {
                       Marker(
-                        markerId: const MarkerId('driver'),
-                        position: LatLng(
-                            state.driverLat!, state.driverLng!),
+                        markerId: const MarkerId('origin'),
+                        position: origin,
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueYellow),
-                        infoWindow:
-                            const InfoWindow(title: 'Conductor'),
+                            BitmapDescriptor.hueAzure),
                       ),
-                  },
-                  polylines: {
-                    Polyline(
-                      polylineId: const PolylineId('route'),
-                      points: _routePoints.isNotEmpty
-                          ? _routePoints
-                          : [origin, destination],
-                      width: 4,
-                      color: AppColors.fifth,
-                    ),
-                  },
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                  compassEnabled: false,
+                      Marker(
+                        markerId: const MarkerId('destination'),
+                        position: destination,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueRed),
+                      ),
+                      if (state.hasDriverPosition)
+                        Marker(
+                          markerId: const MarkerId('driver'),
+                          position: LatLng(
+                              state.driverLat!, state.driverLng!),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(
+                              BitmapDescriptor.hueYellow),
+                          infoWindow:
+                              const InfoWindow(title: 'Conductor'),
+                        ),
+                    },
+                    polylines: {
+                      Polyline(
+                        polylineId: const PolylineId('route'),
+                        points: _routePoints.isNotEmpty
+                            ? _routePoints
+                            : [origin, destination],
+                        width: 4,
+                        color: AppColors.fifth,
+                      ),
+                    },
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
+                    compassEnabled: false,
+                  ),
                 ),
 
                 // ── Status card ──────────────────────────────────────

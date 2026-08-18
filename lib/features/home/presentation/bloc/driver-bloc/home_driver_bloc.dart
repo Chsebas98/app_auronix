@@ -6,6 +6,8 @@ import 'package:auronix_app/features/home/domain/usecases/get_driver_home_usecas
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 part 'home_driver_event.dart';
 part 'home_driver_state.dart';
@@ -66,13 +68,80 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
   ) async {
     emit(state.copyWith(isLoadingAddress: true));
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        emit(state.copyWith(
+          currentAddress: 'Activa el GPS para ver tu ubicación',
+          isLoadingAddress: false,
+        ));
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        emit(state.copyWith(
+          currentAddress: 'Permiso de ubicación no otorgado',
+          isLoadingAddress: false,
+        ));
+        return;
+      }
+
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {
+        position = await Geolocator.getLastKnownPosition();
+      }
+
+      if (position == null) {
+        emit(state.copyWith(
+          currentAddress: 'No se pudo obtener la ubicación',
+          isLoadingAddress: false,
+        ));
+        return;
+      }
+
+      String address = '${position.latitude.toStringAsFixed(4)}, '
+          '${position.longitude.toStringAsFixed(4)}';
+
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          final parts = [
+            if (p.street?.isNotEmpty == true) p.street,
+            if (p.locality?.isNotEmpty == true) p.locality,
+          ];
+          if (parts.isNotEmpty) address = parts.join(', ');
+        }
+      } catch (_) {
+        // Si geocoding falla, mostramos coordenadas
+      }
+
       emit(state.copyWith(
-        currentAddress: 'Dirección obtenida',
+        currentAddress: address,
+        currentLat: position.latitude,
+        currentLng: position.longitude,
         isLoadingAddress: false,
       ));
-    } catch (_) {
-      emit(state.copyWith(isLoadingAddress: false));
+    } catch (e) {
+      debugPrint('[HomeDriverBloc] Error obteniendo ubicación: $e');
+      emit(state.copyWith(
+        currentAddress: 'Ubicación no disponible',
+        isLoadingAddress: false,
+      ));
     }
   }
 

@@ -218,51 +218,56 @@ class _DriverTripInProgressTemplateState
           return Scaffold(
             body: Stack(
               children: [
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: origin,
-                    zoom: 13.5,
+                // RepaintBoundary: aísla el AndroidView del mapa para que
+                // las animaciones de diálogos encima (DialogCubit) no
+                // disparen su frame callback de offset a mitad de layout.
+                RepaintBoundary(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: origin,
+                      zoom: 13.5,
+                    ),
+                    style: context.isDark ? _darkMapStyle : null,
+                    onMapCreated: (controller) {
+                      if (!_mapCompleter.isCompleted) {
+                        _mapCompleter.complete(controller);
+                      }
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        controller.animateCamera(
+                          CameraUpdate.newLatLngBounds(bounds, 80),
+                        );
+                      });
+                    },
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('origin'),
+                        position: origin,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueAzure),
+                      ),
+                      Marker(
+                        markerId: const MarkerId('destination'),
+                        position: destination,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueRed),
+                      ),
+                    },
+                    polylines: {
+                      Polyline(
+                        polylineId: const PolylineId('route'),
+                        points: _routePoints.isNotEmpty
+                            ? _routePoints
+                            : [origin, destination],
+                        width: 4,
+                        color: AppColors.fifth,
+                      ),
+                    },
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
+                    compassEnabled: false,
                   ),
-                  style: context.isDark ? _darkMapStyle : null,
-                  onMapCreated: (controller) {
-                    if (!_mapCompleter.isCompleted) {
-                      _mapCompleter.complete(controller);
-                    }
-                    Future.delayed(const Duration(milliseconds: 300), () {
-                      controller.animateCamera(
-                        CameraUpdate.newLatLngBounds(bounds, 80),
-                      );
-                    });
-                  },
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('origin'),
-                      position: origin,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueAzure),
-                    ),
-                    Marker(
-                      markerId: const MarkerId('destination'),
-                      position: destination,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueRed),
-                    ),
-                  },
-                  polylines: {
-                    Polyline(
-                      polylineId: const PolylineId('route'),
-                      points: _routePoints.isNotEmpty
-                          ? _routePoints
-                          : [origin, destination],
-                      width: 4,
-                      color: AppColors.fifth,
-                    ),
-                  },
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                  compassEnabled: false,
                 ),
 
                 Positioned(

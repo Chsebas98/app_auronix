@@ -86,22 +86,27 @@ class _ClientTripTemplateState extends State<ClientTripTemplate> {
       child: Scaffold(
         body: Stack(
           children: [
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _currentPos,
-                zoom: 14.5,
+            // RepaintBoundary: aísla el AndroidView del mapa para que
+            // las animaciones de diálogos encima (DialogCubit) no
+            // disparen su frame callback de offset a mitad de layout.
+            RepaintBoundary(
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: _currentPos,
+                  zoom: 14.5,
+                ),
+                style: context.isDark ? _darkMapStyle : null,
+                onMapCreated: (controller) {
+                  if (!_mapCompleter.isCompleted) {
+                    _mapCompleter.complete(controller);
+                  }
+                },
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                compassEnabled: false,
               ),
-              style: context.isDark ? _darkMapStyle : null,
-              onMapCreated: (controller) {
-                if (!_mapCompleter.isCompleted) {
-                  _mapCompleter.complete(controller);
-                }
-              },
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              compassEnabled: false,
             ),
 
             Positioned(

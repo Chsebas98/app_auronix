@@ -155,22 +155,27 @@ class _ClientSelectDestinationTemplateState
       body: Stack(
         children: [
           // ── Google Map ───────────────────────────────────
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: target,
-              zoom: 15,
+          // RepaintBoundary: aísla el AndroidView del mapa para que
+          // las animaciones de diálogos encima (DialogCubit) no
+          // disparen su frame callback de offset a mitad de layout.
+          RepaintBoundary(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: target,
+                zoom: 15,
+              ),
+              style: context.isDark ? _darkMapStyle : null,
+              onMapCreated: (controller) {
+                if (!_mapCompleter.isCompleted) {
+                  _mapCompleter.complete(controller);
+                }
+              },
+              myLocationEnabled: _originReady,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: false,
             ),
-            style: context.isDark ? _darkMapStyle : null,
-            onMapCreated: (controller) {
-              if (!_mapCompleter.isCompleted) {
-                _mapCompleter.complete(controller);
-              }
-            },
-            myLocationEnabled: _originReady,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
-            compassEnabled: false,
           ),
 
           // ── Botón volver ──────────────────────────────────
