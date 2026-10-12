@@ -10,3 +10,4 @@ export 'domain/usecases/refresh_token_usecase.dart';
 export 'domain/usecases/register_client_usecase.dart';
 export 'domain/usecases/register_driver_usecase.dart';
 export 'presentation/bloc/auth_bloc.dart';
+export 'presentation/bloc/profile_cubit.dart';

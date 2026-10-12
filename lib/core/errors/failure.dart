@@ -33,3 +33,7 @@ class AuthFailure extends Failure {
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure({required super.message, super.detail});
 }
+
+class LocationFailure extends Failure {
+  const LocationFailure({required super.message});
+}

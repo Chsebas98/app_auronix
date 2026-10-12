@@ -30,15 +30,25 @@ final class AuthUnifiedSuccess extends AuthUnifiedState {
 
 /// Email/OTP verification step passed — awaiting full registration data.
 final class AuthUnifiedVerified extends AuthUnifiedState {
-  const AuthUnifiedVerified();
-}
-
-final class AuthUnifiedRegistering extends AuthUnifiedState {
   final String email;
-  const AuthUnifiedRegistering({required this.email});
+
+  const AuthUnifiedVerified({required this.email});
 
   @override
   List<Object?> get props => [email];
+}
+
+/// OTP code sent to `email` — awaiting the 6-digit code (docs/flow.md
+/// sección 11.1). `sentAt` distingue reenvíos para que la UI reinicie el
+/// cooldown incluso si el email no cambió.
+final class AuthUnifiedOtpSent extends AuthUnifiedState {
+  final String email;
+  final DateTime sentAt;
+
+  const AuthUnifiedOtpSent({required this.email, required this.sentAt});
+
+  @override
+  List<Object?> get props => [email, sentAt];
 }
 
 /// Auth operation failed.

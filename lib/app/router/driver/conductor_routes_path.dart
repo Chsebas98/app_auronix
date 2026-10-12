@@ -7,6 +7,7 @@ class ConductorRoutesPath {
   static const String metrics = '$base/metrics';
   static const String messages = '$base/messages';
   static const String vehicle = '$base/vehicle';
+  static const String verificationPending = '$base/verification-pending';
 
   //Flujo de solicitar taxi
   static const String searchPassenger = '$base/search-passenger';

@@ -59,19 +59,63 @@ final class AuthRegisterClientEvent extends AuthUnifiedEvent {
   List<Object?> get props => [verifyRequest];
 }
 
+final class AuthVerifyRegisterOtpEvent extends AuthUnifiedEvent {
+  final String email;
+  final String code;
+
+  const AuthVerifyRegisterOtpEvent({required this.email, required this.code});
+
+  @override
+  List<Object?> get props => [email, code];
+}
+
+final class AuthResendRegisterOtpEvent extends AuthUnifiedEvent {
+  final String email;
+
+  const AuthResendRegisterOtpEvent({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 final class AuthRegisterDriverEvent extends AuthUnifiedEvent {
   final String ciPassport;
   final String password;
   final String email;
+  final String licenseNumber;
+  final String licenseType;
+  final String plateNumber;
+  final String vehicleBrand;
+  final String vehicleModel;
+  final String vehicleYear;
+  final DateTime birthDate;
 
   const AuthRegisterDriverEvent({
     required this.ciPassport,
     required this.password,
     required this.email,
+    required this.birthDate,
+    this.licenseNumber = '',
+    this.licenseType = '',
+    this.plateNumber = '',
+    this.vehicleBrand = '',
+    this.vehicleModel = '',
+    this.vehicleYear = '',
   });
 
   @override
-  List<Object?> get props => [ciPassport, password, email];
+  List<Object?> get props => [
+    ciPassport,
+    password,
+    email,
+    licenseNumber,
+    licenseType,
+    plateNumber,
+    vehicleBrand,
+    vehicleModel,
+    vehicleYear,
+    birthDate,
+  ];
 }
 
 final class AuthRestoreClientSessionEvent extends AuthUnifiedEvent {
@@ -88,6 +132,7 @@ final class AuthCompleteRegisterClientEvent extends AuthUnifiedEvent {
   final String gender;
   final String phone;
   final String password;
+  final DateTime birthDate;
 
   const AuthCompleteRegisterClientEvent({
     required this.name,
@@ -95,10 +140,11 @@ final class AuthCompleteRegisterClientEvent extends AuthUnifiedEvent {
     required this.gender,
     required this.phone,
     required this.password,
+    required this.birthDate,
   });
 
   @override
-  List<Object?> get props => [name, email, gender, phone, password];
+  List<Object?> get props => [name, email, gender, phone, password, birthDate];
 }
 
 final class AuthLogoutEvent extends AuthUnifiedEvent {

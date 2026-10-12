@@ -9,6 +9,8 @@ final class HomeClientState extends Equatable {
     this.currentAddress = '',
     this.isLoadingAddress = false,
     this.currentTrip,
+    this.emergencyContactRequired = false,
+    this.tripRequestNonce = 0,
   });
 
   final HomeClientStatus status;
@@ -16,6 +18,11 @@ final class HomeClientState extends Equatable {
   final String currentAddress;
   final bool isLoadingAddress;
   final dynamic currentTrip; // reemplaza con tu modelo Trip
+  final bool emergencyContactRequired;
+
+  /// Se incrementa cada vez que pasa el gate de contacto de emergencia — la
+  /// UI escucha el cambio para navegar a "Seleccionar destino" una sola vez.
+  final int tripRequestNonce;
 
   bool get isLoading => status == HomeClientStatus.loading;
   bool get isReady => status == HomeClientStatus.ready;
@@ -26,6 +33,8 @@ final class HomeClientState extends Equatable {
     String? currentAddress,
     bool? isLoadingAddress,
     dynamic currentTrip,
+    bool? emergencyContactRequired,
+    int? tripRequestNonce,
   }) {
     return HomeClientState(
       status: status ?? this.status,
@@ -33,6 +42,9 @@ final class HomeClientState extends Equatable {
       currentAddress: currentAddress ?? this.currentAddress,
       isLoadingAddress: isLoadingAddress ?? this.isLoadingAddress,
       currentTrip: currentTrip ?? this.currentTrip,
+      emergencyContactRequired:
+          emergencyContactRequired ?? this.emergencyContactRequired,
+      tripRequestNonce: tripRequestNonce ?? this.tripRequestNonce,
     );
   }
 
@@ -43,5 +55,7 @@ final class HomeClientState extends Equatable {
     currentAddress,
     isLoadingAddress,
     currentTrip,
+    emergencyContactRequired,
+    tripRequestNonce,
   ];
 }

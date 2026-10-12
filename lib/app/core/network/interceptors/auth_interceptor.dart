@@ -1,26 +1,30 @@
 import 'dart:async';
 
+import 'package:auronix_app/app/core/services/secure_storage_service.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AuthInterceptor extends Interceptor {
   final AppDatabase _db;
+  final SecureStorageService _secureStorage;
   final AuthRemoteDatasource _authRemote;
   final Dio _dio;
 
   bool _isRefreshing = false;
 
-  // Completer por request — cada uno espera su resolución
   final List<Completer<String>> _refreshQueue = [];
 
   AuthInterceptor({
     required AppDatabase db,
+    required SecureStorageService secureStorage,
     required AuthRemoteDatasource authRemote,
     required Dio dio,
   }) : _db = db,
+       _secureStorage = secureStorage,
        _authRemote = authRemote,
        _dio = dio;
 
@@ -33,10 +37,16 @@ class AuthInterceptor extends Interceptor {
   ) async {
     if (_isPublicRoute(options.path)) return handler.next(options);
 
-    final activeUser = await _db.getActiveUserMap();
-    final accessToken = activeUser?[DbConstants.colTokenAccess] as String?;
+    var accessToken = await _secureStorage.getAccessToken();
 
     if (accessToken != null && accessToken.isNotEmpty) {
+      final shouldRefresh = _shouldRefreshProactively(accessToken);
+
+      if (shouldRefresh) {
+        final refreshed = await _proactiveRefresh();
+        if (refreshed != null) accessToken = refreshed;
+      }
+
       options.headers['Authorization'] = 'Bearer $accessToken';
     }
 
@@ -54,41 +64,35 @@ class AuthInterceptor extends Interceptor {
 
     debugPrint('401 en: ${err.requestOptions.path}');
 
-    //Si ya hay un refresh en curso — encolar con Completer y esperar
     if (_isRefreshing) {
-      debugPrint('⏳ Refresh en progreso, encolando...');
+      debugPrint('Refresh en progreso, encolando...');
       final completer = Completer<String>();
       _refreshQueue.add(completer);
 
       try {
-        // Esperar a que el refresh termine y recibir el nuevo token
         final newToken = await completer.future;
         final retryOptions = err.requestOptions;
         retryOptions.headers['Authorization'] = 'Bearer $newToken';
-        final response = await _dio.fetch(retryOptions); // usa _dio configurado
+        final response = await _dio.fetch(retryOptions);
         return handler.resolve(response);
       } catch (e) {
         return handler.next(err);
       }
     }
 
-    // ── Ejecutar refresh ─────────────────────────────────────────
-
     _isRefreshing = true;
 
     try {
-      final activeUser = await _db.getActiveUserMap();
-      final userType = activeUser?[DbConstants.colUserType] as String?;
-      final refreshToken = activeUser?[DbConstants.colTokenRefresh] as String?;
+      final refreshToken = await _secureStorage.getRefreshToken();
+      final userType = await _secureStorage.getUserType();
 
       if (refreshToken == null || refreshToken.isEmpty || userType == null) {
         debugPrint('Sin refresh token — limpiando sesión');
-        _resolveQueue(null); // notificar a encolados que falló
-        if (userType != null) await _db.clearUser(userType);
+        _resolveQueue(null);
+        await _clearSession(userType);
         return handler.next(err);
       }
 
-      // Llamar al endpoint de refresh según userType
       final response = userType == DbConstants.userTypeClient
           ? await _authRemote.refreshClientToken(refreshToken)
           : await _authRemote.refreshDriverToken(refreshToken);
@@ -96,7 +100,7 @@ class AuthInterceptor extends Interceptor {
       if (!response['response']) {
         debugPrint('Refresh falló: ${response['message']}');
         _resolveQueue(null);
-        await _db.clearUser(userType);
+        await _clearSession(userType);
         return handler.next(err);
       }
 
@@ -104,30 +108,25 @@ class AuthInterceptor extends Interceptor {
       final newAccessToken = result['token_access'] as String;
       final newRefreshToken = result['token_refresh'] as String;
 
-      await _db.updateTokens(
-        tokenAccess: newAccessToken,
-        tokenRefresh: newRefreshToken,
+      await _secureStorage.saveTokens(
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
         userType: userType,
       );
 
       debugPrint('Tokens refrescados');
 
-      // Notificar a todos los encolados con el nuevo token
       _resolveQueue(newAccessToken);
 
-      // Reintentar el request original
       final retryOptions = err.requestOptions;
       retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-      final retryResponse = await _dio.fetch(
-        retryOptions,
-      ); // usa _dio configurado
+      final retryResponse = await _dio.fetch(retryOptions);
       return handler.resolve(retryResponse);
     } catch (e) {
       debugPrint('Error en refresh: $e');
       _resolveQueue(null);
-      final activeUser = await _db.getActiveUserMap();
-      final userType = activeUser?[DbConstants.colUserType] as String?;
-      if (userType != null) await _db.clearUser(userType);
+      final userType = await _secureStorage.getUserType();
+      await _clearSession(userType);
       return handler.next(err);
     } finally {
       _isRefreshing = false;
@@ -136,13 +135,69 @@ class AuthInterceptor extends Interceptor {
 
   // ── Helpers ──────────────────────────────────────────────────────
 
-  /// Resuelve o rechaza todos los Completers encolados
+  bool _shouldRefreshProactively(String accessToken) {
+    try {
+      final payload = JwtDecoder.decode(accessToken);
+      final exp = payload['exp'];
+      if (exp == null) return false;
+      final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+        (exp as int) * 1000,
+      );
+      return expiresAt.difference(DateTime.now()).inSeconds < 60;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<String?> _proactiveRefresh() async {
+    if (_isRefreshing) return null;
+    _isRefreshing = true;
+
+    try {
+      final refreshToken = await _secureStorage.getRefreshToken();
+      final userType = await _secureStorage.getUserType();
+
+      if (refreshToken == null || refreshToken.isEmpty || userType == null) {
+        return null;
+      }
+
+      final response = userType == DbConstants.userTypeClient
+          ? await _authRemote.refreshClientToken(refreshToken)
+          : await _authRemote.refreshDriverToken(refreshToken);
+
+      if (!response['response']) return null;
+
+      final result = response['result'] as Map<String, dynamic>;
+      final newAccessToken = result['token_access'] as String;
+      final newRefreshToken = result['token_refresh'] as String;
+
+      await _secureStorage.saveTokens(
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        userType: userType,
+      );
+
+      debugPrint('Tokens refrescados proactivamente');
+      return newAccessToken;
+    } catch (e) {
+      debugPrint('Error en refresh proactivo: $e');
+      return null;
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  Future<void> _clearSession(String? userType) async {
+    await _secureStorage.clearTokens();
+    if (userType != null) await _db.clearUser(userType);
+  }
+
   void _resolveQueue(String? newToken) {
     for (final completer in _refreshQueue) {
       if (newToken != null) {
-        completer.complete(newToken); // éxito → reciben el token
+        completer.complete(newToken);
       } else {
-        completer.completeError('Refresh failed'); // fallo → se manejan
+        completer.completeError('Refresh failed');
       }
     }
     _refreshQueue.clear();
@@ -153,7 +208,8 @@ class AuthInterceptor extends Interceptor {
       '/auth/clients/login',
       '/auth/clients/register',
       '/auth/clients/google-login',
-      '/auth/clients/verify-register',
+      '/auth/clients/register/send-otp',
+      '/auth/clients/register/verify-otp',
       '/auth/clients/refresh-token',
       '/auth/drivers/login',
       '/auth/drivers/register',

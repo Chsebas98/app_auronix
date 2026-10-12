@@ -3,8 +3,9 @@ import 'package:auronix_app/features/home/presentation/pages/driver/driver_home_
 import 'package:auronix_app/features/home/presentation/pages/driver/driver_metrics_page.dart';
 import 'package:auronix_app/features/home/presentation/templates/driver/conductor_shell_template.dart';
 import 'package:auronix_app/features/trips/presentation/pages/driver/driver_start_trip_page.dart';
-import 'package:go_router/go_router.dart';
+import 'package:auronix_app/features/verification/presentation/pages/verification_pending_page.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 abstract final class ConductorRoutes {
   static List<RouteBase> routes({
@@ -46,6 +47,11 @@ abstract final class ConductorRoutes {
         //   builder: (context, state) => const TripPage(),
         // ),
       ],
+    ),
+
+    GoRoute(
+      path: ConductorRoutesPath.verificationPending,
+      builder: (context, state) => const VerificationPendingPage(),
     ),
   ];
 }

@@ -12,6 +12,7 @@ export 'utils/form_validators.dart';
 export 'utils/handler_exceptions.dart';
 export 'utils/helpers/forms_helpers.dart';
 export 'utils/helpers/helpers.dart';
+export 'utils/helpers/plate_validation_helper.dart';
 export 'utils/helpers/response_helpers.dart';
 export 'utils/permission_spec.dart';
 export 'utils/prefs.dart';

@@ -77,21 +77,43 @@ class AuthRemoteDatasource {
     }
   }
 
-  Future<Map<String, dynamic>> verifyRegisterClient({
-    required String email,
-    required String password,
-    required String rol,
-  }) async {
+  /// `POST /auth/clients/register/send-otp` (docs/requerimientos_backend.md
+  /// sección 2.1): envía un código de 6 dígitos al email, expira en 10 min,
+  /// reenviable con cooldown de 60s.
+  Future<Map<String, dynamic>> sendRegisterOtp({required String email}) async {
     try {
       final response = await _dio.post(
-        '$_baseUrl/auth/clients/verify-register',
+        '$_baseUrl/auth/clients/register/send-otp',
         options: Options(
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {'email': email, 'password': password, 'rol': rol},
+        data: {'email': email},
       );
-      debugPrint('verifyRegisterClient exitoso');
+      debugPrint('sendRegisterOtp exitoso');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      return _handleDioException(e);
+    }
+  }
+
+  /// `POST /auth/clients/register/verify-otp`. **Nombre de clave del código
+  /// sin confirmar por backend** — se usa `codigo`, ver
+  /// docs/requerimientos_backend.md sección 9.
+  Future<Map<String, dynamic>> verifyRegisterOtp({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/auth/clients/register/verify-otp',
+        options: Options(
+          contentType: 'application/json',
+          extra: RequestExtras.withRetry(retries: 2),
+        ),
+        data: {'email': email, 'codigo': code},
+      );
+      debugPrint('verifyRegisterOtp exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);
@@ -167,10 +189,23 @@ class AuthRemoteDatasource {
     }
   }
 
+  /// Campos de licencia/vehículo/T&C/fecha de nacimiento enviados como
+  /// `snake_case` para seguir el estilo ya establecido de este endpoint
+  /// (`ci_passport`) — nombres exactos sin confirmar por backend, ver
+  /// docs/requerimientos_backend.md sección 9.
   Future<Map<String, dynamic>> registerDriver({
     required String ciPassport,
     required String password,
     required String email,
+    String? licenseNumber,
+    String? licenseType,
+    String? plateNumber,
+    String? vehicleBrand,
+    String? vehicleModel,
+    String? vehicleYear,
+    DateTime? birthDate,
+    String? terminosVersion,
+    DateTime? terminosAceptadosEn,
   }) async {
     try {
       final response = await _dio.post(
@@ -179,7 +214,22 @@ class AuthRemoteDatasource {
           contentType: 'application/json',
           extra: RequestExtras.withRetry(retries: 2),
         ),
-        data: {'ci_passport': ciPassport, 'password': password, 'email': email},
+        data: {
+          'ci_passport': ciPassport,
+          'password': password,
+          'email': email,
+          if (licenseNumber != null) 'numero_licencia': licenseNumber,
+          if (licenseType != null) 'tipo_licencia': licenseType,
+          if (plateNumber != null) 'placa': plateNumber,
+          if (vehicleBrand != null) 'marca_vehiculo': vehicleBrand,
+          if (vehicleModel != null) 'modelo_vehiculo': vehicleModel,
+          if (vehicleYear != null) 'anio_vehiculo': vehicleYear,
+          if (birthDate != null)
+            'fecha_nacimiento': birthDate.toIso8601String(),
+          if (terminosVersion != null) 'terminos_version': terminosVersion,
+          if (terminosAceptadosEn != null)
+            'terminos_aceptados_en': terminosAceptadosEn.toIso8601String(),
+        },
       );
       debugPrint('registerDriver exitoso');
       return response.data as Map<String, dynamic>;
@@ -196,6 +246,54 @@ class AuthRemoteDatasource {
         data: {'token_refresh': refreshToken},
       );
       debugPrint('refreshDriverToken exitoso');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      return _handleDioException(e);
+    }
+  }
+
+  // ──────────────────── CUENTA (compartido) ────────────────────
+
+  /// `DELETE /users/me` (docs/requerimientos_backend.md sección 2.3).
+  Future<Map<String, dynamic>> deleteAccount() async {
+    try {
+      final response = await _dio.delete(
+        '$_baseUrl/users/me',
+        options: Options(contentType: 'application/json'),
+      );
+      debugPrint('deleteAccount exitoso');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      return _handleDioException(e);
+    }
+  }
+
+  /// `PATCH /users/me/email` — requiere re-verificación por OTP del lado
+  /// backend antes de aplicar el cambio (docs/requerimientos_backend.md
+  /// sección 2.3); el mecanismo exacto no está detallado — ver sección 9.
+  Future<Map<String, dynamic>> changeEmail({required String newEmail}) async {
+    try {
+      final response = await _dio.patch(
+        '$_baseUrl/users/me/email',
+        options: Options(contentType: 'application/json'),
+        data: {'email': newEmail},
+      );
+      debugPrint('changeEmail exitoso');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      return _handleDioException(e);
+    }
+  }
+
+  /// `PATCH /users/me/phone` — misma nota de re-verificación que [changeEmail].
+  Future<Map<String, dynamic>> changePhone({required String newPhone}) async {
+    try {
+      final response = await _dio.patch(
+        '$_baseUrl/users/me/phone',
+        options: Options(contentType: 'application/json'),
+        data: {'telefono': newPhone},
+      );
+      debugPrint('changePhone exitoso');
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       return _handleDioException(e);

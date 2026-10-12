@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
 import 'package:auronix_app/app/core/network/interceptors/cache_control_interceptors.dart';
 import 'package:auronix_app/app/core/network/interceptors/retry_control_interceptor.dart';
+import 'package:auronix_app/app/core/services/secure_storage_service.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:dio/dio.dart';
@@ -24,6 +25,7 @@ class DioClient {
     Duration? receiveTimeout,
     AppDatabase? database,
     AuthRemoteDatasource? authRemote,
+    SecureStorageService? secureStorage,
   }) async {
     if (_dio != null && _initialized) return _dio!;
 
@@ -58,9 +60,14 @@ class DioClient {
       );
     }
 
-    if (database != null && authRemote != null) {
+    if (database != null && authRemote != null && secureStorage != null) {
       dio.interceptors.add(
-        AuthInterceptor(db: database, authRemote: authRemote, dio: dio),
+        AuthInterceptor(
+          db: database,
+          secureStorage: secureStorage,
+          authRemote: authRemote,
+          dio: dio,
+        ),
       );
       debugPrint('Auth Interceptor agregado');
     }

@@ -44,22 +44,64 @@ class ClientRegisterForm extends StatelessWidget {
               20.verticalSpace,
               const AuthPasswordField(isRegister: true),
               12.verticalSpace,
+              Row(
+                children: [
+                  Checkbox(
+                    value: state.termsAccepted,
+                    onChanged: (_) =>
+                        context.read<AuthFormCubit>().toggleTerms(),
+                  ),
+                  Expanded(
+                    child: Wrap(
+                      children: [
+                        Text('Acepto los '),
+                        InkWell(
+                          onTap: () => showDialog<void>(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Términos y Condiciones'),
+                              content: const Text(
+                                'Los términos y condiciones de Auronix se actualizarán antes del lanzamiento.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cerrar'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          child: const Text(
+                            'Términos y Condiciones',
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              12.verticalSpace,
               AppButton(
                 label: 'Registrarse',
                 expand: true,
-                onPressed: () {
-                  if (formKey.currentState?.validate() ?? false) {
-                    context.read<AuthUnifiedBloc>().add(
-                      AuthRegisterClientEvent(
-                        verifyRequest: RegisterVerifyRequest(
-                          email: state.email,
-                          password: state.password,
-                          rol: Roles.rolUser,
-                        ),
-                      ),
-                    );
-                  }
-                },
+                onPressed: state.termsAccepted
+                    ? () {
+                        if (formKey.currentState?.validate() ?? false) {
+                          context.read<AuthUnifiedBloc>().add(
+                            AuthRegisterClientEvent(
+                              verifyRequest: RegisterVerifyRequest(
+                                email: state.email,
+                                password: state.password,
+                                rol: Roles.rolUser,
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    : null,
               ),
             ],
           );

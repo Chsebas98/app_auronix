@@ -1,17 +1,33 @@
+import 'dart:async';
+
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
+import 'package:auronix_app/app/core/config/public_config_service.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
+import 'package:auronix_app/app/core/services/location_service.dart';
+import 'package:auronix_app/app/core/services/secure_storage_service.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
-import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/features.dart';
 import 'package:auronix_app/features/home/presentation/bloc/client-bloc/home_client_bloc.dart';
 import 'package:auronix_app/features/home/presentation/bloc/driver-bloc/home_driver_bloc.dart';
+import 'package:auronix_app/features/trips/negotiation/data/datasources/geo_remote_datasource.dart';
+import 'package:auronix_app/features/trips/negotiation/data/repositories/geo_repository_impl.dart';
+import 'package:auronix_app/features/trips/negotiation/domain/repositories/geo_repository.dart';
+import 'package:auronix_app/features/trips/negotiation/data/datasources/trip_negotiation_remote_datasource.dart';
+import 'package:auronix_app/features/trips/negotiation/data/repositories/trip_negotiation_repository_impl.dart';
+import 'package:auronix_app/features/trips/negotiation/domain/repositories/trip_negotiation_repository.dart';
+import 'package:auronix_app/features/trips/negotiation/presentation/bloc/confirm_trip_cubit.dart';
+import 'package:auronix_app/features/trips/negotiation/presentation/bloc/select_destination_cubit.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/driver-bloc/driver_trip_bloc.dart';
+import 'package:auronix_app/features/trips/safety/data/datasources/emergency_contact_remote_datasource.dart';
+import 'package:auronix_app/features/trips/safety/data/repositories/emergency_contact_repository_impl.dart';
+import 'package:auronix_app/features/trips/safety/domain/repositories/emergency_contact_repository.dart';
+import 'package:auronix_app/features/trips/safety/presentation/bloc/emergency_contact_cubit.dart';
 import 'package:auronix_app/shared/blocs/modals/modal_temp_cubit.dart';
 import 'package:auronix_app/shared/templates/appbar/bottom-appbar/cubit/bottom_nav_cubit.dart';
 import 'package:dio/dio.dart';
@@ -47,14 +63,17 @@ Future<void> initDependencies() async {
     ),
   );
 
-  // ── 2. Base de datos ──────────────────────────────────────────────────────
-  // Debe registrarse antes de los datasources locales y del interceptor.
+  // ── 2. Almacenamiento seguro y base de datos ─────────────────────────────
+  // SecureStorageService debe registrarse antes de los datasources locales y del interceptor.
+
+  sl.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
 
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
 
   sl.registerLazySingleton<AuthLocalDbDataSource>(
     () => AuthLocalDbDataSource(
       sl<AppDatabase>(),
+      sl<SecureStorageService>(),
       userType: DbConstants.userTypeClient,
     ),
     instanceName: DbConstants.userTypeClient,
@@ -63,10 +82,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AuthLocalDbDataSource>(
     () => AuthLocalDbDataSource(
       sl<AppDatabase>(),
+      sl<SecureStorageService>(),
       userType: DbConstants.userTypeDriver,
     ),
     instanceName: DbConstants.userTypeDriver,
   );
+
+  sl.registerLazySingleton<LocationService>(() => LocationService());
 
   // ── 3. Red ────────────────────────────────────────────────────────────────
   // El orden aqui es critico:
@@ -91,12 +113,84 @@ Future<void> initDependencies() async {
     2, // posicion: despues de Cache, antes de Retry
     AuthInterceptor(
       db: sl<AppDatabase>(),
+      secureStorage: sl<SecureStorageService>(),
       dio: dioBasic,
       authRemote: authRemote,
     ),
   );
 
   sl.registerLazySingleton<Dio>(() => dioBasic);
+
+  // ── 3.1 Verificación, contacto de emergencia, geo, config pública ───────
+  // Todos requieren sl<Dio>() ya registrado. SessionBloc (sección 6) depende
+  // de VerificationRepository para poblar
+  // AuthenticationCredentials.verificationStatus.
+
+  sl.registerLazySingleton<VerificationRemoteDatasource>(
+    () => VerificationRemoteDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<VerificationRepository>(
+    () =>
+        VerificationRepositoryImpl(remote: sl<VerificationRemoteDatasource>()),
+  );
+
+  sl.registerFactory<VerificationCubit>(
+    () => VerificationCubit(sl<VerificationRepository>()),
+  );
+
+  sl.registerLazySingleton<EmergencyContactRemoteDatasource>(
+    () => EmergencyContactRemoteDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<EmergencyContactRepository>(
+    () => EmergencyContactRepositoryImpl(
+      remote: sl<EmergencyContactRemoteDatasource>(),
+    ),
+  );
+
+  sl.registerFactory<EmergencyContactCubit>(
+    () => EmergencyContactCubit(sl<EmergencyContactRepository>()),
+  );
+
+  sl.registerLazySingleton<GeoRemoteDatasource>(
+    () => GeoRemoteDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<GeoRepository>(
+    () => GeoRepositoryImpl(remote: sl<GeoRemoteDatasource>()),
+  );
+
+  sl.registerFactory<SelectDestinationCubit>(
+    () => SelectDestinationCubit(sl<GeoRepository>()),
+  );
+
+  sl.registerLazySingleton<PublicConfigService>(
+    () => PublicConfigService(dio: sl<Dio>()),
+  );
+  // Precarga al arrancar (docs/requerimientos_backend.md sección 4.4) —
+  // fire-and-forget: si falla, cada llamador de getConfig() recibe el
+  // Failure explícito y decide cómo bloquear la acción dependiente.
+  unawaited(sl<PublicConfigService>().getConfig());
+
+  sl.registerLazySingleton<TripNegotiationRemoteDatasource>(
+    () => TripNegotiationRemoteDatasource(dio: sl<Dio>()),
+  );
+
+  sl.registerLazySingleton<TripNegotiationRepository>(
+    () => TripNegotiationRepositoryImpl(
+      remote: sl<TripNegotiationRemoteDatasource>(),
+    ),
+  );
+
+  sl.registerFactory<ConfirmTripCubit>(
+    () => ConfirmTripCubit(
+      tripRepository: sl<TripNegotiationRepository>(),
+      geoRepository: sl<GeoRepository>(),
+      locationService: sl<LocationService>(),
+      publicConfigService: sl<PublicConfigService>(),
+    ),
+  );
 
   // ── 4. Auth — datasources locales ────────────────────────────────────────
 
@@ -126,7 +220,7 @@ Future<void> initDependencies() async {
   // AuthUnifiedBloc es factory porque cada pantalla necesita una instancia limpia.
 
   sl.registerLazySingleton<SessionBloc>(
-    () => SessionBloc(sl<AuthUnifiedRepository>()),
+    () => SessionBloc(sl<AuthUnifiedRepository>(), sl<VerificationRepository>()),
   );
 
   sl.registerFactory<AuthUnifiedBloc>(
@@ -140,8 +234,22 @@ Future<void> initDependencies() async {
     () => AuthFormCubit(prefs: sl<RxSharedPreferences>()),
   );
 
-  sl.registerFactory<HomeClientBloc>(() => HomeClientBloc());
-  sl.registerFactory<HomeDriverBloc>(() => HomeDriverBloc());
+  sl.registerFactory<ProfileCubit>(
+    () => ProfileCubit(sl<AuthUnifiedRepository>()),
+  );
+
+  sl.registerFactory<HomeClientBloc>(
+    () => HomeClientBloc(
+      locationService: sl<LocationService>(),
+      emergencyContactRepository: sl<EmergencyContactRepository>(),
+    ),
+  );
+  sl.registerFactory<HomeDriverBloc>(
+    () => HomeDriverBloc(
+      locationService: sl<LocationService>(),
+      emergencyContactRepository: sl<EmergencyContactRepository>(),
+    ),
+  );
   sl.registerFactory<DriverTripBloc>(() => DriverTripBloc());
   sl.registerFactory<ClientTripBloc>(() => ClientTripBloc());
 

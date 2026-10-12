@@ -1,7 +1,6 @@
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
 
 /// Unified authentication repository used by both clients and drivers.
@@ -23,17 +22,18 @@ abstract class AuthUnifiedRepository {
     AuthenticationCredentials googleCreds,
   );
 
-  Future<Either<Failure, void>> verifyRegister(
-    RegisterVerifyRequest registerData,
-  );
+  Future<Either<Failure, void>> sendRegisterOtp({required String email});
+
+  Future<Either<Failure, void>> verifyRegisterOtp({
+    required String email,
+    required String code,
+  });
 
   Future<Either<Failure, AuthenticationCredentials>> registerClient(
     RegisterRequest registerData,
   );
 
   Future<Either<Failure, AuthenticationCredentials?>> getClientSession();
-
-  Future<Either<Failure, void>> completeRegisterClient();
 
   //?Remote – Driver
   Future<Either<Failure, AuthenticationCredentials>> loginDriver({
@@ -46,10 +46,25 @@ abstract class AuthUnifiedRepository {
     required String ciPassport,
     required String password,
     required String email,
+    String? licenseNumber,
+    String? licenseType,
+    String? plateNumber,
+    String? vehicleBrand,
+    String? vehicleModel,
+    String? vehicleYear,
+    DateTime? birthDate,
+    String? terminosVersion,
+    DateTime? terminosAceptadosEn,
   });
 
   Future<Either<Failure, AuthenticationCredentials?>> getDriverSession();
 
   //?Shared
   Future<Either<Failure, void>> logout();
+
+  Future<Either<Failure, void>> deleteAccount();
+
+  Future<Either<Failure, void>> changeEmail({required String newEmail});
+
+  Future<Either<Failure, void>> changePhone({required String newPhone});
 }

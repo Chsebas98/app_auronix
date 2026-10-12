@@ -12,6 +12,7 @@ import 'package:auronix_app/features/auth/presentation/organisms/client/auth_cli
 
 import 'package:auronix_app/features/auth/presentation/organisms/driver/auth_driver_repository.dart';
 import 'package:auronix_app/features/auth/presentation/pages/client/register_complete_page.dart';
+import 'package:auronix_app/features/auth/presentation/pages/client/register_otp_page.dart';
 import 'package:auronix_app/features/auth/presentation/templates/client/auth_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,6 +51,12 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthUnifiedBloc, AuthUnifiedState>(
+      // Un reenvío de OTP vuelve a emitir AuthUnifiedOtpSent (mismo email,
+      // sentAt distinto) — no debe reabrir la pantalla de OTP encima de sí
+      // misma, perdiendo lo ya tipeado; RegisterOtpPage escucha ese caso
+      // internamente para reiniciar el cooldown.
+      listenWhen: (prev, curr) =>
+          !(curr is AuthUnifiedOtpSent && prev is AuthUnifiedOtpSent),
       listener: (context, state) {
         switch (state) {
           case AuthUnifiedLoading():
@@ -63,8 +70,7 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
               message: failure.message,
             );
 
-          case AuthUnifiedRegistering(:final email):
-            // Delega todo al DialogHandler — el reemplaza el loading y abre el fullscreen
+          case AuthUnifiedOtpSent(:final email):
             context.read<DialogCubit>().showFullscreenDialog(
               presentation:
                   DialogPresentation.replaceTop, // cierra loading primero
@@ -73,10 +79,10 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
                   BlocProvider.value(value: context.read<AuthUnifiedBloc>()),
                   BlocProvider.value(value: context.read<AuthFormCubit>()),
                 ],
-                child: RegisterCompletePage(email: email),
+                child: RegisterOtpPage(email: email),
               ),
             );
-          case AuthUnifiedVerified():
+          case AuthUnifiedVerified(:final email):
             context.read<DialogCubit>().showFullscreenDialog(
               presentation: DialogPresentation.replaceTop,
               pageBuilder: (ctx) => MultiBlocProvider(
@@ -84,7 +90,7 @@ class _AuthPageListenerState extends State<_AuthPageListener> {
                   BlocProvider.value(value: context.read<AuthUnifiedBloc>()),
                   BlocProvider.value(value: context.read<AuthFormCubit>()),
                 ],
-                child: RegisterCompletePage(email: ''),
+                child: RegisterCompletePage(email: email),
               ),
             );
 

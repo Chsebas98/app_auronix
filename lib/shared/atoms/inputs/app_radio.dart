@@ -21,19 +21,18 @@ class AppRadio<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RadioGroup<T>(
-      groupValue: groupValue,
-
-      onChanged: (T? v) {
-        if (!isDisabled && v != null) onChanged(v);
-      },
-      child: _buildContent(context),
-    );
+    return _buildContent(context);
   }
 
   Widget _buildContent(BuildContext context) {
     final radio = Radio<T>.adaptive(
       value: value,
+      groupValue: groupValue,
+      onChanged: isDisabled
+          ? null
+          : (T? v) {
+              if (v != null) onChanged(v);
+            },
       activeColor: context.appColors.button,
     );
 

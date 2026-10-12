@@ -5,7 +5,6 @@ import 'package:auronix_app/features/auth/domain/repositories/auth_repository.da
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
-import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -191,20 +190,14 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
   }
 
   @override
-  Future<Either<Failure, void>> verifyRegister(
-    RegisterVerifyRequest registerData,
-  ) async {
+  Future<Either<Failure, void>> sendRegisterOtp({required String email}) async {
     try {
-      final response = await _remote.verifyRegisterClient(
-        email: registerData.email,
-        password: registerData.password,
-        rol: RoleHelpers.getMnemonicoByRole(registerData.rol),
-      );
+      final response = await _remote.sendRegisterOtp(email: email);
 
       if (!response['response']) {
         return Left(
           ServerFailure(
-            message: response['message'] ?? 'Error en la verificación',
+            message: response['message'] ?? 'No se pudo enviar el código',
             detail: response['errorDetail'],
             statusCode: response['statusCode'],
           ),
@@ -213,10 +206,43 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
 
       return const Right(null);
     } catch (e) {
-      debugPrint('[AuthUnified] Error en verifyRegister: $e');
+      debugPrint('[AuthUnified] Error en sendRegisterOtp: $e');
       return Left(
         UnexpectedFailure(
-          message: 'Error al verificar usuario',
+          message: 'Error inesperado al enviar el código',
+          detail: e.toString(),
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyRegisterOtp({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _remote.verifyRegisterOtp(
+        email: email,
+        code: code,
+      );
+
+      if (!response['response']) {
+        return Left(
+          ServerFailure(
+            message: response['message'] ?? 'Código inválido o expirado',
+            detail: response['errorDetail'],
+            statusCode: response['statusCode'],
+          ),
+        );
+      }
+
+      return const Right(null);
+    } catch (e) {
+      debugPrint('[AuthUnified] Error en verifyRegisterOtp: $e');
+      return Left(
+        UnexpectedFailure(
+          message: 'Error inesperado al verificar el código',
           detail: e.toString(),
         ),
       );
@@ -295,24 +321,6 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, AuthenticationCredentials>>
-  completeRegisterClient() async {
-    try {
-      debugPrint('[AuthUnified] Completando registro de cliente');
-      // Aquí podrías hacer una llamada al backend para completar el registro
-      return const Right(AuthenticationCredentials.empty());
-    } catch (e) {
-      debugPrint('[AuthUnified] Error en completeRegisterClient: $e');
-      return Left(
-        UnexpectedFailure(
-          message: 'Error al completar registro',
-          detail: e.toString(),
-        ),
-      );
-    }
-  }
-
   // ──────────────────── DRIVER ────────────────────
 
   @override
@@ -368,6 +376,15 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
     required String ciPassport,
     required String password,
     required String email,
+    String? licenseNumber,
+    String? licenseType,
+    String? plateNumber,
+    String? vehicleBrand,
+    String? vehicleModel,
+    String? vehicleYear,
+    DateTime? birthDate,
+    String? terminosVersion,
+    DateTime? terminosAceptadosEn,
   }) async {
     try {
       debugPrint('[AuthUnified] Iniciando registro conductor');
@@ -376,6 +393,15 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
         ciPassport: ciPassport,
         password: password,
         email: email,
+        licenseNumber: licenseNumber,
+        licenseType: licenseType,
+        plateNumber: plateNumber,
+        vehicleBrand: vehicleBrand,
+        vehicleModel: vehicleModel,
+        vehicleYear: vehicleYear,
+        birthDate: birthDate,
+        terminosVersion: terminosVersion,
+        terminosAceptadosEn: terminosAceptadosEn,
       );
 
       if (!response['response']) {
@@ -468,6 +494,91 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       await _local.clearSession();
       if (_googleInitialized) await _googleSignIn.signOut();
       return const Right(null);
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    try {
+      final response = await _remote.deleteAccount();
+
+      if (!response['response']) {
+        return Left(
+          ServerFailure(
+            message: response['message'] ?? 'No se pudo eliminar la cuenta',
+            detail: response['errorDetail'],
+            statusCode: response['statusCode'],
+          ),
+        );
+      }
+
+      return const Right(null);
+    } catch (e) {
+      debugPrint('[AuthUnified] Error en deleteAccount: $e');
+      return Left(
+        UnexpectedFailure(
+          message: 'Error inesperado al eliminar la cuenta',
+          detail: e.toString(),
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> changeEmail({
+    required String newEmail,
+  }) async {
+    try {
+      final response = await _remote.changeEmail(newEmail: newEmail);
+
+      if (!response['response']) {
+        return Left(
+          ServerFailure(
+            message: response['message'] ?? 'No se pudo cambiar el email',
+            detail: response['errorDetail'],
+            statusCode: response['statusCode'],
+          ),
+        );
+      }
+
+      return const Right(null);
+    } catch (e) {
+      debugPrint('[AuthUnified] Error en changeEmail: $e');
+      return Left(
+        UnexpectedFailure(
+          message: 'Error inesperado al cambiar el email',
+          detail: e.toString(),
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> changePhone({
+    required String newPhone,
+  }) async {
+    try {
+      final response = await _remote.changePhone(newPhone: newPhone);
+
+      if (!response['response']) {
+        return Left(
+          ServerFailure(
+            message: response['message'] ?? 'No se pudo cambiar el teléfono',
+            detail: response['errorDetail'],
+            statusCode: response['statusCode'],
+          ),
+        );
+      }
+
+      return const Right(null);
+    } catch (e) {
+      debugPrint('[AuthUnified] Error en changePhone: $e');
+      return Left(
+        UnexpectedFailure(
+          message: 'Error inesperado al cambiar el teléfono',
+          detail: e.toString(),
+        ),
+      );
     }
   }
 

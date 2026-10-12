@@ -12,11 +12,29 @@ class RegisterDriverUseCase {
     required String ciPassport,
     required String password,
     required String email,
+    String? licenseNumber,
+    String? licenseType,
+    String? plateNumber,
+    String? vehicleBrand,
+    String? vehicleModel,
+    String? vehicleYear,
+    DateTime? birthDate,
+    String? terminosVersion,
+    DateTime? terminosAceptadosEn,
   }) {
     return _repository.registerDriver(
       ciPassport: ciPassport,
       password: password,
       email: email,
+      licenseNumber: licenseNumber,
+      licenseType: licenseType,
+      plateNumber: plateNumber,
+      vehicleBrand: vehicleBrand,
+      vehicleModel: vehicleModel,
+      vehicleYear: vehicleYear,
+      birthDate: birthDate,
+      terminosVersion: terminosVersion,
+      terminosAceptadosEn: terminosAceptadosEn,
     );
   }
 }

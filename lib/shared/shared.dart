@@ -11,6 +11,7 @@ export 'atoms/images/app_image_asset.dart';
 export 'atoms/images/app_svg_image_asset.dart';
 // inputs
 export 'atoms/inputs/app_checkbox.dart';
+export 'atoms/inputs/app_otp_input.dart';
 export 'atoms/inputs/app_radio.dart';
 export 'atoms/inputs/input_default/app_text_field.dart';
 export 'atoms/inputs/input_default/app_text_controller.dart';

@@ -25,6 +25,7 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
   bool _passwordValid = false;
   bool _passwordMatch = false;
   bool _showMatchIndicator = false;
+  DateTime? _birthDate;
 
   @override
   Widget build(BuildContext context) {
@@ -49,23 +50,23 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                 return AppButton(
                   label: 'Completar Registro',
                   expand: true,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      context.read<AuthUnifiedBloc>().add(
-                        // Nota: debes agregar AuthCompleteRegisterEvent
-                        // con los campos name, email, gender, phone, password
-                        // si aun no existe en auth_bloc_event.dart
-                        AuthCompleteRegisterClientEvent(
-                          name: _name,
-                          email: formState.email,
-                          gender: _gender,
-                          phone: _phone,
-                          password: _confirmPassword,
-                        ),
-                      );
-                      Navigator.pop(context);
-                    }
-                  },
+                  onPressed: _birthDate == null
+                      ? null
+                      : () {
+                          if (_formKey.currentState!.validate()) {
+                            context.read<AuthUnifiedBloc>().add(
+                              AuthCompleteRegisterClientEvent(
+                                name: _name,
+                                email: formState.email,
+                                gender: _gender,
+                                phone: _phone,
+                                password: _confirmPassword,
+                                birthDate: _birthDate!,
+                              ),
+                            );
+                            Navigator.pop(context);
+                          }
+                        },
                 );
               },
             ),
@@ -157,6 +158,47 @@ class _RegisterCompletePageState extends State<RegisterCompletePage> {
                   FormValidators.validatePhone(v ?? ''),
                 ),
                 onChanged: (v) => _phone = v,
+              ),
+
+              20.verticalSpace,
+
+              // Fecha de nacimiento
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime(2000),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now().subtract(
+                      const Duration(days: 365 * 18),
+                    ),
+                  );
+                  if (picked != null) {
+                    setState(() => _birthDate = picked);
+                    if (mounted) {
+                      context.read<AuthFormCubit>().setBirthDate(picked);
+                    }
+                  }
+                },
+                child: AbsorbPointer(
+                  child: AppTextField(
+                    obscureText: false,
+                    hasShowHidePassword: false,
+                    hasValidationRules: false,
+                    hasStrengthIndicator: false,
+                    readOnly: true,
+                    initialValue: _birthDate == null
+                        ? ''
+                        : '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}',
+                    decoration: const InputDecoration(
+                      labelText: 'Fecha de nacimiento',
+                      hintText: 'Fecha de nacimiento',
+                      border: InputBorder.none,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      suffixIcon: Icon(Icons.calendar_today_outlined),
+                    ),
+                  ),
+                ),
               ),
 
               20.verticalSpace,

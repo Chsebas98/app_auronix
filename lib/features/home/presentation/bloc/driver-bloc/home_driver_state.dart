@@ -16,6 +16,8 @@ final class HomeDriverState extends Equatable {
     this.currentAddress = '',
     this.isLoadingAddress = false,
     this.isAvailable = false,
+    this.gpsRequired = false,
+    this.emergencyContactRequired = false,
     this.incomingTrip,
     this.activeTrip,
     this.dailyEarnings = 0.0,
@@ -24,10 +26,12 @@ final class HomeDriverState extends Equatable {
   });
 
   final HomeDriverStatus status;
-  final AuthenticationCredentials dataProfile; // reemplaza con tu modelo
+  final AuthenticationCredentials dataProfile;
   final String currentAddress;
   final bool isLoadingAddress;
   final bool isAvailable;
+  final bool gpsRequired;
+  final bool emergencyContactRequired;
   final dynamic incomingTrip;
   final dynamic activeTrip;
   final double dailyEarnings;
@@ -44,6 +48,8 @@ final class HomeDriverState extends Equatable {
     String? currentAddress,
     bool? isLoadingAddress,
     bool? isAvailable,
+    bool? gpsRequired,
+    bool? emergencyContactRequired,
     dynamic incomingTrip,
     dynamic activeTrip,
     double? dailyEarnings,
@@ -56,6 +62,9 @@ final class HomeDriverState extends Equatable {
       currentAddress: currentAddress ?? this.currentAddress,
       isLoadingAddress: isLoadingAddress ?? this.isLoadingAddress,
       isAvailable: isAvailable ?? this.isAvailable,
+      gpsRequired: gpsRequired ?? this.gpsRequired,
+      emergencyContactRequired:
+          emergencyContactRequired ?? this.emergencyContactRequired,
       incomingTrip: incomingTrip ?? this.incomingTrip,
       activeTrip: activeTrip ?? this.activeTrip,
       dailyEarnings: dailyEarnings ?? this.dailyEarnings,
@@ -71,6 +80,8 @@ final class HomeDriverState extends Equatable {
     currentAddress,
     isLoadingAddress,
     isAvailable,
+    gpsRequired,
+    emergencyContactRequired,
     incomingTrip,
     activeTrip,
     dailyEarnings,

@@ -84,15 +84,31 @@ class AppRouter {
           }
 
           final role = sessionState.dataUser.role;
+
+          // Conductor no verificado: sin acceso a home ni a solicitudes
+          // (docs/flow.md sección 2, docs/architecture.md sección 2).
+          // SessionBloc puebla verificationStatus consultando
+          // GET /drivers/me/estado-verificacion (ver session_bloc.dart).
+          if (role == Roles.rolDriver &&
+              sessionState.dataUser.verificationStatus != 'APROBADO' &&
+              currentLocation != ConductorRoutesPath.verificationPending) {
+            debugPrint('Conductor no verificado → /driver/verification-pending');
+            return ConductorRoutesPath.verificationPending;
+          }
+
           // Si está en rutas públicas y no es onBoarding
           if (isPublic && currentLocation != Routes.onBoarding) {
             return switch (role) {
               Roles.rolUser => ClientRoutesPath.home,
               Roles.rolDriver => ConductorRoutesPath.home,
-              // 'socio' => SocioRoutesPath.home,
-              // 'gerente' => GerenteRoutesPath.home,
-              // 'superadmin' => SuperAdminRoutesPath.home,
-              _ => Routes.root,
+              Roles.rolAdmin ||
+              Roles.rolGerente ||
+              Roles.rolMember => () {
+                debugPrint(
+                  '[Router] Rol no soportado en app móvil: ${role.name} → redirigiendo a /auth',
+                );
+                return Routes.auth;
+              }(),
             };
           }
 

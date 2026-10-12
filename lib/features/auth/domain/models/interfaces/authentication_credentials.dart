@@ -14,6 +14,7 @@ class AuthenticationCredentials {
   final String email;
   final String photoUrl;
   final bool isGoogleUser;
+  final String? verificationStatus;
 
   const AuthenticationCredentials({
     required this.tokenAccess,
@@ -27,6 +28,7 @@ class AuthenticationCredentials {
     required this.email,
     this.photoUrl = '',
     this.isGoogleUser = false,
+    this.verificationStatus,
   });
 
   const AuthenticationCredentials.empty()
@@ -40,7 +42,8 @@ class AuthenticationCredentials {
       secondlastName = '',
       email = '',
       photoUrl = '',
-      isGoogleUser = false;
+      isGoogleUser = false,
+      verificationStatus = null;
 
   factory AuthenticationCredentials.fromJson(Map<String, dynamic> json) {
     return AuthenticationCredentials(
@@ -58,6 +61,7 @@ class AuthenticationCredentials {
       email: json['email'] ?? '',
       photoUrl: json['photoUrl'] ?? '',
       isGoogleUser: json['isGoogleUser'] ?? false,
+      verificationStatus: json['verificationStatus'] as String?,
     );
   }
 
@@ -73,6 +77,7 @@ class AuthenticationCredentials {
     String? email,
     String? photoUrl,
     bool? isGoogleUser,
+    String? verificationStatus,
   }) {
     return AuthenticationCredentials(
       tokenAccess: tokenAccess ?? this.tokenAccess,
@@ -86,6 +91,7 @@ class AuthenticationCredentials {
       email: email ?? this.email,
       photoUrl: photoUrl ?? this.photoUrl,
       isGoogleUser: isGoogleUser ?? this.isGoogleUser,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
     );
   }
 
@@ -101,6 +107,7 @@ class AuthenticationCredentials {
     'email': email,
     'photoUrl': photoUrl,
     'isGoogleUser': isGoogleUser,
+    'verificationStatus': verificationStatus,
   };
 
   Map<String, dynamic> toSafeJson({String mask = '***'}) => {

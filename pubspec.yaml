@@ -61,7 +61,6 @@ dependencies:
  sqflite: ^2.4.2
  path_provider: ^2.1.5
  http_cache_hive_store: ^5.0.2
- mapbox_maps_flutter: ^2.18.0
  google_maps_flutter: ^2.14.2
  geolocator: ^14.0.2
  geocoding: ^4.0.0
@@ -69,6 +68,8 @@ dependencies:
  auto_skeleton: ^0.4.1
  fl_chart: ^1.2.0
  flutter_map: ^8.3.0
+ jwt_decoder: ^2.0.1
+ flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
  flutter_launcher_icons: ^0.14.4

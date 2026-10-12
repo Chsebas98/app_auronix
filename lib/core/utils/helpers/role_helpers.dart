@@ -69,20 +69,7 @@ class RoleHelpers {
     }
   }
 
-  static String getMnemonicoByRole(Roles role) {
-    switch (role) {
-      case Roles.rolAdmin:
-        return 'ROL_SUPER_ADMIN';
-      case Roles.rolGerente:
-        return 'ROL_MANAGER';
-      case Roles.rolDriver:
-        return 'ROL_DRIVER';
-      case Roles.rolMember:
-        return 'ROL_MEMBER';
-      case Roles.rolUser:
-        return 'ROL_CLIENT';
-    }
-  }
+  static String getMnemonicoByRole(Roles role) => roleToNemonico(role);
 
   /// Verifica si un rol tiene permisos de admin
   static bool isAdmin(Roles role) {
