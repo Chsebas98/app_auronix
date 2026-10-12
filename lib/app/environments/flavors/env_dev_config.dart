@@ -2,7 +2,7 @@ import 'package:auronix_app/app/environments/flavors/env_base_config.dart';
 
 class EnvDevConfig extends EnvBaseConfig {
   @override
-  String get apiBaseUrl => 'http://127.0.0.1:8081/api';
+  String get apiBaseUrl => 'http://127.0.0.1:8081/microservices-auronix-ando/api/v1';
 
   @override
   String get tokenKey =>
