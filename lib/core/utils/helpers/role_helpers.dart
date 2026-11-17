@@ -1,4 +1,5 @@
 import 'package:auronix_app/core/core.dart';
+import 'package:flutter/foundation.dart';
 
 class RoleHelpers {
   /// Convierte data del backend a enum Roles
@@ -39,16 +40,22 @@ class RoleHelpers {
   static Roles _mapFromNemonico(String? nemonico) {
     switch (nemonico) {
       case 'ROL_CLIENT':
+      case 'ROLE_CLIENT':
         return Roles.rolUser;
       case 'ROL_DRIVER':
+      case 'ROLE_DRIVER':
         return Roles.rolDriver;
       case 'ROL_ADMIN':
+      case 'ROLE_ADMIN':
         return Roles.rolAdmin;
       case 'ROL_GERENTE':
+      case 'ROLE_GERENTE':
         return Roles.rolGerente;
       case 'ROL_MEMBER':
+      case 'ROLE_MEMBER':
         return Roles.rolMember;
       default:
+        debugPrint('[RoleHelpers] rol no reconocido: "$nemonico"');
         return Roles.rolUser;
     }
   }

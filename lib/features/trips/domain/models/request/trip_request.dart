@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:latlong2/latlong.dart';
 
 class TripRequest extends Equatable {
   const TripRequest({
@@ -12,7 +11,8 @@ class TripRequest extends Equatable {
     required this.destinationAddress,
     required this.destinationEta,
     required this.estimatedFare,
-    required this.position,
+    required this.latitude,
+    required this.longitude,
   });
 
   final String id;
@@ -24,7 +24,8 @@ class TripRequest extends Equatable {
   final String destinationAddress;
   final String destinationEta;
   final double estimatedFare;
-  final LatLng position;
+  final double latitude;
+  final double longitude;
 
   @override
   List<Object?> get props => [id];

@@ -14,6 +14,8 @@ final class HomeDriverState extends Equatable {
     this.status = HomeDriverStatus.initial,
     this.dataProfile = const AuthenticationCredentials.empty(),
     this.currentAddress = '',
+    this.currentLat = 0,
+    this.currentLng = 0,
     this.isLoadingAddress = false,
     this.isAvailable = false,
     this.incomingTrip,
@@ -21,11 +23,14 @@ final class HomeDriverState extends Equatable {
     this.dailyEarnings = 0.0,
     this.completedTrips = 0,
     this.earningsHistory = const [],
+    this.errorMessage,
   });
 
   final HomeDriverStatus status;
-  final AuthenticationCredentials dataProfile; // reemplaza con tu modelo
+  final AuthenticationCredentials dataProfile;
   final String currentAddress;
+  final double currentLat;
+  final double currentLng;
   final bool isLoadingAddress;
   final bool isAvailable;
   final dynamic incomingTrip;
@@ -33,6 +38,7 @@ final class HomeDriverState extends Equatable {
   final double dailyEarnings;
   final int completedTrips;
   final List<EarningsPoint> earningsHistory;
+  final String? errorMessage;
 
   bool get isReady => status == HomeDriverStatus.ready;
   bool get hasTripIncoming => status == HomeDriverStatus.tripIncoming;
@@ -42,6 +48,8 @@ final class HomeDriverState extends Equatable {
     HomeDriverStatus? status,
     AuthenticationCredentials? dataProfile,
     String? currentAddress,
+    double? currentLat,
+    double? currentLng,
     bool? isLoadingAddress,
     bool? isAvailable,
     dynamic incomingTrip,
@@ -49,11 +57,14 @@ final class HomeDriverState extends Equatable {
     double? dailyEarnings,
     int? completedTrips,
     List<EarningsPoint>? earningsHistory,
+    String? errorMessage,
   }) {
     return HomeDriverState(
       status: status ?? this.status,
       dataProfile: dataProfile ?? this.dataProfile,
       currentAddress: currentAddress ?? this.currentAddress,
+      currentLat: currentLat ?? this.currentLat,
+      currentLng: currentLng ?? this.currentLng,
       isLoadingAddress: isLoadingAddress ?? this.isLoadingAddress,
       isAvailable: isAvailable ?? this.isAvailable,
       incomingTrip: incomingTrip ?? this.incomingTrip,
@@ -61,6 +72,7 @@ final class HomeDriverState extends Equatable {
       dailyEarnings: dailyEarnings ?? this.dailyEarnings,
       completedTrips: completedTrips ?? this.completedTrips,
       earningsHistory: earningsHistory ?? this.earningsHistory,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
@@ -69,6 +81,8 @@ final class HomeDriverState extends Equatable {
     status,
     dataProfile,
     currentAddress,
+    currentLat,
+    currentLng,
     isLoadingAddress,
     isAvailable,
     incomingTrip,
@@ -76,5 +90,6 @@ final class HomeDriverState extends Equatable {
     dailyEarnings,
     completedTrips,
     earningsHistory,
+    errorMessage,
   ];
 }

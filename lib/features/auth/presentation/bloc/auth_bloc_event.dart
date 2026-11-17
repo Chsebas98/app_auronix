@@ -60,18 +60,12 @@ final class AuthRegisterClientEvent extends AuthUnifiedEvent {
 }
 
 final class AuthRegisterDriverEvent extends AuthUnifiedEvent {
-  final String ciPassport;
-  final String password;
-  final String email;
+  final RegisterDriverRequest data;
 
-  const AuthRegisterDriverEvent({
-    required this.ciPassport,
-    required this.password,
-    required this.email,
-  });
+  const AuthRegisterDriverEvent({required this.data});
 
   @override
-  List<Object?> get props => [ciPassport, password, email];
+  List<Object?> get props => [data.cedula, data.email];
 }
 
 final class AuthRestoreClientSessionEvent extends AuthUnifiedEvent {

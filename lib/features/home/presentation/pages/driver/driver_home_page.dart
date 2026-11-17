@@ -10,7 +10,8 @@ class DriverHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<HomeDriverBloc>()..add(const HomeDriverInitEvent()),
+      // userId: temporal hasta que el interceptor use JWT y extraiga el ID del token
+      create: (_) => sl<HomeDriverBloc>()..add(const HomeDriverInitEvent(userId: 0)),
       child: const DriverHomeTemplate(),
     );
   }
