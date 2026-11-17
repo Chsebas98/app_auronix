@@ -3,408 +3,436 @@
 Plan de implementación generado por Mnemosine. El estado vivo de cada tarea está en Mnemosine;
 este archivo es una foto del plan en el momento de la última publicación.
 
-## Cimientos de arquitectura y tokens de diseño base
+## Cimientos de arquitectura y diseño
 
 - [ ] **Estructura Clean Architecture Feature-First y tokens de diseño base Atomic Design** (pendiente)
-  - Criterio: El tema AppTheme define esquemas de colores y estilos tipográficos consistentes con Material 3.
-  - Criterio: El componente AppButton renderiza el texto especificado y gestiona callbacks de pulsación.
+  - Criterio: M1.T1-C1: La estructura de directorios y exportaciones públicas en lib/app, lib/features y lib/shared se resuelve sin errores de importación circular ni referencias huérfanas.
+  - Criterio: M1.T1-C2: AppTheme genera configuraciones ThemeData de Material 3 válidas para modos claro y oscuro con contrastes de color accesibles.
+  - Criterio: M1.T1-C3: Los componentes atómicos AndoButton y AndoTextField respetan los tokens de espaciado y estado deshabilitado.
 
-## Enrutamiento declarativo y monitoreo de salud inicial
-
-- [ ] **Enrutamiento base con GoRouter y vista de salud/diagnóstico** (pendiente)
-  - Depende de: Estructura Clean Architecture Feature-First y tokens de diseño base Atomic Design, Configuración multi-ambiente e inyección de dependencias con GetIt
-  - Criterio: La ruta /health navega exitosamente a HealthScreen y muestra el ambiente en ejecución.
-  - Criterio: El router gestiona rutas inexistentes redirigiendo a una vista o mensaje de error 404 predeterminado.
-
-## Automatización de calidad en CI y documentación de puesta en marcha
+## Integración continua y documentación
 
 - [ ] **Pipeline de integración continua (CI) y documentación README** (pendiente)
-  - Depende de: Estructura Clean Architecture Feature-First y tokens de diseño base Atomic Design, Configuración multi-ambiente e inyección de dependencias con GetIt, Enrutamiento base con GoRouter y vista de salud/diagnóstico
-  - Criterio: El workflow .github/workflows/ci.yml define las etapas de instalación de Flutter, flutter pub get, flutter analyze y flutter test.
-  - Criterio: El archivo README.md describe la arquitectura, instalación, variables de entorno y comandos para correr la app y sus tests.
-  - Criterio: Las instrucciones de README.md permiten inicializar y levantar la aplicación en entorno local sin ambigüedades.
+  - Depende de: Enrutamiento base con GoRouter y vista de salud/diagnóstico
+  - Criterio: M1.T4-C1: El flujo de GitHub Actions ci.yml define pasos estrictos de checkout, setup de Flutter, análisis estático y ejecución de pruebas con reporte de cobertura.
+  - Criterio: M1.T4-C2: El archivo README.md contiene secciones de instalación, variables de entorno, ejecución por ambiente y testing para un onboarding sin fricción.
+  - Criterio: M1.T4-C3: flutter analyze se ejecuta sin warnings ni errores de linter sobre todo el código base de M1.
 
-## Configuración de entornos e inyección de dependencias
+## Navegación y diagnóstico
+
+- [ ] **Enrutamiento base con GoRouter y vista de salud/diagnóstico** (pendiente)
+  - Depende de: Configuración multi-ambiente e inyección de dependencias con GetIt
+  - Criterio: M1.T3-C1: GoRouter resuelve correctamente la ruta inicial '/health_check' y navega sin errores de contexto.
+  - Criterio: M1.T3-C2: HealthCheckScreen muestra la información del ambiente activo (nombre, apiUrl, esquema ws/wss) consumiendo EnvironmentConfig desde GetIt.
+  - Criterio: M1.T3-C3: Las rutas hacia flujos de pasajero y conductor están declaradas como ramas desacopladas listas para los módulos siguientes.
+
+## Configuración y DI
 
 - [ ] **Configuración multi-ambiente e inyección de dependencias con GetIt** (pendiente)
   - Depende de: Estructura Clean Architecture Feature-First y tokens de diseño base Atomic Design
-  - Criterio: EnvironmentConfig selecciona ws:// para el ambiente local y wss:// para producción a partir de la configuración.
-  - Criterio: El contenedor GetIt inicializa y registra dependencias sin dependencias circulares ni errores de resolución.
-  - Criterio: El archivo .env.example existe en la raíz y define las variables de entorno sin contener secretos ni valores sensibles reales.
+  - Criterio: M1.T2-C1: EnvironmentConfig inicializa las propiedades según el mapa de entorno y selecciona el esquema ws:// para ambiente local y wss:// para desarrollo/producción.
+  - Criterio: M1.T2-C2: GetIt registra y resuelve correctamente la instancia singleton de EnvironmentConfig tras invocar setupServiceLocator().
+  - Criterio: M1.T2-C3: El repositorio incluye .env.example con las claves de entorno necesarias sin valores de producción y .env se encuentra excluido en .gitignore.
 
-## Infraestructura de comunicación en tiempo real
-
-- [ ] **Gestor de WebSockets para estados de viaje y posición** (pendiente)
-  - Depende de: Configuración multi-ambiente e inyección de dependencias con GetIt, Configuración de almacenamiento seguro para tokens y sesión
-  - Criterio: M2.T3-C1: WebSocketManager selecciona esquema ws:// para ambiente local y wss:// para dev y prod.
-  - Criterio: M2.T3-C2: En caso de caída de conexión, el gestor ejecuta reconexión automática con retroceso exponencial sin colapsar la aplicación.
-  - Criterio: M2.T3-C3: Los eventos recibidos por los canales de posición y estado de viaje son emitidos a través de Streams fuertemente tipados.
-
-## Observabilidad y tratamiento de errores
-
-- [ ] **Manejo estructurado de errores y logs de red** (pendiente)
-  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia
-  - Criterio: M2.T5-C1: ErrorMapper convierte respuestas de error del backend en mensajes claros y comprensibles sin exponer trazas técnicas internas.
-  - Criterio: M2.T5-C2: LoggingInterceptor sanitiza y enmascara tokens Bearer, contraseñas y datos sensibles en los logs.
-  - Criterio: M2.T5-C3: Los conflictos de idempotencia (código HTTP 409) son tipificados como IdempotencyConflictFailure con mensaje específico de reintento.
-
-## Seguridad de credenciales y persistencia de sesión
-
-- [ ] **Configuración de almacenamiento seguro para tokens y sesión** (pendiente)
-  - Depende de: Configuración multi-ambiente e inyección de dependencias con GetIt
-  - Criterio: M2.T1-C1: SecureStorageService persiste y recupera tokens JWT y datos de sesión utilizando cifrado nativo en Keystore/Keychain.
-  - Criterio: M2.T1-C2: El método de borrado de sesión purga por completo tokens y llaves sin dejar remanentes.
-  - Criterio: M2.T1-C3: Las excepciones de lectura/escritura de almacenamiento nativo son capturadas y mapeadas a StorageFailure.
-
-## Comunicaciones HTTP seguras e idempotentes
-
-- [ ] **Cliente HTTP Dio con interceptores de seguridad e idempotencia** (pendiente)
-  - Depende de: Configuración de almacenamiento seguro para tokens y sesión
-  - Criterio: M2.T2-C1: Toda petición saliente authenticated incluye el encabezado Authorization con formato Bearer si existe token en almacenamiento seguro.
-  - Criterio: M2.T2-C2: Toda petición HTTP POST hacia endpoints de viaje incluye de forma automática la cabecera Idempotency-Key con formato UUID válido.
-  - Criterio: M2.T2-C3: Ante error HTTP 401 Unauthorized, el interceptor emite un evento de expiración de sesión hacia el bus de eventos de autenticación.
-
-## Almacenamiento y caché offline
+## Base de Datos Embebida y Caché
 
 - [ ] **Persistencia local con Sqflite para caché y modo offline** (pendiente)
   - Depende de: Configuración multi-ambiente e inyección de dependencias con GetIt
-  - Criterio: M2.T4-C1: AppDatabase inicializa la base de datos local creando las tablas con llaves primarias e índices esperados.
-  - Criterio: M2.T4-C2: Las migraciones versionadas se ejecutan de forma secuencial y sin pérdida de datos en actualizaciones de esquema.
-  - Criterio: M2.T4-C3: Las semillas de prueba usan datos mockeados y no contienen información real de producción.
+  - Criterio: La base de datos SQLite embebida inicializa correctamente sus tablas sin perder integridad de datos.
+  - Criterio: Se pueden guardar y consultar registros en caché local durante pérdida de conectividad.
 
-## Cierre de Sesión Seguro
+## Manejo de Errores y Observabilidad
 
-- [ ] **Cierre de sesión y limpieza de datos** (pendiente)
-  - Depende de: SessionBloc: Gestión de estado global de la sesión, Protección de rutas y redirección por Rol
-  - Criterio: M3.T7-C1: El cierre de sesión borra de forma exhaustiva los tokens y llaves del almacenamiento seguro local sin dejar artefactos de sesión.
-  - Criterio: M3.T7-C2: Tras el logout, el usuario es redirigido a /auth/login y el historial de navegación hacia atrás queda purgado.
+- [ ] **Manejo estructurado de errores y logs de red** (pendiente)
+  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia, Gestor de WebSockets para estados de viaje y posición
+  - Criterio: Cualquier error de red o servidor HTTP es mapeado a un objeto de error estructurado con mensaje amigable.
+  - Criterio: Los logs de red ofuscan automáticamente headers de autorización e información sensible.
 
-## Autenticación y Dominio de Usuario
+## Comunicación en Tiempo Real
 
-- [ ] **Modelado de entidades de Usuario y Contrato de Auth** (pendiente)
+- [ ] **Gestor de WebSockets para estados de viaje y posición** (pendiente)
   - Depende de: Configuración de almacenamiento seguro para tokens y sesión, Cliente HTTP Dio con interceptores de seguridad e idempotencia
-  - Criterio: M3.T1-C1: Las entidades de dominio User y AuthTokens son inmutables y validan nulabilidad estricta según el esquema del backend.
-  - Criterio: M3.T1-C2: La deserialización rechaza roles desconocidos o diferentes a PASAJERO y CONDUCTOR arrojando una excepción de dominio.
+  - Criterio: La conexión WebSocket conmuta dinámicamente entre ws:// en ambiente local y wss:// en staging/producción.
+  - Criterio: El cliente WebSocket se reconecta de manera transparente tras una desconexión accidental de red.
 
-## Infraestructura de Autenticación
+## Cliente de Red REST
 
-- [ ] **Data Source y Repositorio de Autenticación (Firebase + Backend)** (pendiente)
-  - Depende de: Modelado de entidades de Usuario y Contrato de Auth, Configuración de almacenamiento seguro para tokens y sesión, Cliente HTTP Dio con interceptores de seguridad e idempotencia
-  - Criterio: M3.T2-C1: El repositorio intercambia exitosamente el IdToken de Firebase por el JWT del backend Ando y lo guarda en almacenamiento seguro.
-  - Criterio: M3.T2-C2: Los errores 401 y 403 del backend se mapean a fallas de autenticación tipadas sin exponer tokens ni datos sensibles.
+- [ ] **Cliente HTTP Dio con interceptores de seguridad e idempotencia** (pendiente)
+  - Depende de: Configuración de almacenamiento seguro para tokens y sesión
+  - Criterio: Todas las peticiones HTTP salientes incluyen el encabezado Authorization Bearer cuando existe un token activo.
+  - Criterio: Las peticiones POST de creación u oferta de viajes generan un UUIDv4 único en el header Idempotency-Key.
 
-## Gestión de Estado de Sesión
+## Persistencia y Almacenamiento Seguro
 
-- [ ] **SessionBloc: Gestión de estado global de la sesión** (pendiente)
-  - Depende de: Data Source y Repositorio de Autenticación (Firebase + Backend)
-  - Criterio: M3.T3-C1: SessionBloc emite SessionAuthenticated con el rol correcto al encontrar un token válido almacenado en CheckSessionRequested.
-  - Criterio: M3.T3-C2: SessionBloc emite SessionUnauthenticated si no hay tokens guardados o si el backend rechaza el token al revalidar.
+- [ ] **Configuración de almacenamiento seguro para tokens y sesión** (pendiente)
+  - Depende de: Configuración multi-ambiente e inyección de dependencias con GetIt
+  - Criterio: Los tokens JWT y datos sensibles de sesión se persisten utilizando Flutter Secure Storage (Keychain en iOS / Keystore en Android).
+  - Criterio: Se proporciona un método clearSession() que remueve completamente los tokens en el logout sin dejar residuos.
 
-## Experiencia de Inicio de Sesión
-
-- [ ] **Pantalla de Login con validación inteligente** (pendiente)
-  - Depende de: SessionBloc: Gestión de estado global de la sesión, Protección de rutas y redirección por Rol
-  - Criterio: M3.T5-C1: El botón de inicio de sesión permanece deshabilitado o previene el envío cuando los campos no cumplen el formato requerido.
-  - Criterio: M3.T5-C2: La interfaz muestra un indicador de carga y deshabilita los inputs mientras SessionBloc está en estado SessionAuthenticating.
-
-## Experiencia de Registro y Onboarding
+## Onboarding de Usuario
 
 - [ ] **Flujo de Registro y Selección de Rol** (pendiente)
-  - Depende de: Pantalla de Login con validación inteligente
-  - Criterio: M3.T6-C1: El formulario de registro exige la cooperativa únicamente cuando el rol seleccionado es CONDUCTOR.
-  - Criterio: M3.T6-C2: Los campos de entrada sanitizan espacios en blanco y validan formatos antes de invocar la creación de cuenta en el backend.
+  - Depende de: Data Source y Repositorio de Autenticación (Firebase + Backend), Pantalla de Login con validación inteligente
+  - Criterio: Rechazo del registro en el formulario cuando no se ha seleccionado un rol (PASAJERO o CONDUCTOR).
+  - Criterio: Creación exitosa de cuenta e iniciación de sesión automática tras un registro válido en el backend.
 
-## Enrutamiento y Control de Acceso
+## Enrutamiento por Rol
 
 - [ ] **Protección de rutas y redirección por Rol** (pendiente)
   - Depende de: SessionBloc: Gestión de estado global de la sesión, Enrutamiento base con GoRouter y vista de salud/diagnóstico
-  - Criterio: M3.T4-C1: Un usuario autenticado con rol CONDUCTOR intentando acceder a una ruta de cliente es redirigido a /conductor/home.
-  - Criterio: M3.T4-C2: Un usuario no autenticado intentando acceder a cualquier ruta protegida es redirigido automáticamente a /auth/login.
+  - Criterio: Redirección de un usuario autenticado con rol PASAJERO a /client/home e imposibilidad de acceder a /driver/*.
+  - Criterio: Redirección de un usuario no autenticado a la pantalla de login al intentar ingresar a cualquier ruta protegida.
 
-## Búsqueda y selección de ubicaciones
+## Autenticación de Pasajeros y Conductores
 
-- [ ] **LocationSearchBloc: Gestión de estado para la búsqueda de origen y destino** (pendiente)
-  - Depende de: Modelado y Repositorio de Autocompletado de Lugares (Places API), Data Source y Repositorio de Rutas y Estimación de Tarifas (Directions API)
-  - Criterio: M4.T3-C1: Las consultas consecutivas de texto aplican debounce de 300 ms antes de emitir la llamada al repositorio.
-  - Criterio: M4.T3-C2: Al seleccionar origen y destino válidos, el Bloc transiciona a RouteCalculating y emite RouteReady con polilínea y tarifa.
-  - Criterio: M4.T3-C3: El evento SwapLocations invierte origen y destino y recalcula la ruta si ambos estaban establecidos.
-  - Criterio: M4.T3-C4: En caso de error de red o timeout, emite ErrorState con mensaje amigable sin crash.
-- [ ] **Data Source y Repositorio de Rutas y Estimación de Tarifas (Directions API)** (pendiente)
-  - Depende de: Modelado y Repositorio de Autocompletado de Lugares (Places API)
-  - Criterio: M4.T2-C1: DirectionsRepository decodifica la polilínea de ruta en una secuencia válida de coordenadas LatLng.
-  - Criterio: M4.T2-C2: La estimación de tarifa calcula distancia, duración estimada y precio base según los parámetros devueltos por el backend.
-  - Criterio: M4.T2-C3: Las excepciones ante rutas no encontradas se traducen en RouteNotFoundFailure.
+- [ ] **Pantalla de Login con validación inteligente** (pendiente)
+  - Depende de: SessionBloc: Gestión de estado global de la sesión, Protección de rutas y redirección por Rol
+  - Criterio: Manejo visual de errores de credenciales con mensajes entendibles para el usuario sin mostrar excepciones ni trazas del backend.
+  - Criterio: Deshabilitar el botón de login y mostrar indicador de carga visual durante la llamada asíncrona de autenticación.
+- [ ] **Data Source y Repositorio de Autenticación (Firebase + Backend)** (pendiente)
+  - Depende de: Modelado de entidades de Usuario y Contrato de Auth, Configuración de almacenamiento seguro para tokens y sesión, Cliente HTTP Dio con interceptores de seguridad e idempotencia
+  - Criterio: Intercambio exitoso del idToken de Firebase con la API de Spring Boot obteniendo el JWT de sesión.
+  - Criterio: Almacenamiento seguro del token JWT recibido en SecureStorageService tras la respuesta exitosa del servidor.
+- [ ] **Modelado de entidades de Usuario y Contrato de Auth** (pendiente)
+  - Depende de: Configuración de almacenamiento seguro para tokens y sesión, Cliente HTTP Dio con interceptores de seguridad e idempotencia
+  - Criterio: Mapeo unitario del DTO AuthResponse con campos id, email, role, token y refreshToken comprobando sound null safety.
+  - Criterio: Validación de tipos de rol válidos (PASAJERO, CONDUCTOR) rechazando valores no reconocidos.
+
+## Gestión de Estado de Sesión
+
+- [ ] **Cierre de sesión y limpieza de datos** (pendiente)
+  - Depende de: SessionBloc: Gestión de estado global de la sesión, Protección de rutas y redirección por Rol
+  - Criterio: Eliminación completa de los tokens en Flutter Secure Storage al ejecutar el evento de Logout.
+  - Criterio: Redirección inmediata de la UI a la pantalla de login tras el cierre de sesión exitoso.
+- [ ] **SessionBloc: Gestión de estado global de la sesión** (pendiente)
+  - Depende de: Data Source y Repositorio de Autenticación (Firebase + Backend)
+  - Criterio: Transición automática a Authenticated cuando existe un token válido guardado en SecureStorageService.
+  - Criterio: Transición a Unauthenticated cuando no hay token persistido o la sesión expiró.
+
+## Como pasajero quiero ver visualmente en el mapa el recorrido de mi viaje y el costo aproximado antes de confirmar la solicitud.
+
 - [ ] **Mapa de Previsualización de Ruta y Card de Estimación de Tarifa** (pendiente)
   - Depende de: Pantalla y Componentes de Autocompletado e Intercambio de Ubicaciones
-  - Criterio: M4.T5-C1: El mapa dibuja los marcadores de origen y destino junto con la polilínea de la ruta calculada.
-  - Criterio: M4.T5-C2: La tarjeta de estimación muestra correctamente el desglose de distancia, tiempo estimado y costo aproximado.
-  - Criterio: M4.T5-C3: Muestra estado de error con botón de reintento si falla la obtención de la ruta o la tarifa.
-  - Criterio: M4.T5-C4: El botón 'Confirmar ruta' queda deshabilitado mientras se calcula la ruta o si hay error, y habilitado cuando RouteReady está activo.
-- [ ] **Pantalla y Componentes de Autocompletado e Intercambio de Ubicaciones** (pendiente)
-  - Depende de: LocationSearchBloc: Gestión de estado para la búsqueda de origen y destino
-  - Criterio: M4.T4-C1: La pantalla renderiza los campos de origen, destino y botón de intercambio accesibles.
-  - Criterio: M4.T4-C2: Se visualizan skeletons de carga mientras se obtienen las predicciones de autocompletado.
-  - Criterio: M4.T4-C3: Muestra mensaje y diseño de estado vacío comprensible cuando no se encuentran lugares coincidentes.
-  - Criterio: M4.T4-C4: Permite seleccionar un elemento de la lista y rellenar automáticamente el campo correspondiente.
+  - Criterio: M4.T5-C1: El componente route_map_preview renderiza los marcadores de origen y destino y ajusta los límites de la cámara según los puntos extremos de la ruta.
+  - Criterio: M4.T5-C2: fare_estimate_card muestra el desglose de distancia, duración y precio estimado, mostrando un spinner o skeleton si la tarifa está calculándose.
+  - Criterio: M4.T5-C3: Al presionar 'Confirmar ruta' con origen, destino y ruta válidos, se invoca el callback o navegación hacia el flujo de confirmación/solicitud.
+  - Criterio: M4.T5-C4: En caso de error de cálculo de ruta, la tarjeta muestra mensaje explicativo con botón para reintentar sin cerrar la vista.
+
+## Como pasajero quiero una gestión de estado rápida y sin congelamientos que busque ubicaciones mientras escribo y actualice mi ruta de viaje.
+
+- [ ] **LocationSearchBloc: Gestión de estado para la búsqueda de origen y destino** (pendiente)
+  - Depende de: Data Source y Repositorio de Rutas y Estimación de Tarifas (Directions API)
+  - Criterio: M4.T3-C1: Las emisiones repetidas de SearchQueryChanged en menos de 300ms ejecutan una única llamada al repositorio debido al debounce.
+  - Criterio: M4.T3-C2: Al emitir SwapLocations con origen y destino cargados, se intercambian las posiciones y se recalcula la ruta.
+  - Criterio: M4.T3-C3: Si la búsqueda no arroja coincidencias, el estado emite predictions vacía y bandera hasNoResults en verdadero.
+  - Criterio: M4.T3-C4: Cuando ambos puntos (origen y destino) están seleccionados, se transiciona a estado isCalculatingRoute y luego a routeReady con routeInfo y fareEstimate.
+
+## Como pasajero quiero ver la ruta entre origen y destino y saber la estimación preliminar del costo de mi viaje antes de solicitarlo.
+
+- [ ] **Data Source y Repositorio de Rutas y Estimación de Tarifas (Directions API)** (pendiente)
+  - Depende de: Modelado y Repositorio de Autocompletado de Lugares (Places API)
+  - Criterio: M4.T2-C1: DirectionsRepositoryImpl decodifica cadenas de polilínea en listas de LatLng sin pérdida de precisión de coordenadas.
+  - Criterio: M4.T2-C2: estimateFare calcula el importe total en base a distancia y tiempo aplicando tarifa base con redondeo a dos decimales.
+  - Criterio: M4.T2-C3: Si el servicio de rutas devuelve un error de ruta no transitable, el repositorio retorna RouteNotFoundFailure manejado.
+
+## Como pasajero quiero obtener sugerencias de lugares mientras escribo para seleccionar mi origen y destino de manera rápida.
+
 - [ ] **Modelado y Repositorio de Autocompletado de Lugares (Places API)** (pendiente)
   - Depende de: Configuración multi-ambiente e inyección de dependencias con GetIt
-  - Criterio: M4.T1-C1: PlacesRepository mapea correctamente la respuesta JSON a lista de entidades PlacePrediction.
-  - Criterio: M4.T1-C2: PlacesRepository devuelve lista vacía sin error cuando no hay coincidencias.
-  - Criterio: M4.T1-C3: Los errores de red se capturan y devuelven un objeto de falla de dominio PlacesFailure tipado.
+  - Criterio: M4.T1-C1: PlacePredictionDto deserializa correctamente un JSON de autocompletado y maneja campos secundarios ausentes con fallback seguro.
+  - Criterio: M4.T1-C2: PlacesRepositoryImpl retorna lista de predicciones en llamadas exitosas y mapea códigos HTTP 4xx/5xx a fallos tipados ServerFailure.
+  - Criterio: M4.T1-C3: Se sanitizan consultas vacías o con puros espacios retornando lista vacía sin emitir petición HTTP.
 
-## Como desarrollador, quiero asegurar que todo el flujo del pasajero es estable y resiliente.
+## Como pasajero quiero escribir mi origen y destino en campos limpios y accesibles con soporte visual para intercambiarlos con un toque.
 
-- [ ] **Test de Integración: Flujo Completo del Pasajero** (pendiente)
-  - Depende de: Finalización de Viaje y Calificación del Conductor
-  - Criterio: El flujo completo desde solicitud hasta calificación se completa sin errores inesperados.
-  - Criterio: La app muestra un aviso de 'Sin conexión' si se pierde la red durante el seguimiento del mapa.
+- [ ] **Pantalla y Componentes de Autocompletado e Intercambio de Ubicaciones** (pendiente)
+  - Depende de: LocationSearchBloc: Gestión de estado para la búsqueda de origen y destino
+  - Criterio: M4.T4-C1: Los inputs de origen y destino y el botón de swap tienen un área táctil mínima de 44x44 dp y etiquetas Semantics válidas.
+  - Criterio: M4.T4-C2: Mientras se obtienen las sugerencias se muestra el skeleton loader, y si no hay resultados se muestra el widget de estado vacío.
+  - Criterio: M4.T4-C3: Al presionar una predicción se selecciona el lugar y el input correspondiente refleja el nombre del lugar elegido.
 
-## Como pasajero, quiero que la app mantenga el estado de mi viaje aunque cambie de pantalla o pierda conexión.
-
-- [ ] **PassengerTripBloc: Orquestación del Ciclo de Vida del Viaje** (pendiente)
-  - Depende de: Repositorio de Viajes y DataSource con Idempotencia
-  - Criterio: El Bloc emite TripSearchingState tras una solicitud exitosa.
-  - Criterio: El Bloc emite TripErrorState con mensaje amigable si ya existe un viaje activo (409).
-
-## Como pasajero, necesito que la app entienda los datos de un viaje para poder solicitarlo y seguirlo.
-
-- [ ] **Modelado de Entidades y Contratos de Viaje para Pasajero** (pendiente)
-  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia
-  - Criterio: El modelo TripModel mapea correctamente todos los estados del enum del backend.
-  - Criterio: La entidad Trip incluye campos para conductor, vehículo y coordenadas de seguimiento.
-
-## Como sistema, debo asegurar que no se dupliquen solicitudes de viaje por problemas de red.
-
-- [ ] **Repositorio de Viajes y DataSource con Idempotencia** (pendiente)
-  - Depende de: Modelado de Entidades y Contratos de Viaje para Pasajero, Cliente HTTP Dio con interceptores de seguridad e idempotencia
-  - Criterio: El repositorio envía el header 'Idempotency-Key' en cada POST de creación de viaje.
-  - Criterio: Se lanza ActiveTripException cuando el backend responde con error 409.
-
-## Como pasajero, quiero ver en tiempo real cuándo un conductor acepta mi viaje sin refrescar la pantalla.
+## Como pasajero, quiero ver el progreso de mi solicitud en tiempo real sin recargar la pantalla.
 
 - [ ] **Integración de WebSocket para Actualizaciones en Tiempo Real** (pendiente)
   - Depende de: PassengerTripBloc: Orquestación del Ciclo de Vida del Viaje, Gestor de WebSockets para estados de viaje y posición
-  - Criterio: El Bloc actualiza el estado del viaje automáticamente al recibir un mensaje del WebSocket.
-  - Criterio: La app reconecta la suscripción al WebSocket si se pierde la conexión durante un viaje activo.
+  - Criterio: La suscripción al tópico del viaje se realiza tras la creación exitosa del viaje.
+  - Criterio: Los eventos del socket provocan transiciones de estado en el PassengerTripBloc.
 
-## Como pasajero, quiero saber que mi solicitud está siendo procesada y tener la opción de cancelarla.
+## Como pasajero, quiero saber que el sistema está buscando un conductor para mí.
 
 - [ ] **Pantalla de Búsqueda de Conductor y Espera** (pendiente)
-  - Depende de: PassengerTripBloc: Orquestación del Ciclo de Vida del Viaje, Mapa de Previsualización de Ruta y Card de Estimación de Tarifa
-  - Criterio: La pantalla muestra un indicador de carga visual mientras el estado es SOLICITADO.
-  - Criterio: El botón 'Cancelar Viaje' invoca la acción correspondiente y regresa al Home.
+  - Depende de: Integración de WebSocket para Actualizaciones en Tiempo Real, Mapa de Previsualización de Ruta y Card de Estimación de Tarifa
+  - Criterio: La pantalla muestra el estado de búsqueda mientras el viaje está en SOLICITADO.
+  - Criterio: El botón de cancelar detiene el proceso y vuelve a la pantalla de inicio.
 
-## Como pasajero, quiero ver dónde viene mi conductor en el mapa para estar listo.
+## Como pasajero, quiero ver dónde está mi conductor y seguir el trayecto en el mapa.
 
 - [ ] **Seguimiento de Viaje en Mapa en Tiempo Real** (pendiente)
   - Depende de: Integración de WebSocket para Actualizaciones en Tiempo Real, Pantalla de Búsqueda de Conductor y Espera
-  - Criterio: El marcador del conductor se mueve en el mapa sin saltos bruscos al recibir coordenadas.
-  - Criterio: Se muestran los detalles del vehículo (placa, modelo) una vez el viaje está ACEPTADO.
+  - Criterio: El icono del conductor se mueve en el mapa al recibir coordenadas por WebSocket.
+  - Criterio: La información del vehículo y conductor es visible y correcta.
 
-## Como pasajero, quiero calificar mi experiencia una vez que el viaje ha terminado.
+## Como pasajero, quiero que la app represente fielmente la información de mi viaje según el backend.
+
+- [ ] **Modelado de Entidades y Contratos de Viaje para Pasajero** (pendiente)
+  - Depende de: Modelado de entidades de Usuario y Contrato de Auth
+  - Criterio: La entidad Trip contiene todos los campos necesarios según el esquema tb_trips.
+  - Criterio: El TripModel realiza la conversión de JSON correctamente respetando tipos de datos y nulos.
+
+## Como pasajero, quiero solicitar viajes de forma segura sin duplicar solicitudes por fallos de red.
+
+- [ ] **Repositorio de Viajes y DataSource con Idempotencia** (pendiente)
+  - Depende de: Modelado de Entidades y Contratos de Viaje para Pasajero, Cliente HTTP Dio con interceptores de seguridad e idempotencia
+  - Criterio: La petición POST a /trips incluye el header Idempotency-Key.
+  - Criterio: El repositorio lanza ActiveTripException cuando el backend devuelve 409.
+
+## Como pasajero, quiero calificar mi experiencia al terminar el viaje.
 
 - [ ] **Finalización de Viaje y Calificación del Conductor** (pendiente)
   - Depende de: Seguimiento de Viaje en Mapa en Tiempo Real
-  - Criterio: El formulario de calificación solo es visible si el estado del viaje es exactamente COMPLETADO.
-  - Criterio: Se valida que la calificación sea obligatoria antes de permitir el envío.
+  - Criterio: El diálogo de calificación aparece inmediatamente al finalizar el viaje.
+  - Criterio: La llamada de calificación envía los datos correctos y gestiona errores de red.
 
-## Navegación y Ejecución de Viaje
+## Como equipo de desarrollo, quiero asegurar que el flujo principal del pasajero funciona de punta a punta.
 
-- [ ] **Pantalla de Navegación del Conductor y Gestión Secuencial del Viaje** (pendiente)
-  - Depende de: DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje, Modal y Notificación de Solicitud de Viaje Entrante (Aceptar/Rechazar)
-  - Criterio: T7-C1: Habilitar el botón de 'Completar Viaje' únicamente cuando el estado actual es EN_CURSO y deshabilitarlo durante ACEPTADO.
-  - Criterio: T7-C2: Deslizar o pulsar 'Iniciar Viaje' emite StartTripRequested y actualiza la UI al tramo hacia el destino.
+- [ ] **Test de Integración: Flujo Completo del Pasajero** (pendiente)
+  - Depende de: Finalización de Viaje y Calificación del Conductor
+  - Criterio: El flujo completo se ejecuta sin errores de navegación ni pérdida de estado.
+  - Criterio: Se verifica que no hay fugas de memoria al cerrar los sockets al final del flujo.
 
-## Finalización y Calificación
+## Como pasajero, mi app debe controlar lógicamente en qué fase del viaje me encuentro.
+
+- [ ] **PassengerTripBloc: Orquestación del Ciclo de Vida del Viaje** (pendiente)
+  - Depende de: Repositorio de Viajes y DataSource con Idempotencia, SessionBloc: Gestión de estado global de la sesión
+  - Criterio: El Bloc bloquea nuevas solicitudes si ya existe un viaje en curso en el estado.
+  - Criterio: El Bloc emite FailureState ante errores de red o idempotencia.
+
+## Finalización y calificación de clientes
 
 - [ ] **Flujo de Finalización de Viaje y Calificación del Pasajero** (pendiente)
   - Depende de: Pantalla de Navegación del Conductor y Gestión Secuencial del Viaje
-  - Criterio: T8-C1: El botón de confirmar calificación se mantiene deshabilitado hasta que se selecciona una puntuación entre 1 y 5 estrellas.
-  - Criterio: T8-C2: Tras registrar la calificación con éxito, el sistema limpia el viaje activo y regresa a la vista de conductor disponible.
+  - Criterio: T8-C1: Envío de calificación ejecuta llamada REST y transiciona a estado disponible
+  - Criterio: T8-C2: Diálogo muestra resumen financiero de tarifa y desglosa el pago completado
 
-## Validación E2E Conductor
+## Lógica de estado y orquestación del conductor
 
-- [ ] **Prueba de Integración E2E: Ciclo de Vida Completo del Conductor** (pendiente)
-  - Depende de: Pantalla Principal del Conductor y Panel de Disponibilidad, Modal y Notificación de Solicitud de Viaje Entrante (Aceptar/Rechazar), Pantalla de Navegación del Conductor y Gestión Secuencial del Viaje, Flujo de Finalización de Viaje y Calificación del Pasajero
-  - Criterio: T9-C1: El test de integración completa todo el ciclo secuencial del viaje del conductor desde disponibilidad hasta calificación final con backend/mock de integración.
-  - Criterio: T9-C2: Verificar en emulador/dispositivo que la UI del conductor muestra adecuadamente los estados de reconexión y transiciones de viaje fluidas.
-
-## Gestión de Operaciones del Conductor
-
-- [ ] **Modelos y contratos del dominio para operaciones del conductor** (pendiente)
-  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia, SessionBloc: Gestión de estado global de la sesión
-  - Criterio: T1-C1: Validar que TripStatus rechaza transiciones ilegales que no respeten el orden secuencial (ej. ACEPTADO directo a COMPLETADO sin pasar por EN_CURSO).
-  - Criterio: T1-C2: Comprobar que DriverTripRequest valida la correspondencia de cooperativeId y no permite campos obligatorios nulos.
 - [ ] **DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje** (pendiente)
   - Depende de: DataSource y Repositorio de Conductor con filtrado por Cooperativa, Servicio de Geolocalización y Transmisión de Posición por WebSocket
-  - Criterio: T4-C1: Cambiar el estado a DriverTripInProgress únicamente tras recibir confirmación exitosa de StartTripRequested.
-  - Criterio: T4-C2: Rechazar o descartar una solicitud tras timeout emitiendo DriverAvailable sin afectar el estado general de disponibilidad.
+  - Criterio: T4-C1: Máquina de estados rechaza saltos no secuenciales de estado de viaje
+  - Criterio: T4-C2: DriverTripBloc pasa a DriverOnlineWaiting al activar disponibilidad geográfica
 
-## Integración con Backend Ando
+## Modelado de datos del conductor
 
-- [ ] **DataSource y Repositorio de Conductor con filtrado por Cooperativa** (pendiente)
-  - Depende de: Modelos y contratos del dominio para operaciones del conductor, Cliente HTTP Dio con interceptores de seguridad e idempotencia, Protección de rutas y redirección por Rol
-  - Criterio: T2-C1: Aceptar o iniciar viaje envía las cabeceras de autorización correctas y mapea adecuadamente el DTO devuelto por el backend.
-  - Criterio: T2-C2: Lanzar CooperativeMismatchException cuando se detecta un viaje de una cooperativa diferente a la del conductor.
+- [ ] **Modelos y contratos del dominio para operaciones del conductor** (pendiente)
+  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia, Modelado de entidades de Usuario y Contrato de Auth
+  - Criterio: T1-C1: DriverTrip modela los estados válidos de viaje según el contrato backend
+  - Criterio: T1-C2: TripOffer valida obligatoriamente que cooperativaId no sea nulo ni vacío
 
-## Interfaz del Conductor
+## Validación integral del flujo del conductor
+
+- [ ] **Prueba de Integración E2E: Ciclo de Vida Completo del Conductor** (pendiente)
+  - Depende de: Flujo de Finalización de Viaje y Calificación del Pasajero
+  - Criterio: T9-C1: Flujo E2E completo del conductor se ejecuta sin errores respetando la secuencia del ciclo
+  - Criterio: T9-C2: Verificación visual y fluidez de transiciones en dispositivo o emulador
+
+## Interfaz principal y disponibilidad del conductor
 
 - [ ] **Pantalla Principal del Conductor y Panel de Disponibilidad** (pendiente)
-  - Depende de: DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje
-  - Criterio: T5-C1: Renderizar el switch de disponibilidad y disparar el evento ToggleAvailabilityRequested al cambiar su estado.
-  - Criterio: T5-C2: Mostrar banner de alerta cuando la conexión de red se pierde o el GPS está deshabilitado.
+  - Depende de: Protección de rutas y redirección por Rol, DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje
+  - Criterio: T5-C1: Switch de disponibilidad cambia estado reactivo y muestra feedback visual
+  - Criterio: T5-C2: Indicador de cooperativa muestra el nombre correspondiente obtenido del perfil autenticado
 
-## Seguimiento GPS en Tiempo Real
+## Integración de datos de viajes del conductor
+
+- [ ] **DataSource y Repositorio de Conductor con filtrado por Cooperativa** (pendiente)
+  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia, SessionBloc: Gestión de estado global de la sesión, Modelos y contratos del dominio para operaciones del conductor
+  - Criterio: T2-C1: Filtrado estricto descarta ofertas que no pertenecen a la cooperativa del conductor
+  - Criterio: T2-C2: Transiciones REST envían id de conductor y token en cabeceras HTTP
+
+## Telemetría y disponibilidad GPS del conductor
 
 - [ ] **Servicio de Geolocalización y Transmisión de Posición por WebSocket** (pendiente)
-  - Depende de: Modelos y contratos del dominio para operaciones del conductor, Gestor de WebSockets para estados de viaje y posición
-  - Criterio: T3-C1: Emitir coordenadas serializadas al WebSocket únicamente cuando el conductor se encuentre en estado disponible o con viaje activo.
-  - Criterio: T3-C2: Manejar la denegación de permisos de ubicación emitiendo un fallo de dominio LocationPermissionDeniedException sin congelar la aplicación.
+  - Depende de: Gestor de WebSockets para estados de viaje y posición, Modelos y contratos del dominio para operaciones del conductor
+  - Criterio: T3-C1: Posición GPS se transmite al canal WebSocket con formato JSON esperado por el backend
+  - Criterio: T3-C2: Manejo de errores sin conexión almacena la última posición y reanuda el envío al reconectar
 
-## Aceptación de Solicitudes
+## Gestión de solicitudes entrantes
 
 - [ ] **Modal y Notificación de Solicitud de Viaje Entrante (Aceptar/Rechazar)** (pendiente)
   - Depende de: DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje, Pantalla Principal del Conductor y Panel de Disponibilidad
-  - Criterio: T6-C1: El botón Aceptar dispara AcceptTripRequested y cierra el modal de oferta pasando a navegación en ruta.
-  - Criterio: T6-C2: El botón Rechazar emite RejectTripRequested y descarta el modal de inmediato.
+  - Criterio: T6-C1: Botón Aceptar dispara evento de aceptación en DriverTripBloc y cierra modal
+  - Criterio: T6-C2: Expiración del temporizador ejecuta rechazo automático de la solicitud
 
-## Gestión de Historial y Perfil
+## Navegación y controles durante el viaje
+
+- [ ] **Pantalla de Navegación del Conductor y Gestión Secuencial del Viaje** (pendiente)
+  - Depende de: Data Source y Repositorio de Rutas y Estimación de Tarifas (Directions API), DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje, Modal y Notificación de Solicitud de Viaje Entrante (Aceptar/Rechazar)
+  - Criterio: T7-C1: Botón de acción principal muta de acuerdo con el estado secuencial del viaje
+  - Criterio: T7-C2: Pérdida temporal de red no resetea la pantalla y muestra alerta de reconexión
+
+## Historial y Perfil - Lógica de Estado de Historial
+
+- [ ] **TripHistoryBloc: Gestión reactiva de listado paginado y detalle de viajes pasados** (pendiente)
+  - Depende de: Data Sources y Repositorios de Historial de Viajes y Perfil
+  - Criterio: TripHistoryBloc emite TripHistoryLoading y luego TripHistoryLoaded con la lista inicial al recibir LoadTripHistory.
+  - Criterio: El evento LoadMoreTrips concatena la siguiente página de viajes sin duplicar registros ya existentes.
+  - Criterio: El evento LoadTripDetail carga correctamente la información extendida de viajes COMPLETADO o CANCELADO.
+
+## Historial y Perfil - Enrutamiento y Navegación
+
+- [ ] **Integración en Rutas y Menú de Navegación para Pasajero y Conductor** (pendiente)
+  - Depende de: Protección de rutas y redirección por Rol, Pantalla y componentes de Listado de Historial de Viajes con paginación, Pantalla de Detalle de Viaje Pasado (Completed / Cancelled), Pantalla de Perfil de Usuario y Edición de Datos
+  - Criterio: La ruta /trips/history es navegable tanto desde el menú del pasajero como desde el menú del conductor con sus respectivos permisos.
+  - Criterio: La ruta /trips/:id navega a TripDetailScreen cargando el viaje especificado por parámetro.
+  - Criterio: El acceso a /profile permite consultar y actualizar datos desde ambos flujos de rol.
+
+## Historial y Perfil - UI de Perfil de Usuario
+
+- [ ] **Pantalla de Perfil de Usuario y Edición de Datos** (pendiente)
+  - Depende de: Cierre de sesión y limpieza de datos, ProfileBloc: Gestión de estado para lectura y actualización del perfil de usuario
+  - Criterio: ProfileScreen visualiza correctamente la información de usuario distinguiendo entre campos editables y no editables.
+  - Criterio: EditProfileModal valida teléfono y nombre antes de permitir el envío del formulario.
+  - Criterio: El botón de cerrar sesión invoca el evento de desautenticación en SessionBloc y limpia la sesión.
+
+## Historial y Perfil - UI de Detalle de Viaje
+
+- [ ] **Pantalla de Detalle de Viaje Pasado (Completed / Cancelled)** (pendiente)
+  - Depende de: TripHistoryBloc: Gestión reactiva de listado paginado y detalle de viajes pasados
+  - Criterio: TripDetailScreen renderiza el desglose completo de cobro/pago, estado final y participantes del viaje.
+  - Criterio: Si el viaje tiene estado CANCELADO, la pantalla muestra la razón de cancelación y ajusta el desglose financiero acorde.
+  - Criterio: TripRatingDisplayWidget muestra la calificación por estrellas y comentario si existen para el viaje.
+
+## Historial y Perfil - UI de Historial de Viajes
 
 - [ ] **Pantalla y componentes de Listado de Historial de Viajes con paginación** (pendiente)
   - Depende de: TripHistoryBloc: Gestión reactiva de listado paginado y detalle de viajes pasados
-  - Criterio: M7.T5-C1: La pantalla renderiza el estado vacío TripHistoryEmptyState cuando la lista de viajes está vacía.
-  - Criterio: M7.T5-C2: Al hacer scroll al final de la lista se despacha el evento para cargar la siguiente página.
-  - Criterio: M7.T5-C3: Cada elemento renderiza fecha, dirección de origen/destino, tarifa formateada y badge de estado.
-- [ ] **Pantalla de Perfil de Usuario y Edición de Datos** (pendiente)
-  - Depende de: ProfileBloc: Gestión de estado para lectura y actualización del perfil de usuario
-  - Criterio: M7.T7-C1: Los campos editables reflejan los valores iniciales del usuario y validan formato de teléfono antes del envío.
-  - Criterio: M7.T7-C2: Al enviar cambios válidos, se invoca el evento de actualización y se muestra indicador de carga mientras procesa.
-- [ ] **Integración en Rutas y Menú de Navegación para Pasajero y Conductor** (pendiente)
-  - Depende de: Pantalla y componentes de Listado de Historial de Viajes con paginación, Pantalla de Detalle de Viaje Pasado (Completed / Cancelled), Pantalla de Perfil de Usuario y Edición de Datos, Protección de rutas y redirección por Rol
-  - Criterio: M7.T8-C1: La ruta '/trips/history' y '/profile' son accesibles tanto para rol PASAJERO como CONDUCTOR.
-  - Criterio: M7.T8-C2: La ruta '/trips/:id' abre TripDetailPage con el identificador de viaje proporcionado como parámetro.
-- [ ] **Modelado de entidades de dominio y contratos para Historial de Viajes y Perfil** (pendiente)
-  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia, Modelado de entidades de Usuario y Contrato de Auth
-  - Criterio: M7.T1-C1: Las entidades y modelos de TripSummary y UserProfile deserializan correctamente payloads de respuesta según el SSOT del backend.
-  - Criterio: M7.T1-C2: Los campos de paginación (page, size, totalElements, totalPages, content) se mapean adecuadamente a TripHistoryPage.
-- [ ] **Data Sources y Repositorios de Historial de Viajes y Perfil** (pendiente)
-  - Depende de: Modelado de entidades de dominio y contratos para Historial de Viajes y Perfil, Cliente HTTP Dio con interceptores de seguridad e idempotencia
-  - Criterio: M7.T2-C1: TripHistoryRemoteDataSource invoca /api/v1/trips/history con parámetros de paginación y cabecera de autenticación JWT.
-  - Criterio: M7.T2-C2: ProfileRepository actualiza los datos del usuario mediante PUT /api/v1/users/profile y retorna la entidad actualizada o propaga el fallo de dominio.
-- [ ] **TripHistoryBloc: Gestión reactiva de listado paginado y detalle de viajes pasados** (pendiente)
-  - Depende de: Data Sources y Repositorios de Historial de Viajes y Perfil
-  - Criterio: M7.T3-C1: El evento TripHistoryFetchRequested emite estados Loading y Loaded con los primeros elementos obtenidos.
-  - Criterio: M7.T3-C2: El evento TripHistoryNextPageRequested concatena los nuevos resultados a la lista existente sin duplicar registros.
-  - Criterio: M7.T3-C3: Los errores en la petición de historial emiten TripHistoryError con mensaje comprensible.
+  - Criterio: TripHistoryScreen muestra skeleton loading mientras se cargan los viajes y renderiza TripSummaryCards al completarse.
+  - Criterio: Hacer scroll al final de la lista dispara la solicitud de la página siguiente al bloc.
+  - Criterio: Si el usuario no tiene viajes registrados, se presenta EmptyTripHistoryWidget con mensaje descriptivo y acción de solicitar viaje.
+
+## Historial y Perfil - Lógica de Estado de Perfil
+
 - [ ] **ProfileBloc: Gestión de estado para lectura y actualización del perfil de usuario** (pendiente)
-  - Depende de: Data Sources y Repositorios de Historial de Viajes y Perfil
-  - Criterio: M7.T4-C1: ProfileFetchRequested recupera el perfil actual del usuario y emite ProfileLoaded.
-  - Criterio: M7.T4-C2: ProfileUpdateSubmitted procesa la actualización y emite ProfileUpdateSuccess con los nuevos datos.
-- [ ] **Pantalla de Detalle de Viaje Pasado (Completed / Cancelled)** (pendiente)
-  - Depende de: TripHistoryBloc: Gestión reactiva de listado paginado y detalle de viajes pasados
-  - Criterio: M7.T6-C1: La pantalla muestra todos los detalles del viaje completado incluyendo monto total, conductor/pasajero, cooperativa y rating.
-  - Criterio: M7.T6-C2: Si el viaje fue cancelado, se ocultan datos de tarifa y calificación y se visualiza claramente el motivo de cancelación y el estado CANCELADO.
+  - Depende de: SessionBloc: Gestión de estado global de la sesión, Data Sources y Repositorios de Historial de Viajes y Perfil
+  - Criterio: ProfileBloc carga los datos del usuario autenticado emitiendo ProfileLoaded ante LoadUserProfile.
+  - Criterio: ProfileBloc valida los datos modificados y emite ProfileUpdateSuccess tras confirmación del repositorio.
+  - Criterio: Cualquier error de autorización o fallo de red emite ProfileError sin corromper el estado anterior del perfil.
 
-## Monitoreo y Reporte Seguro de Fallos
+## Historial y Perfil - Capa de Datos y Repositorios
 
-- [ ] **Servicio de reporte de fallos y sanitización de registros de error** (pendiente)
-  - Depende de: Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy
-  - Criterio: M8.T4-C1: CrashReportingService captura errores síncronos y asíncronos no manejados reportándolos a la plataforma de monitoreo configurada.
-  - Criterio: M8.T4-C2: El sanitizador de errores elimina encabezados Authorization, tokens bearer y campos sensibles de los metadatos del crash.
+- [ ] **Data Sources y Repositorios de Historial de Viajes y Perfil** (pendiente)
+  - Depende de: Cliente HTTP Dio con interceptores de seguridad e idempotencia, Modelado de entidades de dominio y contratos para Historial de Viajes y Perfil
+  - Criterio: TripHistoryRemoteDataSource realiza peticiones GET paginadas incluyendo query params page y size con Bearer token en headers.
+  - Criterio: ProfileRemoteDataSource obtiene y actualiza el perfil del usuario autenticado sin filtrar datos de terceros.
+  - Criterio: Los repositorios convierten excepciones de red o HTTP 403/404 en fallos de dominio tipados (TripNotFoundFailure, UnauthorizedAccessFailure).
 
-## Limpieza y Cero Código Muerto
+## Historial y Perfil - Modelado y Contratos de Dominio
 
-- [ ] **Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy** (pendiente)
-  - Depende de: Auditoría de seguridad y depuración de dependencias en pubspec
-  - Criterio: M8.T2-C1: El analizador estático de Dart finaliza sin ningún warning, error o linter issue en todo el árbol de lib/ y test/.
-  - Criterio: M8.T2-C2: Todos los archivos y clases huérfanas de versiones previas quedan completamente eliminados sin referencias rotas.
+- [ ] **Modelado de entidades de dominio y contratos para Historial de Viajes y Perfil** (pendiente)
+  - Depende de: Configuración de almacenamiento seguro para tokens y sesión, Modelado de entidades de Usuario y Contrato de Auth
+  - Criterio: Las entidades TripDetail y TripSummary modelan con precisión estados finales COMPLETADO y CANCELADO, métricas de tarifa, fechas y datos de calificación.
+  - Criterio: La entidad PaginatedTrips encapsula la lista de viajes, página actual, total de páginas y si existen páginas subsecuentes.
+  - Criterio: UserProfile modela nombre, teléfono, correo, rol y avatar sin exponer campos confidenciales o no autorizados.
 
-## Resiliencia y Modo Sin Conexión
-
-- [ ] **Servicio de conectividad de red reactivo y banner de desconexión/reconexión** (pendiente)
-  - Depende de: Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy
-  - Criterio: M8.T3-C1: ConnectivityBloc emite estado desconectado al cesar la conectividad y estado conectado al restablecerse.
-  - Criterio: M8.T3-C2: NetworkStatusBanner se renderiza informando pérdida de red cuando el estado es desconectado y desaparece con animación al reconectar.
-  - Criterio: M8.T3-C3: Al volver la conexión, el gestor de red reintenta automáticamente la reconexión de sockets y peticiones pendientes.
-
-## Accesibilidad e Inclusión
-
-- [ ] **Auditoría y adaptación de accesibilidad WCAG 2.1 AA en flujos clave** (pendiente)
-  - Depende de: Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy
-  - Criterio: M8.T5-C1: Los botones y controles interactivos principales cuentan con nodos Semantics y etiquetas accesibles no vacías.
-  - Criterio: M8.T5-C2: La paleta de colores del tema garantiza un contraste superior a 4.5:1 entre colores de texto y fondo en modo claro y oscuro.
-  - Criterio: M8.T5-C3: Los campos de formulario y cards de estado de viaje exponen estados y roles semánticos correctos para lectores de pantalla.
-
-## Calidad y Seguridad de Dependencias
+## Seguridad y Salud del Repositorio
 
 - [ ] **Auditoría de seguridad y depuración de dependencias en pubspec** (pendiente)
   - Depende de: Test de Integración: Flujo Completo del Pasajero, Prueba de Integración E2E: Ciclo de Vida Completo del Conductor, Integración en Rutas y Menú de Navegación para Pasajero y Conductor
-  - Criterio: M8.T1-C1: pubspec.yaml contiene únicamente dependencias activas del proyecto sin paquetes heredados en desuso.
-  - Criterio: M8.T1-C2: El comando de auditoría y análisis de paquetes finaliza exitosamente con código de salida 0 sin advertencias críticas ni incompatibilidades de versión.
+  - Criterio: T1-C1: El archivo pubspec.lock no contiene dependencias con vulnerabilidades de severidad alta o crítica según el análisis de seguridad de dependencias.
+  - Criterio: T1-C2: Se eliminan todas las dependencias directas no utilizadas en el código fuente de lib/.
+  - Criterio: T1-C3: Todas las dependencias son estrictamente compatibles con Dart SDK >=3.12.0 <4.0.0 y Flutter 3.44 sin advertencias de deprecación críticas.
 
-## Gestión y versionado de datos locales
+## Resiliencia Offline y Red
 
-- [ ] **Alineación y verificación del esquema de datos y persistencia SQLite según contratos SSOT** (pendiente)
+- [ ] **Servicio de conectividad de red reactivo y banner de desconexión/reconexión** (pendiente)
   - Depende de: Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy
-  - Criterio: Las migraciones de la base de datos local Sqflite se ejecutan en orden secuencial sin pérdida de integridad.
-  - Criterio: El procedimiento de recuperación ante base de datos local corrupta recrea el esquema sin bloquear la apertura de la aplicación.
-  - Criterio: Existe la documentación docs/database_local_model.md con el mapeo claro de entidades y contratos.
+  - Criterio: T4-C1: Al detectarse pérdida de conectividad a internet, se emite el estado offline y la interfaz muestra el banner visible de desconexión.
+  - Criterio: T4-C2: Al restablecerse la conexión de red, el banner muestra estado de reconexión y se oculta tras confirmar enlace activo.
+  - Criterio: T4-C3: Las peticiones fallidas por timeout o falta de red durante un intento de sincronización no borran el estado local de formularios de solicitud de viaje.
 
-## Control de calidad y verificación en dispositivos reales
+## Calidad y Mantenibilidad del Código
+
+- [ ] **Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy** (pendiente)
+  - Depende de: Auditoría de seguridad y depuración de dependencias en pubspec
+  - Criterio: T2-C1: flutter analyze no reporta ningún aviso de unused_element, unused_import ni dead_code en todo el directorio lib/ ni test/.
+  - Criterio: T2-C2: No existen archivos dart no referenciados ni blocs antiguos sin registro en dependency_injection.dart ni consumo en rutas.
+  - Criterio: T2-C3: Los modelos de datos y endpoints en lib/features/trips/ y lib/features/auth/ coinciden exactamente con los contratos SSOT del backend sin restos de payloads legacy.
+
+## Observabilidad y Manejo Seguro de Errores
+
+- [ ] **Servicio de reporte de fallos y sanitización de registros de error** (pendiente)
+  - Depende de: Servicio de conectividad de red reactivo y banner de desconexión/reconexión
+  - Criterio: T5-C1: Las excepciones no controladas de Flutter y de la plataforma son capturadas por el servicio centralizado sin provocar caídas silenciosas de la aplicación.
+  - Criterio: T5-C2: Los registros y trazas de error enviados al servicio de reporte son sanitizados, reemplazando tokens JWT, passwords y credenciales con máscaras.
+  - Criterio: T5-C3: Las excepciones de aplicación se presentan al usuario mediante mensajes comprensibles y con opciones de reintento, sin exhibir trazas internas de error.
+
+## Accesibilidad Universal
+
+- [ ] **Auditoría y adaptación de accesibilidad WCAG 2.1 AA en flujos clave** (pendiente)
+  - Depende de: Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy
+  - Criterio: T3-C1: Todos los botones, iconos de interacción y campos de entrada en las pantallas principales cumplen con el tamaño mínimo de pulsación táctil (44x44 dp).
+  - Criterio: T3-C2: Todos los controles interactivos y estados informativos cuentan con etiquetas Semantics válidas para lectores de pantalla.
+  - Criterio: T3-C3: Las combinaciones de color de texto y fondo en tokens de diseño cumplen el ratio de contraste mínimo 4.5:1.
+
+## Como QA, quiero ejecutar una suite de pruebas de humo sobre dispositivos reales y emuladores para garantizar la estabilidad release.
 
 - [ ] **Suite de verificación de smoke testing en emulador y validación en dispositivos reales** (pendiente)
-  - Depende de: Configuración de compilación firmada Android (AAB) y scripts de release, Configuración de compilación para iOS Archive y exportación de release, Integración de Política de Privacidad dentro de la app y pantalla informativa, Documentación exhaustiva de despliegue y distribución en DEPLOY.md
-  - Criterio: El test de integración integration_test/smoke_release_test.dart compila y ejecuta exitosamente en emulador Android.
-  - Criterio: El checklist docs/REAL_DEVICE_TESTING_CHECKLIST.md detalla los criterios de aceptación físicos (sensores GPS, suspensión en segundo plano, reconexión móvil 4G/5G).
-  - Criterio: La app es instalada y verificada en un teléfono Android y un teléfono iPhone físico siguiendo el checklist de prueba.
+  - Depende de: Configuración de compilación firmada Android (AAB) y scripts de release, Configuración de compilación para iOS Archive y exportación de release
+  - Criterio: Ejecución exitosa de test/integration/flows/release_smoke_test.dart en emulador headless sin fallos en el runner de Flutter.
+  - Criterio: Probar la compilación de release firmada en al menos un teléfono Android real y un iPhone real, verificando fluidez visual, conexión de socket y GPS.
 
-## Identidad visual y branding nativo de la aplicación
+## Como usuario de Ando-UI, quiero identificar visualmente la aplicación en la pantalla de inicio de mi dispositivo y ver una pantalla de carga nativa adecuada al abrirla.
 
 - [ ] **Configuración de App Launcher Icons y Native Splash Screen para Android e iOS** (pendiente)
-  - Depende de: Auditoría de seguridad y depuración de dependencias en pubspec, Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy
-  - Criterio: Los archivos de configuración de flutter_launcher_icons y flutter_native_splash están definidos en pubspec.yaml con rutas válidas de assets.
-  - Criterio: El nombre de visualización de la app está fijado a 'Ando' en AndroidManifest.xml e Info.plist.
-  - Criterio: La pantalla de splash nativa y los iconos de la app se visualizan correctamente en Android e iOS sin deformaciones de aspecto.
+  - Depende de: Servicio de reporte de fallos y sanitización de registros de error
+  - Criterio: Verificar la presencia y estructura de los archivos de íconos y splash screen generados en android/app/src/main/res/ y ios/Runner/Assets.xcassets.
+  - Criterio: Verificar visualmente en emulador/dispositivo Android e iOS que el ícono de la app se muestra correctamente alineado y el splash screen nativo se despliega sin distorsiones.
 
-## Seguridad y permisos de plataforma
+## Como usuario, quiero entender por qué la aplicación solicita permisos de ubicación o notificación antes de concederlos.
 
 - [ ] **Declaración y justificación contextual de permisos móviles mínimos en Android e iOS** (pendiente)
-  - Depende de: Auditoría de seguridad y depuración de dependencias en pubspec
-  - Criterio: AndroidManifest.xml e Info.plist contienen únicamente los permisos de geolocalización y red estrictamente requeridos.
-  - Criterio: PermissionService maneja correctamente los estados granted, denied y permanentlyDenied sin lanzar excepciones no controladas.
-  - Criterio: Las descripciones en Info.plist justifican el propósito de uso de ubicación de forma comprensible para el usuario.
+  - Depende de: Configuración de App Launcher Icons y Native Splash Screen para Android e iOS
+  - Criterio: Comprobar que el servicio de permisos de la app solo solicita permisos declarados en la lista blanca de producción.
+  - Criterio: Probar en dispositivo iOS y Android que al pulsar sobre la búsqueda de viajes o activación de conductor aparece el diálogo explicativo antes de la solicitud de sistema.
 
-## Empaquetado y distribución móvil
+## Como equipo de DevOps/Despliegue, quiero exportar un paquete iOS Archive (.ipa) firmado para la distribución en TestFlight y App Store.
 
-- [ ] **Configuración de compilación firmada Android (AAB) y scripts de release** (pendiente)
-  - Depende de: Configuración de App Launcher Icons y Native Splash Screen para Android e iOS, Declaración y justificación contextual de permisos móviles mínimos en Android e iOS
-  - Criterio: android/app/build.gradle obtiene las credenciales de firma de release desde variables de entorno o key.properties sin contener contraseñas en texto plano.
-  - Criterio: El archivo de reglas ProGuard android/app/proguard-rules.pro preserva los modelos de serialización JSON y componentes de WebSocket requeridos para release.
-  - Criterio: El script tool/build_android_bundle.sh ejecuta la compilación del bundle para el flavor de producción.
 - [ ] **Configuración de compilación para iOS Archive y exportación de release** (pendiente)
-  - Depende de: Configuración de App Launcher Icons y Native Splash Screen para Android e iOS, Declaración y justificación contextual de permisos móviles mínimos en Android e iOS
-  - Criterio: ExportOptions.plist y Release.xcconfig están configurados para distribución App Store / Ad-Hoc sin incluir certificados privados en Git.
-  - Criterio: El bundle identifier de iOS coincide con el applicationId de Android configurado para el flavor de producción.
-  - Criterio: La compilación del archivo de iOS se genera correctamente con flutter build ipa en entorno macOS con Xcode.
+  - Depende de: Configuración de compilación firmada Android (AAB) y scripts de release
+  - Criterio: Verificar mediante test de integración de CI la generación del archivo ipa o archive en build/ios/archive/Runner.xcarchive sin credenciales hardcodeadas.
+  - Criterio: Cargar el paquete generado a TestFlight a través de Transporter o Xcode Organizer y comprobar que supera las validaciones automáticas de Apple.
 
-## Cumplimiento legal y normativo para tiendas
+## Como desarrollador, quiero asegurar que el esquema de base de datos local SQLite y migraciones coincida exactamente con la memoria del proyecto.
 
-- [ ] **Integración de Política de Privacidad dentro de la app y pantalla informativa** (pendiente)
-  - Depende de: Auditoría y adaptación de accesibilidad WCAG 2.1 AA en flujos clave
-  - Criterio: PrivacyPolicyScreen carga y renderiza el contenido de assets/legal/privacy_policy.md sin errores ni estado de carga infinito.
-  - Criterio: El archivo docs/PRIVACY_POLICY.md existe en la raíz del repositorio y contiene las secciones requeridas por Google Play y App Store (datos recolectados, ubicación en segundo plano, contacto del responsable).
-  - Criterio: El enlace a la Política de Privacidad es accesible tanto desde el flujo de registro como desde el perfil de usuario.
+- [ ] **Alineación y verificación del esquema de datos y persistencia SQLite según contratos SSOT** (pendiente)
+  - Depende de: Suite de verificación de smoke testing en emulador y validación en dispositivos reales
+  - Criterio: Ejecutar test/unit/database/schema_validation_test.dart comprobando la versión de esquema, creación limpia de tablas y ejecución idempotente de migraciones.
+  - Criterio: Simular una actualización de base de datos en la app migrando datos antiguos y comprobando que no se pierden sesiones ni historial guardado.
 
-## Documentación de operaciones y despliegue
+## Como desarrollador o administrador, quiero seguir una guía paso a paso para compilar, probar y desplegar la app en producción.
 
 - [ ] **Documentación exhaustiva de despliegue y distribución en DEPLOY.md** (pendiente)
   - Depende de: Configuración de compilación firmada Android (AAB) y scripts de release, Configuración de compilación para iOS Archive y exportación de release
-  - Criterio: El archivo DEPLOY.md existe en la raíz y describe los pasos de compilación y despliegue para Android e iOS en los ambientes local, dev y prod.
-  - Criterio: DEPLOY.md no contiene tokens, contraseñas ni rutas absolutas privadas de desarrolladores.
+  - Criterio: Test de documentación que escanea DEPLOY.md verificando la presencia de las secciones obligatorias: Prerequisites, Environment Variables, Android Release, iOS Release, Rollback Procedure, Backup/Restore.
+  - Criterio: Leer la guía DEPLOY.md y ejecutar paso a paso en una máquina limpia los comandos descritos verificando su correcto funcionamiento.
 
-## Limpieza de versión y depuración final
+## Como equipo de DevOps/Despliegue, quiero generar un artefacto Android App Bundle (AAB) firmado para la distribución en Google Play Store.
+
+- [ ] **Configuración de compilación firmada Android (AAB) y scripts de release** (pendiente)
+  - Depende de: Declaración y justificación contextual de permisos móviles mínimos en Android e iOS
+  - Criterio: Ejecutar script de validación de compilación que verifique la generación exitosa del paquete AAB firmado en build/app/outputs/bundle/release/app-release.aab.
+  - Criterio: Inspeccionar el archivo AAB generado e intentar su instalación preliminar mediante bundletool para asegurar que la firma es válida.
+
+## Como usuario, quiero acceder a la política de privacidad de Ando desde la app para conocer el tratamiento de mis datos personales.
+
+- [ ] **Integración de Política de Privacidad dentro de la app y pantalla informativa** (pendiente)
+  - Depende de: Declaración y justificación contextual de permisos móviles mínimos en Android e iOS
+  - Criterio: Test de widget que comprueba la renderización de PrivacyPolicyScreen, presencia de títulos y enlaces legales sin errores de navegación.
+  - Criterio: Acceder desde el menú de usuario a la política de privacidad y comprobar que la información es legible y cumple con los requerimientos de divulgación de datos de las tiendas.
+
+## Como responsable de calidad del código, quiero garantizar que la rama principal de producción no contenga código muerto, archivos temporales ni dependencias obsoletas.
 
 - [ ] **Limpieza final de versión y depuración de código muerto y dependencias** (pendiente)
-  - Depende de: Suite de verificación de smoke testing en emulador y validación en dispositivos reales
-  - Criterio: El analizador de Dart (`dart analyze`) finaliza con cero advertencias y cero errores de código o imports no utilizados.
-  - Criterio: No existen dependencias o paquetes declarados en `pubspec.yaml` que no sean importados en el código fuente de `lib/`.
+  - Depende de: Configuración de App Launcher Icons y Native Splash Screen para Android e iOS, Declaración y justificación contextual de permisos móviles mínimos en Android e iOS, Configuración de compilación firmada Android (AAB) y scripts de release, Configuración de compilación para iOS Archive y exportación de release, Integración de Política de Privacidad dentro de la app y pantalla informativa, Documentación exhaustiva de despliegue y distribución en DEPLOY.md, Suite de verificación de smoke testing en emulador y validación en dispositivos reales, Alineación y verificación del esquema de datos y persistencia SQLite según contratos SSOT
+  - Criterio: Ejecución de flutter analyze y test/security/dead_code_audit_test.dart reportando 0 advertencias y sin dependencias no utilizadas.
+  - Criterio: Test de integración CI que realiza un build limpio desatendido y verifica que el repositorio no tiene archivos sin seguimiento ni sobrantes tras la compilación.

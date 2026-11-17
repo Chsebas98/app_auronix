@@ -4,239 +4,249 @@ Mapa del producto final por módulos, con sus tareas en orden y los códigos de 
 
 ## M1 · Esqueleto del proyecto y cimientos de arquitectura
 
-Establecer la estructura base del repositorio Flutter en Clean Architecture Feature-First con Atomic Design, inyección de dependencias, configuración por ambiente (local, dev, prod) y runner de pruebas verificado en CI con endpoint de salud/verificación.
+Establecer la estructura base del repositorio Flutter en Clean Architecture Feature-First con Atomic Design, inyección de dependencias (GetIt), configuración por ambiente (local, dev, prod) con soporte .env y runner de pruebas verificado en CI con vista de diagnóstico y salud.
 
 - **T1** Estructura Clean Architecture Feature-First y tokens de diseño base Atomic Design (pending)
-  - T1-C1: La estructura de carpetas en lib/app, lib/features y lib/shared respeta la jerarquía Feature-First y Atomic Design.
-  - T1-C2: AppTheme proporciona esquemas de color claro y oscuro conformes a Material 3.
+  - T1-C5: M1.T1-C1: La estructura de directorios y exportaciones públicas en lib/app, lib/features y lib/shared se resuelve sin errores de importación circular ni referencias huérfanas.
+  - T1-C6: M1.T1-C2: AppTheme genera configuraciones ThemeData de Material 3 válidas para modos claro y oscuro con contrastes de color accesibles.
+  - T1-C7: M1.T1-C3: Los componentes atómicos AndoButton y AndoTextField respetan los tokens de espaciado y estado deshabilitado.
 - **T2** Configuración multi-ambiente e inyección de dependencias con GetIt (pending)
-  - T2-C1: EnvironmentConfig carga correctamente los valores y URLs base según el ambiente seleccionado (local, dev, prod).
-  - T2-C2: setupDependencyInjection registra e inicializa los servicios base en el contenedor GetIt sin lanzar excepciones.
+  - T2-C6: M1.T2-C1: EnvironmentConfig inicializa las propiedades según el mapa de entorno y selecciona el esquema ws:// para ambiente local y wss:// para desarrollo/producción.
+  - T2-C7: M1.T2-C2: GetIt registra y resuelve correctamente la instancia singleton de EnvironmentConfig tras invocar setupServiceLocator().
+  - T2-C8: M1.T2-C3: El repositorio incluye .env.example con las claves de entorno necesarias sin valores de producción y .env se encuentra excluido en .gitignore.
 - **T3** Enrutamiento base con GoRouter y vista de salud/diagnóstico (pending)
-  - T3-C1: El enrutador navega correctamente a la ruta de salud /health.
-  - T3-C2: HealthPage muestra el estado del ambiente activo y la versión del sistema.
+  - T3-C5: M1.T3-C1: GoRouter resuelve correctamente la ruta inicial '/health_check' y navega sin errores de contexto.
+  - T3-C6: M1.T3-C2: HealthCheckScreen muestra la información del ambiente activo (nombre, apiUrl, esquema ws/wss) consumiendo EnvironmentConfig desde GetIt.
+  - T3-C7: M1.T3-C3: Las rutas hacia flujos de pasajero y conductor están declaradas como ramas desacopladas listas para los módulos siguientes.
 - **T4** Pipeline de integración continua (CI) y documentación README (pending)
-  - T4-C1 (manual): El flujo de CI en .github/workflows/ci.yml ejecuta flutter analyze, dart format y flutter test en cada PR y push a la rama principal.
-  - T4-C2: El archivo README.md incluye la descripción del proyecto, guía de instalación, configuración de ambientes y ejecución de tests.
+  - T4-C6: M1.T4-C1: El flujo de GitHub Actions ci.yml define pasos estrictos de checkout, setup de Flutter, análisis estático y ejecución de pruebas con reporte de cobertura.
+  - T4-C7: M1.T4-C2: El archivo README.md contiene secciones de instalación, variables de entorno, ejecución por ambiente y testing para un onboarding sin fricción.
+  - T4-C8: M1.T4-C3: flutter analyze se ejecuta sin warnings ni errores de linter sobre todo el código base de M1.
 
 ## M2 · Cimientos de Red, Seguridad y Persistencia Local
 
-Configurar cliente HTTP (Dio/http), gestión centralizada de tokens JWT, almacenamiento seguro de sesión local (Flutter Secure Storage/Sqflite), gestor de conexión WebSocket y manejo estructurado de errores y logs.
+Configurar cliente HTTP Dio con interceptores JWT e Idempotency-Key, almacenamiento seguro de sesión local (Flutter Secure Storage), persistencia relacional embebida (Sqflite), gestor de conexión WebSocket con soporte ws:// para local y wss:// para producción, y manejo centralizado de errores y logs.
 
 - **T5** Configuración de almacenamiento seguro para tokens y sesión (pending)
-  - T5-C1: M2.T1-C1: El servicio guarda y recupera un valor de prueba cifrado en el llavero del sistema (Keychain/Keystore).
-  - T5-C2: M2.T1-C2: El método de borrado elimina todas las claves relacionadas con la sesión durante el cierre de sesión.
+  - T5-C6: Los tokens JWT y datos sensibles de sesión se persisten utilizando Flutter Secure Storage (Keychain en iOS / Keystore en Android).
+  - T5-C7: Se proporciona un método clearSession() que remueve completamente los tokens en el logout sin dejar residuos.
 - **T6** Cliente HTTP Dio con interceptores de seguridad e idempotencia (pending)
-  - T6-C1: M2.T2-C1: Todas las peticiones salientes incluyen la cabecera Authorization si existe un token en el storage.
-  - T6-C2: M2.T2-C2: Las peticiones POST incluyen una cabecera 'Idempotency-Key' con un formato UUID válido.
+  - T6-C6: Todas las peticiones HTTP salientes incluyen el encabezado Authorization Bearer cuando existe un token activo.
+  - T6-C7: Las peticiones POST de creación u oferta de viajes generan un UUIDv4 único en el header Idempotency-Key.
 - **T7** Gestor de WebSockets para estados de viaje y posición (pending)
-  - T7-C1 (manual): M2.T3-C1: El cliente WebSocket se conecta exitosamente al endpoint de STOMP del backend enviando el JWT de autenticación.
-  - T7-C2: M2.T3-C2: El sistema reintenta la conexión automáticamente tras una pérdida de red con backoff exponencial.
+  - T7-C6: La conexión WebSocket conmuta dinámicamente entre ws:// en ambiente local y wss:// en staging/producción.
+  - T7-C7: El cliente WebSocket se reconecta de manera transparente tras una desconexión accidental de red.
 - **T9** Persistencia local con Sqflite para caché y modo offline (pending)
-  - T9-C1: M2.T5-C1: La base de datos se inicializa correctamente y permite operaciones CRUD básicas.
-  - T9-C2: M2.T5-C2: El sistema maneja el versionado y la ejecución de scripts de migración sin pérdida de datos.
+  - T9-C6: La base de datos SQLite embebida inicializa correctamente sus tablas sin perder integridad de datos.
+  - T9-C7: Se pueden guardar y consultar registros en caché local durante pérdida de conectividad.
 - **T8** Manejo estructurado de errores y logs de red (pending)
-  - T8-C1: M2.T4-C1: Las respuestas 401 del backend disparan automáticamente el flujo de limpieza de sesión local.
-  - T8-C2: M2.T4-C2: Los errores del servidor se registran con el código de error y el mensaje sin exponer trazas internas a la UI.
+  - T8-C6: Cualquier error de red o servidor HTTP es mapeado a un objeto de error estructurado con mensaje amigable.
+  - T8-C7: Los logs de red ofuscan automáticamente headers de autorización e información sensible.
 
 ## M3 · Módulo de Autenticación y Onboarding
 
-Implementar flujo completo de inicio de sesión y registro para pasajeros y conductores usando Firebase Auth + JWT, SessionBloc para enrutamiento según rol de usuario y validación inteligente de formularios.
+Implementar flujo completo de inicio de sesión y registro para pasajeros y conductores usando Firebase Auth integrado con JWT de Spring Boot, SessionBloc para gestión reactiva de sesión y enrutamiento según rol de usuario (client_routes, conductor_routes).
 
 - **T10** Modelado de entidades de Usuario y Contrato de Auth (pending)
-  - T10-C1: M3.T1-C1: El modelo UserData deserializa correctamente un JSON con uuid, email y role (PASAJERO/CONDUCTOR).
-  - T10-C2: M3.T1-C2: Los roles están tipados como un Enum estricto en Dart (UserRole.pasajero, UserRole.conductor).
+  - T10-C5: Mapeo unitario del DTO AuthResponse con campos id, email, role, token y refreshToken comprobando sound null safety.
+  - T10-C6: Validación de tipos de rol válidos (PASAJERO, CONDUCTOR) rechazando valores no reconocidos.
 - **T11** Data Source y Repositorio de Autenticación (Firebase + Backend) (pending)
-  - T11-C1: M3.T2-C1: La llamada al repositorio devuelve el JWT del backend tras un login exitoso en Firebase.
-  - T11-C2: M3.T2-C2: El JWT recibido se persiste en Flutter Secure Storage tras la autenticación.
+  - T11-C5: Intercambio exitoso del idToken de Firebase con la API de Spring Boot obteniendo el JWT de sesión.
+  - T11-C6: Almacenamiento seguro del token JWT recibido en SecureStorageService tras la respuesta exitosa del servidor.
 - **T12** SessionBloc: Gestión de estado global de la sesión (pending)
-  - T12-C1: M3.T3-C1: El estado cambia a Authenticated y expone el objeto User al recibir un token válido.
-  - T12-C2: M3.T3-C2: El estado cambia a Unauthenticated si no hay token o la verificación falla.
+  - T12-C5: Transición automática a Authenticated cuando existe un token válido guardado en SecureStorageService.
+  - T12-C6: Transición a Unauthenticated cuando no hay token persistido o la sesión expiró.
 - **T15** Protección de rutas y redirección por Rol (pending)
-  - T15-C1: M3.T6-C1: Al intentar acceder a una ruta de pasajero siendo conductor, el router bloquea el acceso o redirige correctamente.
-  - T15-C2: M3.T6-C2: Un usuario no logueado es enviado a /login al intentar abrir cualquier ruta privada.
-- **T13** Pantalla de Login con validación inteligente (pending)
-  - T13-C1: M3.T4-C1: El botón de login se deshabilita mientras los campos no cumplen el formato (email válido, pass > 6 car).
-  - T13-C2 (manual): M3.T4-C2: Se muestra un mensaje de error legible si el backend o Firebase rechazan las credenciales.
-- **T14** Flujo de Registro y Selección de Rol (pending)
-  - T14-C1: M3.T5-C1: El registro envía el campo 'role' correcto al backend tras la creación exitosa en Firebase.
-  - T14-C2: M3.T5-C2: No se permite avanzar en el registro sin haber seleccionado un rol.
+  - T15-C5: Redirección de un usuario autenticado con rol PASAJERO a /client/home e imposibilidad de acceder a /driver/*.
+  - T15-C6: Redirección de un usuario no autenticado a la pantalla de login al intentar ingresar a cualquier ruta protegida.
 - **T16** Cierre de sesión y limpieza de datos (pending)
-  - T16-C1: M3.T7-C1: Tras el logout, el token JWT desaparece del almacenamiento seguro.
-  - T16-C2 (manual): M3.T7-C2: La aplicación redirige a la pantalla de Login y no permite volver atrás a la pantalla privada.
+  - T16-C5: Eliminación completa de los tokens en Flutter Secure Storage al ejecutar el evento de Logout.
+  - T16-C6: Redirección inmediata de la UI a la pantalla de login tras el cierre de sesión exitoso.
+- **T13** Pantalla de Login con validación inteligente (pending)
+  - T13-C5: Manejo visual de errores de credenciales con mensajes entendibles para el usuario sin mostrar excepciones ni trazas del backend.
+  - T13-C6: Deshabilitar el botón de login y mostrar indicador de carga visual durante la llamada asíncrona de autenticación.
+- **T14** Flujo de Registro y Selección de Rol (pending)
+  - T14-C5: Rechazo del registro en el formulario cuando no se ha seleccionado un rol (PASAJERO o CONDUCTOR).
+  - T14-C6: Creación exitosa de cuenta e iniciación de sesión automática tras un registro válido en el backend.
 
 ## M4 · Módulo de Búsqueda y Selección de Ubicaciones
 
-Integrar servicio de Places / Directions API para autocompletado de origen y destino, cálculo de rutas, estimación de tarifas y visualización previa en el mapa.
+Integrar servicio de Places y Directions API para autocompletado con debounce de origen y destino, cálculo y dibujado de polilíneas de ruta, estimación preliminar de tarifas y visualización en mapa interactivo.
 
 - **T17** Modelado y Repositorio de Autocompletado de Lugares (Places API) (pending)
-  - T17-C1: M4.T1-C1: El modelo PlacePrediction deserializa correctamente sugerencias desde el payload JSON de la API.
-  - T17-C2: M4.T1-C2: PlacesRepositoryImpl retorna una lista de predicciones dada una cadena de búsqueda válida.
+  - T17-C6: M4.T1-C1: PlacePredictionDto deserializa correctamente un JSON de autocompletado y maneja campos secundarios ausentes con fallback seguro.
+  - T17-C7: M4.T1-C2: PlacesRepositoryImpl retorna lista de predicciones en llamadas exitosas y mapea códigos HTTP 4xx/5xx a fallos tipados ServerFailure.
+  - T17-C8: M4.T1-C3: Se sanitizan consultas vacías o con puros espacios retornando lista vacía sin emitir petición HTTP.
 - **T18** Data Source y Repositorio de Rutas y Estimación de Tarifas (Directions API) (pending)
-  - T18-C1: M4.T2-C1: DirectionsRepositoryImpl calcula la distancia, el tiempo y la polilínea codificada entre dos puntos geográficos.
-  - T18-C2: M4.T2-C2: EstimateFareUseCase retorna el precio estimado calculado según la distancia y duración provistas.
+  - T18-C6: M4.T2-C1: DirectionsRepositoryImpl decodifica cadenas de polilínea en listas de LatLng sin pérdida de precisión de coordenadas.
+  - T18-C7: M4.T2-C2: estimateFare calcula el importe total en base a distancia y tiempo aplicando tarifa base con redondeo a dos decimales.
+  - T18-C8: M4.T2-C3: Si el servicio de rutas devuelve un error de ruta no transitable, el repositorio retorna RouteNotFoundFailure manejado.
 - **T19** LocationSearchBloc: Gestión de estado para la búsqueda de origen y destino (pending)
-  - T19-C1: M4.T3-C1: LocationSearchBloc emite estado con predicciones tras recibir el evento de cambio de texto superado el tiempo de debounce.
-  - T19-C2: M4.T3-C2: LocationSearchBloc emite estado de error comprensible cuando falla el servicio de direcciones o la conectividad.
-  - T19-C3: M4.T3-C3: LocationSearchBloc emite estado de resultados vacíos cuando la consulta de autocompletado no retorna coincidencias.
+  - T19-C8: M4.T3-C1: Las emisiones repetidas de SearchQueryChanged en menos de 300ms ejecutan una única llamada al repositorio debido al debounce.
+  - T19-C9: M4.T3-C2: Al emitir SwapLocations con origen y destino cargados, se intercambian las posiciones y se recalcula la ruta.
+  - T19-C10: M4.T3-C3: Si la búsqueda no arroja coincidencias, el estado emite predictions vacía y bandera hasNoResults en verdadero.
+  - T19-C11: M4.T3-C4: Cuando ambos puntos (origen y destino) están seleccionados, se transiciona a estado isCalculatingRoute y luego a routeReady con routeInfo y fareEstimate.
 - **T20** Pantalla y Componentes de Autocompletado e Intercambio de Ubicaciones (pending)
-  - T20-C1: M4.T4-C1: LocationPickerPage renderiza el skeleton loader mientras se realiza la consulta de autocompletado.
-  - T20-C2: M4.T4-C2: Al presionar el botón de intercambio, las descripciones y datos de origen y destino invierten sus posiciones.
-  - T20-C3 (manual): M4.T4-C3: Comprobar visualmente que la lista de sugerencias resalta la coincidencia de texto ingresada y se adapta a pantallas pequeñas.
+  - T20-C8: M4.T4-C1: Los inputs de origen y destino y el botón de swap tienen un área táctil mínima de 44x44 dp y etiquetas Semantics válidas.
+  - T20-C9: M4.T4-C2: Mientras se obtienen las sugerencias se muestra el skeleton loader, y si no hay resultados se muestra el widget de estado vacío.
+  - T20-C10: M4.T4-C3: Al presionar una predicción se selecciona el lugar y el input correspondiente refleja el nombre del lugar elegido.
 - **T21** Mapa de Previsualización de Ruta y Card de Estimación de Tarifa (pending)
-  - T21-C1: M4.T5-C1: RoutePreviewMapWidget dibuja los marcadores de origen y destino y la polilínea recibida en sus propiedades.
-  - T21-C2: M4.T5-C2: FareEstimateCard muestra el monto estimado y el tiempo de viaje en minutos de manera clara.
-  - T21-C3 (manual): M4.T5-C3: Probar manualmente en emulador que el zoom del mapa se ajusta automáticamente para encuadrar la ruta completa al seleccionar origen y destino.
+  - T21-C8: M4.T5-C1: El componente route_map_preview renderiza los marcadores de origen y destino y ajusta los límites de la cámara según los puntos extremos de la ruta.
+  - T21-C9: M4.T5-C2: fare_estimate_card muestra el desglose de distancia, duración y precio estimado, mostrando un spinner o skeleton si la tarifa está calculándose.
+  - T21-C10: M4.T5-C3: Al presionar 'Confirmar ruta' con origen, destino y ruta válidos, se invoca el callback o navegación hacia el flujo de confirmación/solicitud.
+  - T21-C11: M4.T5-C4: En caso de error de cálculo de ruta, la tarjeta muestra mensaje explicativo con botón para reintentar sin cerrar la vista.
 
 ## M5 · Módulo de Gestión y Seguimiento de Viajes del Pasajero
 
-Desarrollar la experiencia del pasajero para solicitar viaje con cabecera de idempotencia, visualizar la búsqueda de conductor, seguir el viaje en tiempo real por WebSocket, manejar restricciones de viaje activo único, confirmar finalización y calificar.
+Desarrollar la experiencia completa del cliente para solicitar viajes utilizando cabecera Idempotency-Key, interfaz de espera 'buscando conductor', seguimiento en vivo del conductor y viaje en curso por WebSocket, bloqueo de solicitudes simultáneas si hay viaje activo, finalización y calificación.
 
 - **T22** Modelado de Entidades y Contratos de Viaje para Pasajero (pending)
-  - T22-C1: El modelo TripModel mapea correctamente todos los estados del enum del backend.
-  - T22-C2: La entidad Trip incluye campos para conductor, vehículo y coordenadas de seguimiento.
+  - T22-C3: La entidad Trip contiene todos los campos necesarios según el esquema tb_trips.
+  - T22-C4: El TripModel realiza la conversión de JSON correctamente respetando tipos de datos y nulos.
 - **T23** Repositorio de Viajes y DataSource con Idempotencia (pending)
-  - T23-C1: El repositorio envía el header 'Idempotency-Key' en cada POST de creación de viaje.
-  - T23-C2: Se lanza ActiveTripException cuando el backend responde con error 409.
+  - T23-C3: La petición POST a /trips incluye el header Idempotency-Key.
+  - T23-C4: El repositorio lanza ActiveTripException cuando el backend devuelve 409.
 - **T24** PassengerTripBloc: Orquestación del Ciclo de Vida del Viaje (pending)
-  - T24-C1: El Bloc emite TripSearchingState tras una solicitud exitosa.
-  - T24-C2: El Bloc emite TripErrorState con mensaje amigable si ya existe un viaje activo (409).
+  - T24-C3: El Bloc bloquea nuevas solicitudes si ya existe un viaje en curso en el estado.
+  - T24-C4: El Bloc emite FailureState ante errores de red o idempotencia.
 - **T25** Integración de WebSocket para Actualizaciones en Tiempo Real (pending)
-  - T25-C1: El Bloc actualiza el estado del viaje automáticamente al recibir un mensaje del WebSocket.
-  - T25-C2: La app reconecta la suscripción al WebSocket si se pierde la conexión durante un viaje activo.
+  - T25-C3: La suscripción al tópico del viaje se realiza tras la creación exitosa del viaje.
+  - T25-C4: Los eventos del socket provocan transiciones de estado en el PassengerTripBloc.
 - **T26** Pantalla de Búsqueda de Conductor y Espera (pending)
-  - T26-C1 (manual): La pantalla muestra un indicador de carga visual mientras el estado es SOLICITADO.
-  - T26-C2: El botón 'Cancelar Viaje' invoca la acción correspondiente y regresa al Home.
+  - T26-C3 (manual): La pantalla muestra el estado de búsqueda mientras el viaje está en SOLICITADO.
+  - T26-C4: El botón de cancelar detiene el proceso y vuelve a la pantalla de inicio.
 - **T27** Seguimiento de Viaje en Mapa en Tiempo Real (pending)
-  - T27-C1 (manual): El marcador del conductor se mueve en el mapa sin saltos bruscos al recibir coordenadas.
-  - T27-C2: Se muestran los detalles del vehículo (placa, modelo) una vez el viaje está ACEPTADO.
+  - T27-C3 (manual): El icono del conductor se mueve en el mapa al recibir coordenadas por WebSocket.
+  - T27-C4: La información del vehículo y conductor es visible y correcta.
 - **T28** Finalización de Viaje y Calificación del Conductor (pending)
-  - T28-C1: El formulario de calificación solo es visible si el estado del viaje es exactamente COMPLETADO.
-  - T28-C2: Se valida que la calificación sea obligatoria antes de permitir el envío.
+  - T28-C3: El diálogo de calificación aparece inmediatamente al finalizar el viaje.
+  - T28-C4: La llamada de calificación envía los datos correctos y gestiona errores de red.
 - **T29** Test de Integración: Flujo Completo del Pasajero (pending)
-  - T29-C1: El flujo completo desde solicitud hasta calificación se completa sin errores inesperados.
-  - T29-C2: La app muestra un aviso de 'Sin conexión' si se pierde la red durante el seguimiento del mapa.
+  - T29-C3: El flujo completo se ejecuta sin errores de navegación ni pérdida de estado.
+  - T29-C4: Se verifica que no hay fugas de memoria al cerrar los sockets al final del flujo.
 
 ## M6 · Módulo de Operaciones y Navegación del Conductor
 
-Implementar el flujo del conductor para cambiar estado a disponible (vía GPS), recibir solicitudes cercanas restringidas a su cooperativa, aceptar/rechazar viajes, navegar al origen/destino, actualizar ciclo de vida secuencial y calificar al pasajero.
+Implementar el flujo operativo del conductor para disponibilidad geográfica GPS, recepción de solicitudes filtradas por su cooperativa, aceptación o rechazo, navegación guiada, actualización secuencial del ciclo de viaje (ACEPTADO -> EN_CURSO -> COMPLETADO) y calificación al cliente.
 
 - **T30** Modelos y contratos del dominio para operaciones del conductor (pending)
-  - T30-C1: Validar que TripStatus rechaza transiciones ilegales que no respeten el orden secuencial (ej. ACEPTADO directo a COMPLETADO sin pasar por EN_CURSO).
-  - T30-C2: Comprobar que DriverTripRequest valida la correspondencia de cooperativeId y no permite campos obligatorios nulos.
+  - T30-C3: DriverTrip modela los estados válidos de viaje según el contrato backend
+  - T30-C4: TripOffer valida obligatoriamente que cooperativaId no sea nulo ni vacío
 - **T31** DataSource y Repositorio de Conductor con filtrado por Cooperativa (pending)
-  - T31-C1: Aceptar o iniciar viaje envía las cabeceras de autorización correctas y mapea adecuadamente el DTO devuelto por el backend.
-  - T31-C2: Lanzar CooperativeMismatchException cuando se detecta un viaje de una cooperativa diferente a la del conductor.
+  - T31-C3: Filtrado estricto descarta ofertas que no pertenecen a la cooperativa del conductor
+  - T31-C4: Transiciones REST envían id de conductor y token en cabeceras HTTP
 - **T32** Servicio de Geolocalización y Transmisión de Posición por WebSocket (pending)
-  - T32-C1: Emitir coordenadas serializadas al WebSocket únicamente cuando el conductor se encuentre en estado disponible o con viaje activo.
-  - T32-C2: Manejar la denegación de permisos de ubicación emitiendo un fallo de dominio LocationPermissionDeniedException sin congelar la aplicación.
+  - T32-C3: Posición GPS se transmite al canal WebSocket con formato JSON esperado por el backend
+  - T32-C4: Manejo de errores sin conexión almacena la última posición y reanuda el envío al reconectar
 - **T33** DriverTripBloc: Máquina de estados para disponibilidad y ciclo de vida de viaje (pending)
-  - T33-C1: Cambiar el estado a DriverTripInProgress únicamente tras recibir confirmación exitosa de StartTripRequested.
-  - T33-C2: Rechazar o descartar una solicitud tras timeout emitiendo DriverAvailable sin afectar el estado general de disponibilidad.
+  - T33-C3: Máquina de estados rechaza saltos no secuenciales de estado de viaje
+  - T33-C4: DriverTripBloc pasa a DriverOnlineWaiting al activar disponibilidad geográfica
 - **T34** Pantalla Principal del Conductor y Panel de Disponibilidad (pending)
-  - T34-C1: Renderizar el switch de disponibilidad y disparar el evento ToggleAvailabilityRequested al cambiar su estado.
-  - T34-C2: Mostrar banner de alerta cuando la conexión de red se pierde o el GPS está deshabilitado.
+  - T34-C3: Switch de disponibilidad cambia estado reactivo y muestra feedback visual
+  - T34-C4: Indicador de cooperativa muestra el nombre correspondiente obtenido del perfil autenticado
 - **T35** Modal y Notificación de Solicitud de Viaje Entrante (Aceptar/Rechazar) (pending)
-  - T35-C1: El botón Aceptar dispara AcceptTripRequested y cierra el modal de oferta pasando a navegación en ruta.
-  - T35-C2: El botón Rechazar emite RejectTripRequested y descarta el modal de inmediato.
+  - T35-C3: Botón Aceptar dispara evento de aceptación en DriverTripBloc y cierra modal
+  - T35-C4: Expiración del temporizador ejecuta rechazo automático de la solicitud
 - **T36** Pantalla de Navegación del Conductor y Gestión Secuencial del Viaje (pending)
-  - T36-C1: Habilitar el botón de 'Completar Viaje' únicamente cuando el estado actual es EN_CURSO y deshabilitarlo durante ACEPTADO.
-  - T36-C2: Deslizar o pulsar 'Iniciar Viaje' emite StartTripRequested y actualiza la UI al tramo hacia el destino.
+  - T36-C3: Botón de acción principal muta de acuerdo con el estado secuencial del viaje
+  - T36-C4: Pérdida temporal de red no resetea la pantalla y muestra alerta de reconexión
 - **T37** Flujo de Finalización de Viaje y Calificación del Pasajero (pending)
-  - T37-C1: El botón de confirmar calificación se mantiene deshabilitado hasta que se selecciona una puntuación entre 1 y 5 estrellas.
-  - T37-C2: Tras registrar la calificación con éxito, el sistema limpia el viaje activo y regresa a la vista de conductor disponible.
+  - T37-C3: Envío de calificación ejecuta llamada REST y transiciona a estado disponible
+  - T37-C4: Diálogo muestra resumen financiero de tarifa y desglosa el pago completado
 - **T38** Prueba de Integración E2E: Ciclo de Vida Completo del Conductor (pending)
-  - T38-C1: El test de integración completa todo el ciclo secuencial del viaje del conductor desde disponibilidad hasta calificación final con backend/mock de integración.
-  - T38-C2 (manual): Verificar en emulador/dispositivo que la UI del conductor muestra adecuadamente los estados de reconexión y transiciones de viaje fluidas.
+  - T38-C3: Flujo E2E completo del conductor se ejecuta sin errores respetando la secuencia del ciclo
+  - T38-C4 (manual): Verificación visual y fluidez de transiciones en dispositivo o emulador
 
 ## M7 · Módulo de Historial de Viajes y Perfil
 
-Permitir la consulta detallada de viajes pasados para pasajeros y conductores con paginación estable, visualización de estado final, montos y calificaciones, junto con la edición básica de perfil.
+Construir las vistas de perfil y consulta paginada de historial de viajes para pasajeros y conductores, mostrando detalle de estados finales (COMPLETADO, CANCELADO), desglose de cobro/pago, calificaciones emitidas y recibidas, con almacenamiento seguro y mínimo privilegio.
 
 - **T39** Modelado de entidades de dominio y contratos para Historial de Viajes y Perfil (pending)
-  - T39-C1: M7.T1-C1: Las entidades y modelos de TripSummary y UserProfile deserializan correctamente payloads de respuesta según el SSOT del backend.
-  - T39-C2: M7.T1-C2: Los campos de paginación (page, size, totalElements, totalPages, content) se mapean adecuadamente a TripHistoryPage.
+  - T39-C3: Las entidades TripDetail y TripSummary modelan con precisión estados finales COMPLETADO y CANCELADO, métricas de tarifa, fechas y datos de calificación.
+  - T39-C4: La entidad PaginatedTrips encapsula la lista de viajes, página actual, total de páginas y si existen páginas subsecuentes.
+  - T39-C5: UserProfile modela nombre, teléfono, correo, rol y avatar sin exponer campos confidenciales o no autorizados.
 - **T40** Data Sources y Repositorios de Historial de Viajes y Perfil (pending)
-  - T40-C1: M7.T2-C1: TripHistoryRemoteDataSource invoca /api/v1/trips/history con parámetros de paginación y cabecera de autenticación JWT.
-  - T40-C2: M7.T2-C2: ProfileRepository actualiza los datos del usuario mediante PUT /api/v1/users/profile y retorna la entidad actualizada o propaga el fallo de dominio.
+  - T40-C3: TripHistoryRemoteDataSource realiza peticiones GET paginadas incluyendo query params page y size con Bearer token en headers.
+  - T40-C4: ProfileRemoteDataSource obtiene y actualiza el perfil del usuario autenticado sin filtrar datos de terceros.
+  - T40-C5: Los repositorios convierten excepciones de red o HTTP 403/404 en fallos de dominio tipados (TripNotFoundFailure, UnauthorizedAccessFailure).
 - **T41** TripHistoryBloc: Gestión reactiva de listado paginado y detalle de viajes pasados (pending)
-  - T41-C1: M7.T3-C1: El evento TripHistoryFetchRequested emite estados Loading y Loaded con los primeros elementos obtenidos.
-  - T41-C2: M7.T3-C2: El evento TripHistoryNextPageRequested concatena los nuevos resultados a la lista existente sin duplicar registros.
-  - T41-C3: M7.T3-C3: Los errores en la petición de historial emiten TripHistoryError con mensaje comprensible.
+  - T41-C4: TripHistoryBloc emite TripHistoryLoading y luego TripHistoryLoaded con la lista inicial al recibir LoadTripHistory.
+  - T41-C5: El evento LoadMoreTrips concatena la siguiente página de viajes sin duplicar registros ya existentes.
+  - T41-C6: El evento LoadTripDetail carga correctamente la información extendida de viajes COMPLETADO o CANCELADO.
 - **T42** ProfileBloc: Gestión de estado para lectura y actualización del perfil de usuario (pending)
-  - T42-C1: M7.T4-C1: ProfileFetchRequested recupera el perfil actual del usuario y emite ProfileLoaded.
-  - T42-C2: M7.T4-C2: ProfileUpdateSubmitted procesa la actualización y emite ProfileUpdateSuccess con los nuevos datos.
+  - T42-C3: ProfileBloc carga los datos del usuario autenticado emitiendo ProfileLoaded ante LoadUserProfile.
+  - T42-C4: ProfileBloc valida los datos modificados y emite ProfileUpdateSuccess tras confirmación del repositorio.
+  - T42-C5: Cualquier error de autorización o fallo de red emite ProfileError sin corromper el estado anterior del perfil.
 - **T43** Pantalla y componentes de Listado de Historial de Viajes con paginación (pending)
-  - T43-C1: M7.T5-C1: La pantalla renderiza el estado vacío TripHistoryEmptyState cuando la lista de viajes está vacía.
-  - T43-C2: M7.T5-C2: Al hacer scroll al final de la lista se despacha el evento para cargar la siguiente página.
-  - T43-C3: M7.T5-C3: Cada elemento renderiza fecha, dirección de origen/destino, tarifa formateada y badge de estado.
+  - T43-C4: TripHistoryScreen muestra skeleton loading mientras se cargan los viajes y renderiza TripSummaryCards al completarse.
+  - T43-C5: Hacer scroll al final de la lista dispara la solicitud de la página siguiente al bloc.
+  - T43-C6: Si el usuario no tiene viajes registrados, se presenta EmptyTripHistoryWidget con mensaje descriptivo y acción de solicitar viaje.
 - **T44** Pantalla de Detalle de Viaje Pasado (Completed / Cancelled) (pending)
-  - T44-C1: M7.T6-C1: La pantalla muestra todos los detalles del viaje completado incluyendo monto total, conductor/pasajero, cooperativa y rating.
-  - T44-C2: M7.T6-C2: Si el viaje fue cancelado, se ocultan datos de tarifa y calificación y se visualiza claramente el motivo de cancelación y el estado CANCELADO.
+  - T44-C3: TripDetailScreen renderiza el desglose completo de cobro/pago, estado final y participantes del viaje.
+  - T44-C4: Si el viaje tiene estado CANCELADO, la pantalla muestra la razón de cancelación y ajusta el desglose financiero acorde.
+  - T44-C5: TripRatingDisplayWidget muestra la calificación por estrellas y comentario si existen para el viaje.
 - **T45** Pantalla de Perfil de Usuario y Edición de Datos (pending)
-  - T45-C1: M7.T7-C1: Los campos editables reflejan los valores iniciales del usuario y validan formato de teléfono antes del envío.
-  - T45-C2: M7.T7-C2: Al enviar cambios válidos, se invoca el evento de actualización y se muestra indicador de carga mientras procesa.
+  - T45-C3: ProfileScreen visualiza correctamente la información de usuario distinguiendo entre campos editables y no editables.
+  - T45-C4: EditProfileModal valida teléfono y nombre antes de permitir el envío del formulario.
+  - T45-C5: El botón de cerrar sesión invoca el evento de desautenticación en SessionBloc y limpia la sesión.
 - **T46** Integración en Rutas y Menú de Navegación para Pasajero y Conductor (pending)
-  - T46-C1: M7.T8-C1: La ruta '/trips/history' y '/profile' son accesibles tanto para rol PASAJERO como CONDUCTOR.
-  - T46-C2: M7.T8-C2: La ruta '/trips/:id' abre TripDetailPage con el identificador de viaje proporcionado como parámetro.
+  - T46-C3: La ruta /trips/history es navegable tanto desde el menú del pasajero como desde el menú del conductor con sus respectivos permisos.
+  - T46-C4: La ruta /trips/:id navega a TripDetailScreen cargando el viaje especificado por parámetro.
+  - T46-C5: El acceso a /profile permite consultar y actualizar datos desde ambos flujos de rol.
 
 ## M8 · Endurecimiento de Seguridad, Calidad y Limpieza
 
-Realizar auditoría de dependencias, eliminar código muerto/desuso fruto de refactorizaciones previas (ej. mapas/libs obsoletas), aplicar comprobación de accesibilidad WCAG y manejo resiliente sin conexión.
+Ejecutar auditoría de dependencias libres de vulnerabilidades, eliminar código muerto de versiones previas (librerías obsoletas de mapas y blocs sin uso), verificar accesibilidad WCAG 2.1 AA en todas las pantallas y dotar a la aplicación de resiliencia con manejo offline y reporte seguro de fallos.
 
 - **T47** Auditoría de seguridad y depuración de dependencias en pubspec (pending)
-  - T47-C1: M8.T1-C1: pubspec.yaml contiene únicamente dependencias activas del proyecto sin paquetes heredados en desuso.
-  - T47-C2: M8.T1-C2: El comando de auditoría y análisis de paquetes finaliza exitosamente con código de salida 0 sin advertencias críticas ni incompatibilidades de versión.
+  - T47-C3: El archivo pubspec.lock no contiene dependencias con vulnerabilidades de severidad alta o crítica según el análisis de seguridad de dependencias.
+  - T47-C4: Se eliminan todas las dependencias directas no utilizadas en el código fuente de lib/.
+  - T47-C5: Todas las dependencias son estrictamente compatibles con Dart SDK >=3.12.0 <4.0.0 y Flutter 3.44 sin advertencias de deprecación críticas.
 - **T48** Detección y eliminación exhaustiva de código muerto, imports obsoletos y contratos legacy (pending)
-  - T48-C1: M8.T2-C1: El analizador estático de Dart finaliza sin ningún warning, error o linter issue en todo el árbol de lib/ y test/.
-  - T48-C2: M8.T2-C2: Todos los archivos y clases huérfanas de versiones previas quedan completamente eliminados sin referencias rotas.
-- **T51** Auditoría y adaptación de accesibilidad WCAG 2.1 AA en flujos clave (pending)
-  - T51-C1: M8.T5-C1: Los botones y controles interactivos principales cuentan con nodos Semantics y etiquetas accesibles no vacías.
-  - T51-C2: M8.T5-C2: La paleta de colores del tema garantiza un contraste superior a 4.5:1 entre colores de texto y fondo en modo claro y oscuro.
-  - T51-C3 (manual): M8.T5-C3: Los campos de formulario y cards de estado de viaje exponen estados y roles semánticos correctos para lectores de pantalla.
+  - T48-C3: flutter analyze no reporta ningún aviso de unused_element, unused_import ni dead_code en todo el directorio lib/ ni test/.
+  - T48-C4: No existen archivos dart no referenciados ni blocs antiguos sin registro en dependency_injection.dart ni consumo en rutas.
+  - T48-C5: Los modelos de datos y endpoints en lib/features/trips/ y lib/features/auth/ coinciden exactamente con los contratos SSOT del backend sin restos de payloads legacy.
 - **T49** Servicio de conectividad de red reactivo y banner de desconexión/reconexión (pending)
-  - T49-C1: M8.T3-C1: ConnectivityBloc emite estado desconectado al cesar la conectividad y estado conectado al restablecerse.
-  - T49-C2: M8.T3-C2: NetworkStatusBanner se renderiza informando pérdida de red cuando el estado es desconectado y desaparece con animación al reconectar.
-  - T49-C3: M8.T3-C3: Al volver la conexión, el gestor de red reintenta automáticamente la reconexión de sockets y peticiones pendientes.
+  - T49-C4: Al detectarse pérdida de conectividad a internet, se emite el estado offline y la interfaz muestra el banner visible de desconexión.
+  - T49-C5: Al restablecerse la conexión de red, el banner muestra estado de reconexión y se oculta tras confirmar enlace activo.
+  - T49-C6: Las peticiones fallidas por timeout o falta de red durante un intento de sincronización no borran el estado local de formularios de solicitud de viaje.
 - **T50** Servicio de reporte de fallos y sanitización de registros de error (pending)
-  - T50-C1: M8.T4-C1: CrashReportingService captura errores síncronos y asíncronos no manejados reportándolos a la plataforma de monitoreo configurada.
-  - T50-C2: M8.T4-C2: El sanitizador de errores elimina encabezados Authorization, tokens bearer y campos sensibles de los metadatos del crash.
+  - T50-C3: Las excepciones no controladas de Flutter y de la plataforma son capturadas por el servicio centralizado sin provocar caídas silenciosas de la aplicación.
+  - T50-C4: Los registros y trazas de error enviados al servicio de reporte son sanitizados, reemplazando tokens JWT, passwords y credenciales con máscaras.
+  - T50-C5: Las excepciones de aplicación se presentan al usuario mediante mensajes comprensibles y con opciones de reintento, sin exhibir trazas internas de error.
+- **T51** Auditoría y adaptación de accesibilidad WCAG 2.1 AA en flujos clave (pending)
+  - T51-C4: Todos los botones, iconos de interacción y campos de entrada en las pantallas principales cumplen con el tamaño mínimo de pulsación táctil (44x44 dp).
+  - T51-C5: Todos los controles interactivos y estados informativos cuentan con etiquetas Semantics válidas para lectores de pantalla.
+  - T51-C6: Las combinaciones de color de texto y fondo en tokens de diseño cumplen el ratio de contraste mínimo 4.5:1.
 
 ## M9 · Preparación para Producción, Multi-Ambiente y Publicación
 
-Configurar compilación firmada Android App Bundle e iOS Archive, splash screens, iconos, variables de ambiente (local, dev, prod), guías de despliegue DEPLOY.md, política de privacidad y verificación en dispositivo real/emulador.
+Configurar empaquetado release firmado (Android AAB e iOS Archive), assets visuales completos (iconos y splash screen), verificación cruzada con contratos y esquema de base de datos existente, suite de smoke testing en emulador y dispositivos físicos, y documentación en DEPLOY.md y política de privacidad.
 
 - **T52** Configuración de App Launcher Icons y Native Splash Screen para Android e iOS (pending)
-  - T52-C1: Los archivos de configuración de flutter_launcher_icons y flutter_native_splash están definidos en pubspec.yaml con rutas válidas de assets.
-  - T52-C2: El nombre de visualización de la app está fijado a 'Ando' en AndroidManifest.xml e Info.plist.
-  - T52-C3 (manual): La pantalla de splash nativa y los iconos de la app se visualizan correctamente en Android e iOS sin deformaciones de aspecto.
+  - T52-C4: Verificar la presencia y estructura de los archivos de íconos y splash screen generados en android/app/src/main/res/ y ios/Runner/Assets.xcassets.
+  - T52-C5 (manual): Verificar visualmente en emulador/dispositivo Android e iOS que el ícono de la app se muestra correctamente alineado y el splash screen nativo se despliega sin distorsiones.
 - **T53** Declaración y justificación contextual de permisos móviles mínimos en Android e iOS (pending)
-  - T53-C1: AndroidManifest.xml e Info.plist contienen únicamente los permisos de geolocalización y red estrictamente requeridos.
-  - T53-C2: PermissionService maneja correctamente los estados granted, denied y permanentlyDenied sin lanzar excepciones no controladas.
-  - T53-C3: Las descripciones en Info.plist justifican el propósito de uso de ubicación de forma comprensible para el usuario.
+  - T53-C4: Comprobar que el servicio de permisos de la app solo solicita permisos declarados en la lista blanca de producción.
+  - T53-C5 (manual): Probar en dispositivo iOS y Android que al pulsar sobre la búsqueda de viajes o activación de conductor aparece el diálogo explicativo antes de la solicitud de sistema.
 - **T54** Configuración de compilación firmada Android (AAB) y scripts de release (pending)
-  - T54-C1: android/app/build.gradle obtiene las credenciales de firma de release desde variables de entorno o key.properties sin contener contraseñas en texto plano.
-  - T54-C2: El archivo de reglas ProGuard android/app/proguard-rules.pro preserva los modelos de serialización JSON y componentes de WebSocket requeridos para release.
-  - T54-C3 (manual): El script tool/build_android_bundle.sh ejecuta la compilación del bundle para el flavor de producción.
+  - T54-C4: Ejecutar script de validación de compilación que verifique la generación exitosa del paquete AAB firmado en build/app/outputs/bundle/release/app-release.aab.
+  - T54-C5 (manual): Inspeccionar el archivo AAB generado e intentar su instalación preliminar mediante bundletool para asegurar que la firma es válida.
 - **T55** Configuración de compilación para iOS Archive y exportación de release (pending)
-  - T55-C1: ExportOptions.plist y Release.xcconfig están configurados para distribución App Store / Ad-Hoc sin incluir certificados privados en Git.
-  - T55-C2: El bundle identifier de iOS coincide con el applicationId de Android configurado para el flavor de producción.
-  - T55-C3 (manual): La compilación del archivo de iOS se genera correctamente con flutter build ipa en entorno macOS con Xcode.
-- **T56** Integración de Política de Privacidad dentro de la app y pantalla informativa (pending)
-  - T56-C1: PrivacyPolicyScreen carga y renderiza el contenido de assets/legal/privacy_policy.md sin errores ni estado de carga infinito.
-  - T56-C2: El archivo docs/PRIVACY_POLICY.md existe en la raíz del repositorio y contiene las secciones requeridas por Google Play y App Store (datos recolectados, ubicación en segundo plano, contacto del responsable).
-  - T56-C3: El enlace a la Política de Privacidad es accesible tanto desde el flujo de registro como desde el perfil de usuario.
-- **T57** Documentación exhaustiva de despliegue y distribución en DEPLOY.md (pending)
-  - T57-C1: El archivo DEPLOY.md existe en la raíz y describe los pasos de compilación y despliegue para Android e iOS en los ambientes local, dev y prod.
-  - T57-C2: DEPLOY.md no contiene tokens, contraseñas ni rutas absolutas privadas de desarrolladores.
+  - T55-C4: Verificar mediante test de integración de CI la generación del archivo ipa o archive en build/ios/archive/Runner.xcarchive sin credenciales hardcodeadas.
+  - T55-C5 (manual): Cargar el paquete generado a TestFlight a través de Transporter o Xcode Organizer y comprobar que supera las validaciones automáticas de Apple.
 - **T59** Suite de verificación de smoke testing en emulador y validación en dispositivos reales (pending)
-  - T59-C1: El test de integración integration_test/smoke_release_test.dart compila y ejecuta exitosamente en emulador Android.
-  - T59-C2: El checklist docs/REAL_DEVICE_TESTING_CHECKLIST.md detalla los criterios de aceptación físicos (sensores GPS, suspensión en segundo plano, reconexión móvil 4G/5G).
-  - T59-C3 (manual): La app es instalada y verificada en un teléfono Android y un teléfono iPhone físico siguiendo el checklist de prueba.
+  - T59-C4: Ejecución exitosa de test/integration/flows/release_smoke_test.dart en emulador headless sin fallos en el runner de Flutter.
+  - T59-C5 (manual): Probar la compilación de release firmada en al menos un teléfono Android real y un iPhone real, verificando fluidez visual, conexión de socket y GPS.
+- **T56** Integración de Política de Privacidad dentro de la app y pantalla informativa (pending)
+  - T56-C4: Test de widget que comprueba la renderización de PrivacyPolicyScreen, presencia de títulos y enlaces legales sin errores de navegación.
+  - T56-C5 (manual): Acceder desde el menú de usuario a la política de privacidad y comprobar que la información es legible y cumple con los requerimientos de divulgación de datos de las tiendas.
+- **T57** Documentación exhaustiva de despliegue y distribución en DEPLOY.md (pending)
+  - T57-C3: Test de documentación que escanea DEPLOY.md verificando la presencia de las secciones obligatorias: Prerequisites, Environment Variables, Android Release, iOS Release, Rollback Procedure, Backup/Restore.
+  - T57-C4 (manual): Leer la guía DEPLOY.md y ejecutar paso a paso en una máquina limpia los comandos descritos verificando su correcto funcionamiento.
 - **T58** Alineación y verificación del esquema de datos y persistencia SQLite según contratos SSOT (pending)
-  - T58-C1: Las migraciones de la base de datos local Sqflite se ejecutan en orden secuencial sin pérdida de integridad.
-  - T58-C2: El procedimiento de recuperación ante base de datos local corrupta recrea el esquema sin bloquear la apertura de la aplicación.
-  - T58-C3: Existe la documentación docs/database_local_model.md con el mapeo claro de entidades y contratos.
+  - T58-C4: Ejecutar test/unit/database/schema_validation_test.dart comprobando la versión de esquema, creación limpia de tablas y ejecución idempotente de migraciones.
+  - T58-C5 (manual): Simular una actualización de base de datos en la app migrando datos antiguos y comprobando que no se pierden sesiones ni historial guardado.
 - **T60** Limpieza final de versión y depuración de código muerto y dependencias (pending)
-  - T60-C1: El analizador de Dart (`dart analyze`) finaliza con cero advertencias y cero errores de código o imports no utilizados.
-  - T60-C2: No existen dependencias o paquetes declarados en `pubspec.yaml` que no sean importados en el código fuente de `lib/`.
+  - T60-C3: Ejecución de flutter analyze y test/security/dead_code_audit_test.dart reportando 0 advertencias y sin dependencias no utilizadas.
+  - T60-C4: Test de integración CI que realiza un build limpio desatendido y verifica que el repositorio no tiene archivos sin seguimiento ni sobrantes tras la compilación.
