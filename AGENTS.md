@@ -83,3 +83,14 @@ After an interrupted execution, inspect task state before retrying. Do not fabri
 ### Modo API
 - Mnemosine ejecuta las tareas con la API del proveedor y entrega cada una como pull request contra la rama del proyecto. Revisa y fusiona los PR; no hace falta ningún proceso del lado del agente.
 <!-- mnemosine:connection:end -->
+
+<!-- mnemosine:quality:start -->
+## Reglas de entrega de Mnemosine
+
+- El objetivo es un producto final listo para producción, no un MVP: cada tarea deja su parte funcionando de verdad (validaciones, errores, seguridad, configuración por ambiente) y el proyecto compilando con sus tests en verde.
+- Cada criterio de aceptación AUTOMATED de la tarea tiene un código (por ejemplo T12-C3): escribe al menos un test que lo pruebe y cuyo nombre lleve ese código (test_T12_C3_rechaza_la_contrasena_incorrecta, it("T12-C3: ..."), T12C3...). Mnemosine verifica cada criterio buscando ese test entre los que pasaron en la CI del repositorio.
+- Los criterios MANUAL los comprueba el dueño del proyecto cuando entregas: explica en tus notas cómo probarlos.
+- Una tarea solo termina con la CI del repositorio en verde sobre el commit entregado; indica ese commit o pull request.
+- Sin código muerto: si reemplazas una función, clase, componente, endpoint, archivo o dependencia por otro dentro de la misma versión, elimina el anterior con todas sus referencias, imports, tests y configuración. No dejes código comentado, duplicado ni sin uso. Solo se conserva algo anterior cuando una versión ya publicada lo necesita por compatibilidad, y entonces se marca como obsoleto indicando en qué versión se eliminará.
+- El perfil de producción del proyecto (docs/analysis/production_profile.md) dice qué necesita para operar en producción.
+<!-- mnemosine:quality:end -->
