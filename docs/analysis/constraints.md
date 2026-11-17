@@ -15,3 +15,10 @@ Record mandatory technical, business, security, compatibility and operational co
 - Actualización de las pruebas de integración de sockets para contemplar el transporte no-SSL en desarrollo/local y SSL en producción.
 - Cierre de dudas técnicas previas al desarrollo, dejando el proyecto completamente listo para la generación detallada de tareas por módulo.
 
+## Proposed changes (internal analysis)
+
+- Consolidación de la arquitectura Clean Architecture (Feature-First) con Atomic Design para presentación en Ando-UI.
+- Definición del esquema y documentación de base de datos relacional existente (contracts/schemas/database.md y database.json) como SSOT de solo lectura.
+- Configuración de transporte de WebSockets adaptativa por ambiente: ws:// directo sin SSL en ambiente local y wss:// cifrado en entornos de desarrollo y producción.
+- Estructuración de product_map en 9 módulos jerárquicos desde los cimientos hasta la distribución productiva sin deuda técnica.
+
