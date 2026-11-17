@@ -115,3 +115,19 @@ More unit tests usually improve speed and diagnosis, while integration and end-t
 - **Database transaction behavior:** add integration coverage.
 - **Critical login journey:** add end-to-end coverage.
 - **API provider/consumer boundary:** add contract tests.
+
+## Tests required by the internal analysis
+
+- test/unit/app/config/environment_config_test.dart: Comprobar lectura de variables de entorno y selección de esquema ws:// para local y wss:// para producción.
+- test/unit/app/network/dio_client_test.dart: Validar inyección automática de Bearer Token en encabezados y generación obligatoria de Idempotency-Key en llamadas POST de viajes.
+- test/unit/features/auth/domain/session_bloc_test.dart: Verificar transiciones de estado de autenticación (unauthenticated, authenticating, authenticated, failure) y resolución de rutas por rol (pasajero vs conductor).
+- test/unit/features/trips/domain/passenger_trip_bloc_test.dart: Validar rechazo de nueva solicitud cuando el pasajero ya tiene un viaje no terminal (SOLICITADO, OFERTADO, ACEPTADO, EN_CURSO).
+- test/unit/features/trips/domain/driver_trip_bloc_test.dart: Comprobar filtrado estricto de solicitudes para permitir solo las pertenecientes a la cooperativa del conductor autenticado.
+- test/unit/features/trips/domain/trip_state_machine_test.dart: Verificar que las transiciones de estado del viaje sigan la secuencia estricta SOLICITADO -> OFERTADO -> ACEPTADO -> EN_CURSO -> COMPLETADO sin permitir saltos de estado.
+- test/integration/network/websocket_manager_test.dart: Probar suscripción, reconexión automática tras corte de red y recepción de eventos en tiempo real tanto en modo no seguro ws:// (local) como seguro wss://.
+- test/integration/flows/passenger_trip_e2e_test.dart: Recorrido E2E del pasajero desde selección de destino en mapa, solicitud con Idempotency-Key, recepción de conductor por socket y calificación final.
+- test/integration/flows/driver_trip_e2e_test.dart: Recorrido E2E del conductor recibiendo alerta de viaje, aceptando solicitud, transmitiendo GPS e informando inicio y finalización del viaje.
+- test/security/secure_storage_test.dart: Comprobar que los tokens JWT y datos sensibles de sesión se almacenan exclusivamente en Keystore/Keychain y nunca en texto plano.
+- test/security/dead_code_audit_test.dart: Comprobar mediante flutter analyze y scripts de verificación de imports que no existen componentes huérfanos ni dependencias no utilizadas en el build final.
+- test/accessibility/wcag_compliance_test.dart: Ejecutar escaneo automatizado de contraste, tamaños mínimos de toque (44x44) y etiquetas Semantics para lectores de pantalla en las vistas principales.
+
