@@ -6,6 +6,7 @@ import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/app/environments/environment.dart';
+import 'package:auronix_app/app/environments/flavors/env_base_config.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/client/data/datasources/remote/client_profile_remote_datasource.dart';
@@ -51,7 +52,19 @@ import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 final sl = GetIt.instance;
 
+/// T2-C7: EnvironmentConfig debe poder resolverse vía GetIt, no solo vía el singleton manual
+/// Environment() que ya usan otros puntos del código. Separado de initDependencies() para poder
+/// probarlo sin levantar el resto del árbol de dependencias (Dio, sockets, Hive, etc.).
+void registerEnvironmentConfig(GetIt getIt) {
+  if (!getIt.isRegistered<EnvBaseConfig>()) {
+    getIt.registerLazySingleton<EnvBaseConfig>(() => Environment().config!);
+  }
+}
+
 Future<void> initDependencies() async {
+  // ── 0. Configuración de ambiente ─────────────────────────────────────────
+  registerEnvironmentConfig(sl);
+
   // ── 1. Globales ───────────────────────────────────────────────────────────
 
   sl.registerFactory<GlobalCubit>(() => GlobalCubit());
@@ -196,12 +209,9 @@ Future<void> initDependencies() async {
     () => DriverTripRemoteDatasource(dio: sl<Dio>()),
   );
 
-  // WebSocket URL derivada de apiBaseUrl: http://host:port/api → ws://host:port
-  final wsBaseUrl = Environment()
-      .config!
-      .apiBaseUrl
-      .replaceFirst(RegExp(r'https?://'), 'ws://')
-      .replaceFirst(RegExp(r'/api.*'), '');
+  // WebSocket URL derivada de apiBaseUrl (T2-C6: wss:// obligatorio en
+  // desarrollo/producción, antes siempre caía en ws:// sin cifrar).
+  final wsBaseUrl = deriveWsBaseUrl(Environment().config!.apiBaseUrl);
 
   sl.registerFactory<DriverTripSocket>(
     () => DriverTripSocket(serverUrl: wsBaseUrl),

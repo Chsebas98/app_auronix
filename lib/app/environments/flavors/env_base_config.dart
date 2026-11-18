@@ -20,3 +20,17 @@ RSAPublicKey parsePublicKeyFromPem(String pemString) {
   final publicKey = parser.parse(pemString) as RSAPublicKey;
   return publicKey;
 }
+
+/// Deriva la URL base de WebSocket a partir de apiBaseUrl: http://host:port/api -> ws://host:port,
+/// https://host:port/api -> wss://host:port. wss:// es obligatorio cuando apiBaseUrl es https://
+/// (desarrollo remoto/producción); ws:// sin cifrar solo aplica a http:// local.
+///
+/// Usa Uri.parse en vez de recortar el string a mano: un recorte textual de "/api" se come de más
+/// cuando el host empieza con "api." (ej. https://api.ando.com/api/v1 quedaba en "wss:/" roto,
+/// porque "/api" también matcheaba justo después del "//" del esquema).
+String deriveWsBaseUrl(String apiBaseUrl) {
+  final uri = Uri.parse(apiBaseUrl);
+  final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
+  final authority = uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
+  return '$wsScheme://$authority';
+}
