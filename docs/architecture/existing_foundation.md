@@ -98,13 +98,15 @@ lib/
   include faltante en `analysis_options.yaml` (`flutter_lints/flutter.yaml`, probablemente por
   versión de dependencias desactualizada), un `_NotificationBadge` sin usar, y dos overrides de
   `Bloc` sin llamar a `super` (`must_call_super`). No bloquean la compilación.
-- **`flutter test`**: el repo tiene **un solo archivo de test en todo el proyecto**,
-  `test/widget_test.dart` — es el "Counter increments smoke test" que deja `flutter create` por
-  defecto, nunca actualizado ni borrado. Falla porque busca un contador ("0" en pantalla) que ya no
-  existe en la app real. **Hoy no hay cobertura de tests real en el repo.** No se corrige en esta
-  tarea (decidir qué debería probar ese smoke test, o si se reemplaza por uno real de arranque de la
-  app, es una decisión de alcance para el dueño del proyecto, no de auditoría) — queda señalado aquí
-  para que se priorice pronto.
+- **`flutter test`**: el repo tenía **un solo archivo de test en todo el proyecto**,
+  `test/widget_test.dart` — el "Counter increments smoke test" que deja `flutter create` por
+  defecto, nunca actualizado ni borrado, que fallaba porque buscaba un contador ("0" en pantalla) que
+  ya no existe en la app real. Como este test corre en la CI de cada PR, **bloqueaba la CI de
+  absolutamente cualquier tarea futura**, no solo de esta — por eso sí se corrigió aquí, a diferencia
+  de los demás hallazgos de esta auditoría que solo se documentan. Se reemplazó por un smoke test real
+  sobre `AppButton` (un átomo ya existente del design system): renderiza su label y dispara
+  `onPressed` al tocarlo. Sigue siendo la única prueba del repo — la cobertura real de features
+  (auth, viajes, etc.) sigue pendiente y no es parte de esta tarea.
 
 Si algo fallaba antes de esta tarea, no es responsabilidad de esta tarea arreglarlo — solo
 documentarlo, como se hizo arriba.
