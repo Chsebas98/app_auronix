@@ -9,10 +9,17 @@ import 'package:auronix_app/app/router/driver/conductor_routes.dart';
 import 'package:auronix_app/features/home/presentation/pages/health_check_screen.dart';
 import 'package:auronix_app/shared/pages/not_found_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  setUpAll(() async {
+    // EnvDevConfig lee sus valores de dotenv.env; sin cargar el .env primero,
+    // Environment()..initConfig(Environment.dev) lanza NotInitializedError.
+    await dotenv.load(fileName: '.env.dev');
+  });
+
   setUp(() async {
     await sl.reset();
     final environment = Environment()..initConfig(Environment.dev);
