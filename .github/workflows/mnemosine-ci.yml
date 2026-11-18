@@ -314,7 +314,10 @@ jobs:
               if [ -z "$(in_dir "$dir" list -name '*_test.dart')" ]; then fail "$(name_of "$dir"): no hay tests de Dart (*_test.dart). $NO_TESTS"; continue; fi
               rc=0; run_logged in_dir "$dir" $tool pub get || rc=$?
               if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudieron instalar las dependencias ($tool pub get)." "$MNEMOSINE_LOG"; continue; fi
-              rc=0; run_logged in_dir "$dir" $tool test --file-reporter "json:$(report_path dart "$dir" json)" || rc=$?
+              # --concurrency=1: evita "database is locked" cuando varios
+              # archivos de test usan una AppDatabase real (sqflite) sobre
+              # el mismo .db y corren en paralelo.
+              rc=0; run_logged in_dir "$dir" $tool test --concurrency=1 --file-reporter "json:$(report_path dart "$dir" json)" || rc=$?
               if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron los tests ($tool test)." "$MNEMOSINE_LOG"; else tested; fi
             done
           }

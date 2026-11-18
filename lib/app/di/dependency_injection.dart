@@ -159,6 +159,7 @@ Future<void> initDependencies() async {
       ),
       local: sl<AuthLocalServices>(),
       prefs: sl<RxSharedPreferences>(),
+      secureStorage: sl<SecureStorageService>(),
     ),
   );
 
