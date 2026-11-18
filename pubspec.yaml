@@ -44,6 +44,7 @@ dependencies:
  equatable: ^2.0.7
  firebase_core: ^4.2.1
  flutter_bloc: ^9.1.1
+ flutter_dotenv: ^5.2.1
  flutter_localization: ^0.3.3
  flutter_screenutil: ^5.9.3
  flutter_svg: ^2.2.1
@@ -123,6 +124,8 @@ flutter:
   - assets/images/flr/
   - assets/images/rive/
   - assets/icon/
+  - .env.dev
+  - .env.prod
  #   - images/a_dot_ham.jpeg
 
  # An image asset can refer to one or more resolution-specific "variants", see

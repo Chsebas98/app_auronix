@@ -306,6 +306,11 @@ jobs:
             for dir in $(roots -name pubspec.yaml | grep -v -e '/example$' -e '/example/' || true); do
               echo "== Dart/Flutter: $dir"
               if grep -qs 'sdk: *flutter' "$dir/pubspec.yaml"; then tool=flutter; else tool=dart; fi
+              # Si el proyecto declara .env.* como asset (ver .env.example) y la CI no tiene los
+              # secretos reales, usar valores de mentira para que el bundle de assets no falle.
+              for env_file in "$dir/.env.dev" "$dir/.env.prod"; do
+                [ -f "$env_file" ] || { [ -f "$dir/.env.example" ] && cp "$dir/.env.example" "$env_file"; } || true
+              done
               if [ -z "$(in_dir "$dir" list -name '*_test.dart')" ]; then fail "$(name_of "$dir"): no hay tests de Dart (*_test.dart). $NO_TESTS"; continue; fi
               rc=0; run_logged in_dir "$dir" $tool pub get || rc=$?
               if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudieron instalar las dependencias ($tool pub get)." "$MNEMOSINE_LOG"; continue; fi
