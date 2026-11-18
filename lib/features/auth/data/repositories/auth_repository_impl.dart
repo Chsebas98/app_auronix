@@ -101,9 +101,9 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       debugPrint('[AuthUnified] GoogleSignIn inicializado');
 
       final googleAccount = await _googleSignIn.authenticate();
-      debugPrint('[AuthUnified] Google account obtenida: ${googleAccount}');
+      debugPrint('[AuthUnified] Google account obtenida: $googleAccount');
       final googleAuth = googleAccount.authentication;
-      debugPrint('[AuthUnified] Google authentication obtenida: ${googleAuth}');
+      debugPrint('[AuthUnified] Google authentication obtenida: $googleAuth');
       if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
         return const Left(
           AuthFailure(message: 'El token no se obtuvo correctamente'),
@@ -127,7 +127,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
         photoUrl: googleAccount.photoUrl ?? '',
         isGoogleUser: true,
       );
-      debugPrint('[AuthUnified] Credenciales Google obtenidas: ${authModel}');
+      debugPrint('[AuthUnified] Credenciales Google obtenidas: $authModel');
       await _clientDb.saveUser(authModel);
       return Right(authModel);
     } catch (e) {

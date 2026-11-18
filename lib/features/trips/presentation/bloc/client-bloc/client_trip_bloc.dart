@@ -203,10 +203,6 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     emit(const ClientTripState());
   }
 
-  // ignore: must_call_super
   @override
-  Future<void> close() async {
-    // Singleton gestionado por GetIt — no cerrar para evitar
-    // "Cannot add new events after calling close"
-  }
+  Future<void> close() => super.close();
 }

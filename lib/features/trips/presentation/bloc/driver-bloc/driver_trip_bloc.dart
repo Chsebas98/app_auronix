@@ -288,9 +288,6 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     );
   }
 
-  // ignore: must_call_super
   @override
-  Future<void> close() async {
-    // Singleton gestionado por GetIt — no cerrar
-  }
+  Future<void> close() => super.close();
 }
