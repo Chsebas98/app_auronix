@@ -29,3 +29,10 @@ class UnexpectedFailure extends Failure {
 class StorageFailure extends Failure {
   const StorageFailure({required super.message, super.detail});
 }
+
+/// Conflicto de idempotencia (HTTP 409): un reintento de red duplico una
+/// peticion con el mismo Idempotency-Key (ver IdempotencyInterceptor, T6).
+class IdempotencyConflictFailure extends Failure {
+  const IdempotencyConflictFailure({required super.message, super.detail})
+    : super(statusCode: 409);
+}
