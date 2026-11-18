@@ -25,3 +25,7 @@ class AuthFailure extends Failure {
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure({required super.message, super.detail});
 }
+
+class StorageFailure extends Failure {
+  const StorageFailure({required super.message, super.detail});
+}

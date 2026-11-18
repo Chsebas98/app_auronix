@@ -2,6 +2,7 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
+import 'package:auronix_app/app/core/network/secure_storage_service.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
@@ -64,6 +65,9 @@ void registerEnvironmentConfig(GetIt getIt) {
 Future<void> initDependencies() async {
   // ── 0. Configuración de ambiente ─────────────────────────────────────────
   registerEnvironmentConfig(sl);
+  sl.registerLazySingleton<SecureStorageService>(
+    () => SecureStorageServiceImpl(),
+  );
 
   // ── 1. Globales ───────────────────────────────────────────────────────────
 

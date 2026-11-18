@@ -47,6 +47,7 @@ dependencies:
  flutter_bloc: ^9.1.1
  flutter_dotenv: ^5.2.1
  flutter_localization: ^0.3.3
+ flutter_secure_storage: ^9.2.4
  flutter_screenutil: ^5.9.3
  flutter_svg: ^2.2.1
  get_it: ^8.2.0
