@@ -145,6 +145,10 @@ class AppDatabase {
             'ALTER TABLE user_v3 RENAME TO ${DbConstants.tableUser}',
           );
         }
+
+        if (oldVersion < 4) {
+          await _createTripCacheTable(db);
+        }
       },
     );
   }
@@ -171,6 +175,129 @@ class AppDatabase {
         UNIQUE(${DbConstants.colEmail}, ${DbConstants.colUserType})
       );
     ''');
+
+    await _createTripCacheTable(db);
+  }
+
+  /// trip_cache: historial local (copias de viajes ya confirmados por el
+  /// backend, synced=1) y borradores offline (creados sin conexion,
+  /// synced=0, remote_id nulo hasta que se envien). Alineada con tb_trips.
+  Future<void> _createTripCacheTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DbConstants.tableTripCache} (
+        ${DbConstants.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${DbConstants.colRemoteId} INTEGER,
+        ${DbConstants.colCodigoViaje} TEXT,
+        ${DbConstants.colPassengerId} INTEGER NOT NULL,
+        ${DbConstants.colDriverId} INTEGER,
+        ${DbConstants.colCooperativaId} INTEGER,
+        ${DbConstants.colOrigenLatitud} REAL NOT NULL,
+        ${DbConstants.colOrigenLongitud} REAL NOT NULL,
+        ${DbConstants.colOrigenDireccion} TEXT NOT NULL,
+        ${DbConstants.colDestinoLatitud} REAL,
+        ${DbConstants.colDestinoLongitud} REAL,
+        ${DbConstants.colDestinoDireccion} TEXT,
+        ${DbConstants.colDistanciaKm} REAL,
+        ${DbConstants.colPrecioTotal} REAL,
+        ${DbConstants.colEstado} TEXT NOT NULL DEFAULT 'SOLICITADO',
+        ${DbConstants.colFechaSolicitud} TEXT,
+        ${DbConstants.colSynced} INTEGER NOT NULL DEFAULT 0,
+        ${DbConstants.colCachedAt} INTEGER NOT NULL
+      );
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_trip_cache_remote_id
+        ON ${DbConstants.tableTripCache}(${DbConstants.colRemoteId});
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_trip_cache_passenger
+        ON ${DbConstants.tableTripCache}(${DbConstants.colPassengerId});
+    ''');
+  }
+
+  /// Guarda/actualiza una copia de cache de un viaje ya confirmado por el
+  /// backend (synced=1). Si ya existe una fila con el mismo [remoteId], la
+  /// reemplaza en vez de duplicarla.
+  Future<int> cacheTrip(
+    Map<String, Object?> tripData, {
+    required int remoteId,
+  }) async {
+    final db = await database;
+    final existing = await db.query(
+      DbConstants.tableTripCache,
+      columns: [DbConstants.colId],
+      where: '${DbConstants.colRemoteId} = ?',
+      whereArgs: [remoteId],
+      limit: 1,
+    );
+
+    final row = <String, Object?>{
+      ...tripData,
+      DbConstants.colRemoteId: remoteId,
+      DbConstants.colSynced: 1,
+      DbConstants.colCachedAt: DateTime.now().millisecondsSinceEpoch,
+    };
+
+    if (existing.isNotEmpty) {
+      final id = existing.first[DbConstants.colId] as int;
+      await db.update(
+        DbConstants.tableTripCache,
+        row,
+        where: '${DbConstants.colId} = ?',
+        whereArgs: [id],
+      );
+      return id;
+    }
+    return db.insert(DbConstants.tableTripCache, row);
+  }
+
+  /// Guarda un borrador de viaje creado sin conexion (remote_id nulo,
+  /// synced=0) para reintentar enviarlo despues.
+  Future<int> saveTripDraft(Map<String, Object?> draftData) async {
+    final db = await database;
+    return db.insert(DbConstants.tableTripCache, {
+      ...draftData,
+      DbConstants.colRemoteId: null,
+      DbConstants.colSynced: 0,
+      DbConstants.colCachedAt: DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  /// Historial local (viajes ya confirmados), mas reciente primero.
+  Future<List<Map<String, Object?>>> getCachedTrips({int? passengerId}) async {
+    final db = await database;
+    return db.query(
+      DbConstants.tableTripCache,
+      where: passengerId != null
+          ? '${DbConstants.colSynced} = 1 AND ${DbConstants.colPassengerId} = ?'
+          : '${DbConstants.colSynced} = 1',
+      whereArgs: passengerId != null ? [passengerId] : null,
+      orderBy: '${DbConstants.colCachedAt} DESC',
+    );
+  }
+
+  /// Borradores pendientes de enviar al backend (sin remote_id todavia).
+  Future<List<Map<String, Object?>>> getPendingDrafts() async {
+    final db = await database;
+    return db.query(
+      DbConstants.tableTripCache,
+      where: '${DbConstants.colSynced} = 0',
+      orderBy: '${DbConstants.colCachedAt} ASC',
+    );
+  }
+
+  Future<void> deleteTripCacheRow(int id) async {
+    final db = await database;
+    await db.delete(
+      DbConstants.tableTripCache,
+      where: '${DbConstants.colId} = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> clearTripCache() async {
+    final db = await database;
+    await db.delete(DbConstants.tableTripCache);
   }
 
   Future<void> upsertUserMap(Map<String, Object?> data, String userType) async {
