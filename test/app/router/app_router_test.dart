@@ -51,8 +51,8 @@ void main() {
         .replace(
           scheme: apiUri.scheme == 'https' ? 'wss' : 'ws',
           path: '',
-          query: '',
-          fragment: '',
+          query: null,
+          fragment: null,
         )
         .toString();
 

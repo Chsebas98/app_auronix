@@ -34,7 +34,7 @@ class HealthCheckScreen extends StatelessWidget {
     if (!apiUri.hasAuthority) return '$scheme://';
 
     return apiUri
-        .replace(scheme: scheme, path: '', query: '', fragment: '')
+        .replace(scheme: scheme, path: '', query: null, fragment: null)
         .toString();
   }
 }
