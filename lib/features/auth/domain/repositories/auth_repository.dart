@@ -1,8 +1,10 @@
 import 'package:auronix_app/core/core.dart';
+import 'package:auronix_app/features/auth/data/models/register_request_model.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_driver_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
+import 'package:auronix_app/features/auth/domain/models/user_data.dart';
 import 'package:dartz/dartz.dart';
 
 /// Unified authentication repository used by both clients and drivers.
@@ -51,4 +53,15 @@ abstract class AuthUnifiedRepository {
 
   //?Shared
   Future<Either<Failure, void>> logout();
+
+  //?Backend real (T11): /api/v1/auth/{login,register}, persistido en
+  //?SecureStorageService (T5) en vez de AuthLocalDbDataSource.
+  Future<Either<Failure, UserData>> loginWithBackend({
+    required String email,
+    required String password,
+  });
+
+  Future<Either<Failure, UserData>> registerWithBackend(
+    RegisterRequestModel data,
+  );
 }

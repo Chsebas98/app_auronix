@@ -1,14 +1,19 @@
+import 'package:auronix_app/app/core/network/secure_storage_service.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/environments/environment.dart';
 import 'package:auronix_app/app/environments/flavors/env_dev_config.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:auronix_app/features/auth/data/models/auth_response_model.dart';
+import 'package:auronix_app/features/auth/data/models/login_request_model.dart';
+import 'package:auronix_app/features/auth/data/models/register_request_model.dart';
 import 'package:auronix_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_driver_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_request.dart';
 import 'package:auronix_app/features/auth/domain/models/request/register_verify_request.dart';
+import 'package:auronix_app/features/auth/domain/models/user_data.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -20,6 +25,7 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
   final AuthLocalDbDataSource _driverDb;
   final AuthLocalServices _local;
   final RxSharedPreferences _prefs;
+  final SecureStorageService _secureStorage;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   bool _googleInitialized = false;
 
@@ -29,11 +35,59 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
     required AuthLocalDbDataSource driverDb,
     required AuthLocalServices local,
     required RxSharedPreferences prefs,
+    required SecureStorageService secureStorage,
   }) : _remote = remote,
        _clientDb = clientDb,
        _driverDb = driverDb,
        _local = local,
-       _prefs = prefs;
+       _prefs = prefs,
+       _secureStorage = secureStorage;
+
+  // ──────────────────── Backend real (T11) ────────────────────
+
+  @override
+  Future<Either<Failure, UserData>> loginWithBackend({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _remote.login(
+        LoginRequestModel(email: email, password: password),
+      );
+      final persisted = await _persistBackendTokens(response);
+      if (persisted != null) return Left(persisted);
+      return Right(response.toUserData());
+    } on AuthRequestException catch (e) {
+      return Left(e.failure);
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserData>> registerWithBackend(
+    RegisterRequestModel data,
+  ) async {
+    try {
+      await _remote.register(data);
+      // El registro no devuelve tokens (RegisterUserResponseDto no los trae)
+      // — hace falta un login aparte despues de registrar.
+      return await loginWithBackend(email: data.email, password: data.password);
+    } on AuthRequestException catch (e) {
+      return Left(e.failure);
+    }
+  }
+
+  Future<Failure?> _persistBackendTokens(AuthResponseModel response) async {
+    final savedAccess = await _secureStorage.saveAccessToken(
+      response.accessToken,
+    );
+    if (savedAccess.isLeft()) {
+      return savedAccess.fold((f) => f, (_) => null);
+    }
+    final savedRefresh = await _secureStorage.saveRefreshToken(
+      response.refreshToken,
+    );
+    return savedRefresh.fold((f) => f, (_) => null);
+  }
 
   // ──────────────────── LOCAL ────────────────────
 
@@ -150,11 +204,26 @@ class AuthRepositoryUnifiedImpl implements AuthUnifiedRepository {
       final response = await _remote.googleLogin(googleCreds);
 
       if (!response['response']) {
+        final statusCode = response['statusCode'] as int?;
+        // T11: el backend real (micro-auronix AuthController) todavia no
+        // tiene un endpoint de intercambio Google->JWT — un 404 aqui no es
+        // "credenciales invalidas", es que falta implementarlo. TODO T11:
+        // una vez el backend agregue ese endpoint, este caso especial sobra.
+        if (statusCode == 404) {
+          return const Left(
+            UnexpectedFailure(
+              message:
+                  'Inicio de sesión con Google no disponible todavía: '
+                  'el servidor no tiene este endpoint implementado.',
+              detail: 'POST /auth/clients/google-login -> 404',
+            ),
+          );
+        }
         return Left(
           AuthFailure(
             message: response['message'] ?? 'Error de autenticación',
             detail: response['errorDetail'],
-            statusCode: response['statusCode'],
+            statusCode: statusCode,
           ),
         );
       }
