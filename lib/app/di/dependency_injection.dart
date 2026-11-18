@@ -71,6 +71,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   sl.registerFactory<AppLifeCycleCubit>(() => AppLifeCycleCubit());
   sl.registerFactory<PermissionCubit>(() => PermissionCubit());
+  sl.registerLazySingleton<Environment>(() => Environment());
 
   sl.registerLazySingleton<RxSharedPreferences>(
     () => RxSharedPreferences.getInstance(),

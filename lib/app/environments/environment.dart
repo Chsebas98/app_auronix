@@ -12,8 +12,13 @@ class Environment {
   static const String dev = "DEV";
   static const String prod = "PROD";
   EnvBaseConfig? config;
+  String _activeEnvironment = dev;
+
+  String get activeEnvironment => _activeEnvironment;
+
   void initConfig(String environment) {
-    config = _getConfig(environment);
+    _activeEnvironment = environment == prod ? prod : dev;
+    config = _getConfig(_activeEnvironment);
   }
 
   EnvBaseConfig _getConfig(String environment) {

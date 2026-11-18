@@ -8,7 +8,9 @@ import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/presentation/pages/client/auth_page.dart';
+import 'package:auronix_app/features/home/presentation/pages/health_check_screen.dart';
 import 'package:auronix_app/features/onBoarding/onboarding_screen.dart';
+import 'package:auronix_app/shared/pages/not_found_screen.dart';
 import 'package:auronix_app/shared/pages/root_page.dart';
 import 'package:auronix_app/shared/templates/presentation/allow_permits_screen.dart';
 
@@ -18,6 +20,7 @@ import 'package:go_router/go_router.dart';
 final _publicRoutes = <String>{
   Routes.onBoarding,
   Routes.about,
+  Routes.health,
   Routes.auth,
   Routes.register,
   Routes.login,
@@ -40,8 +43,10 @@ class AppRouter {
       navigatorKey: rootNavKey,
       initialLocation: Routes.onBoarding,
       refreshListenable: GoRouterRefreshBloc(sessionBloc.stream),
-      // errorBuilder: (context, state) => const NotFoundScreen(),
+      errorBuilder: (context, state) => const NotFoundScreen(),
       redirect: (context, state) {
+        if (state.error != null) return null;
+
         final sessionState = sessionBloc.state;
         final currentLocation = state.uri.path;
 
@@ -114,6 +119,11 @@ class AppRouter {
           builder: (context, state) {
             return AllowPermitsScreen();
           },
+        ),
+        GoRoute(
+          name: 'health',
+          path: Routes.health,
+          builder: (context, state) => const HealthCheckScreen(),
         ),
         //Protegidas - Cliente
         GoRoute(
