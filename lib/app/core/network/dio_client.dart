@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:auronix_app/app/core/network/interceptors/cache_control_interceptors.dart';
 import 'package:auronix_app/app/core/network/interceptors/retry_control_interceptor.dart';
+import 'package:auronix_app/app/network/interceptors/logging_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -65,16 +66,8 @@ class DioClient {
       ),
     );
 
-    // 4. Log Interceptor (último para ver todo)
-    dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        requestHeader: false,
-        responseHeader: false,
-        logPrint: (obj) => debugPrint('Dio: $obj'),
-      ),
-    );
+    // 4. Log Interceptor (último para ver todo; enmascara tokens/contraseñas)
+    dio.interceptors.add(LoggingInterceptor());
 
     _dio = dio;
     _initialized = true;
