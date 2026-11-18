@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auronix_app/app/core/bloc/session-bloc/session_bloc.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -10,6 +11,9 @@ class AuthInterceptor extends Interceptor {
   final AppDatabase _db;
   final AuthRemoteDatasource _authRemote;
   final Dio _dio;
+  // Closure, no la instancia directa: SessionBloc se registra en GetIt
+  // DESPUES de que este interceptor se construye (ver dependency_injection.dart).
+  final SessionBloc Function() _sessionBloc;
 
   bool _isRefreshing = false;
 
@@ -20,9 +24,11 @@ class AuthInterceptor extends Interceptor {
     required AppDatabase db,
     required AuthRemoteDatasource authRemote,
     required Dio dio,
+    required SessionBloc Function() sessionBloc,
   }) : _db = db,
        _authRemote = authRemote,
-       _dio = dio;
+       _dio = dio,
+       _sessionBloc = sessionBloc;
 
   // ── onRequest ────────────────────────────────────────────────────
 
@@ -82,9 +88,12 @@ class AuthInterceptor extends Interceptor {
       final refreshToken = activeUser?[DbConstants.colTokenRefresh] as String?;
 
       if (refreshToken == null || refreshToken.isEmpty || userType == null) {
-        debugPrint('Sin refresh token — limpiando sesión');
+        debugPrint('Sin refresh token — notificando expiración de sesión');
         _resolveQueue(null); // notificar a encolados que falló
-        if (userType != null) await _db.clearUser(userType);
+        // T6-C5: notificar al bus de eventos de sesión en vez de limpiar la
+        // DB aqui directo — SessionBloc.logout() ya limpia cliente/conductor
+        // y emite SessionUnauthenticated (el router ya redirige con eso).
+        _sessionBloc().add(const LoggoutUserEvent());
         return handler.next(err);
       }
 
@@ -96,7 +105,7 @@ class AuthInterceptor extends Interceptor {
       if (!response['response']) {
         debugPrint('Refresh falló: ${response['message']}');
         _resolveQueue(null);
-        await _db.clearUser(userType);
+        _sessionBloc().add(const LoggoutUserEvent());
         return handler.next(err);
       }
 
@@ -125,9 +134,7 @@ class AuthInterceptor extends Interceptor {
     } catch (e) {
       debugPrint('Error en refresh: $e');
       _resolveQueue(null);
-      final activeUser = await _db.getActiveUserMap();
-      final userType = activeUser?[DbConstants.colUserType] as String?;
-      if (userType != null) await _db.clearUser(userType);
+      _sessionBloc().add(const LoggoutUserEvent());
       return handler.next(err);
     } finally {
       _isRefreshing = false;

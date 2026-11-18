@@ -2,6 +2,7 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
+import 'package:auronix_app/app/core/network/interceptors/idempotency_interceptor.dart';
 import 'package:auronix_app/app/core/network/secure_storage_service.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
@@ -131,8 +132,10 @@ Future<void> initDependencies() async {
       db: sl<AppDatabase>(),
       dio: dioBasic,
       authRemote: authRemote,
+      sessionBloc: () => sl<SessionBloc>(),
     ),
   );
+  dioBasic.interceptors.add(IdempotencyInterceptor());
 
   sl.registerLazySingleton<Dio>(() => dioBasic);
 
