@@ -52,6 +52,11 @@ void main() {
 
       await manager.connect();
       final connectFrame = await broker.firstConnect;
+      // broker.firstConnect se resuelve en cuanto el SERVIDOR recibe el
+      // CONNECT; el CLIENTE todavia necesita procesar la vuelta CONNECTED
+      // antes de marcarse conectado, asi que se espera eso por separado
+      // (bajo carga esa vuelta no es instantanea).
+      await _waitUntil(() => manager.isConnected);
 
       expect(connectFrame.headers['Authorization'], 'Bearer token-abc');
       expect(manager.isConnected, isTrue);
@@ -130,9 +135,25 @@ void main() {
       // El segundo intento de reconexion debe tardar mas que el primero
       // (backoff exponencial, no un retry a intervalo fijo).
       expect(secondGapMs, greaterThan(firstGapMs));
+      await _waitUntil(() => manager.isConnected);
       expect(manager.isConnected, isTrue);
     },
   );
+}
+
+/// Espera a que [condition] sea verdadera, sin asumir que un evento del
+/// servidor implica que el cliente ya termino de procesar su respuesta.
+Future<void> _waitUntil(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw TimeoutException('_waitUntil: condicion no se cumplio a tiempo');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
 }
 
 class _StompConnectFrame {
