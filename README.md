@@ -6,7 +6,7 @@ App móvil Flutter de ride-hailing (tipo Uber/Cabify) con dos roles de usuario: 
 
 ## Stack
 
-- Flutter, Dart SDK `^3.9.0`.
+- Flutter 3.44 / Dart 3.12 (el constraint de Dart del paquete está en `pubspec.yaml`).
 - Estado: `flutter_bloc` (Bloc + Cubit).
 - Navegación: `go_router`, con shells separados por rol (`/client/...`, `/driver/...`).
 - Inyección de dependencias: `get_it` (service locator), en `lib/app/di/dependency_injection.dart`.
@@ -19,7 +19,7 @@ App móvil Flutter de ride-hailing (tipo Uber/Cabify) con dos roles de usuario: 
 
 ## Arquitectura (resumen)
 
-Clean Architecture por feature (`data/domain/presentation`) + Atomic Design en la capa de UI (`atoms/molecules/organisms/templates/pages`). Detalle completo en [`docs/architecture.md`](docs/architecture.md), [`docs/design_patterns.md`](docs/design_patterns.md) y [`docs/hierarchy.md`](docs/hierarchy.md).
+Clean Architecture Feature-First por feature (`data/domain/presentation`) + Atomic Design en la capa de UI (`atoms/molecules/organisms/templates/pages`). Detalle en [`docs/architecture/existing_foundation.md`](docs/architecture/existing_foundation.md), [`docs/architecture.md`](docs/architecture.md), [`docs/design_patterns.md`](docs/design_patterns.md) y [`docs/hierarchy.md`](docs/hierarchy.md).
 
 ## Estructura de alto nivel
 
@@ -35,6 +35,37 @@ Clean Architecture por feature (`data/domain/presentation`) + Atomic Design en l
 - Config por entorno: `lib/app/environments/flavors/`.
 - Flavors Android (`dev`/`prod`): `android/app/build.gradle.kts`. **Firma de release no configurada** (usa el keystore de debug) — ver [`docs/security.md`](docs/security.md).
 - Proyectos Firebase separados (`auronix-ando-dev` / `auronix-ando-prod`).
+
+### Configuración local
+
+Crea los archivos de entorno a partir de la plantilla y completa sus valores para cada ambiente:
+
+```sh
+cp .env.example .env.dev
+cp .env.example .env.prod
+```
+
+`main_dev.dart` carga `.env.dev` y `main_prod.dart` carga `.env.prod`. No guardes valores secretos en el repositorio; los archivos `.env.*` están ignorados por Git.
+
+Para instalar dependencias y ejecutar la app:
+
+```sh
+flutter pub get
+flutter run -t lib/main_dev.dart
+```
+
+Para ejecutar con la configuración de producción localmente o crear un bundle de release:
+
+```sh
+flutter run -t lib/main_prod.dart
+flutter build appbundle --release -t lib/main_prod.dart
+```
+
+Ejecuta la suite de pruebas con:
+
+```sh
+flutter test
+```
 
 ## Estado del proyecto
 

@@ -173,10 +173,7 @@ class AppDatabase {
     ''');
   }
 
-  Future<void> upsertUserMap(
-    Map<String, Object?> data,
-    String userType,
-  ) async {
+  Future<void> upsertUserMap(Map<String, Object?> data, String userType) async {
     final db = await database;
 
     // Garantizar máximo 1 registro por user_type

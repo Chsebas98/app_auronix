@@ -27,11 +27,13 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
 
     final userId = JwtHelpers.getUserId(event.credentials.tokenAccess) ?? 0;
 
-    emit(state.copyWith(
-      status: HomeClientStatus.ready,
-      dataProfile: event.credentials,
-      userId: userId,
-    ));
+    emit(
+      state.copyWith(
+        status: HomeClientStatus.ready,
+        dataProfile: event.credentials,
+        userId: userId,
+      ),
+    );
 
     add(const GetCurrentLocationEvent());
   }
@@ -44,10 +46,12 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        emit(state.copyWith(
-          currentAddress: 'Activa el GPS para ver tu ubicación',
-          isLoadingAddress: false,
-        ));
+        emit(
+          state.copyWith(
+            currentAddress: 'Activa el GPS para ver tu ubicación',
+            isLoadingAddress: false,
+          ),
+        );
         return;
       }
 
@@ -57,10 +61,12 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        emit(state.copyWith(
-          currentAddress: 'Permiso de ubicación no otorgado',
-          isLoadingAddress: false,
-        ));
+        emit(
+          state.copyWith(
+            currentAddress: 'Permiso de ubicación no otorgado',
+            isLoadingAddress: false,
+          ),
+        );
         return;
       }
 
@@ -77,14 +83,17 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
       }
 
       if (position == null) {
-        emit(state.copyWith(
-          currentAddress: 'No se pudo obtener la ubicación',
-          isLoadingAddress: false,
-        ));
+        emit(
+          state.copyWith(
+            currentAddress: 'No se pudo obtener la ubicación',
+            isLoadingAddress: false,
+          ),
+        );
         return;
       }
 
-      String address = '${position.latitude.toStringAsFixed(4)}, '
+      String address =
+          '${position.latitude.toStringAsFixed(4)}, '
           '${position.longitude.toStringAsFixed(4)}';
 
       try {
@@ -104,18 +113,22 @@ class HomeClientBloc extends Bloc<HomeClientEvent, HomeClientState> {
         // Si geocoding falla, mostramos coordenadas
       }
 
-      emit(state.copyWith(
-        currentAddress: address,
-        currentLat: position.latitude,
-        currentLng: position.longitude,
-        isLoadingAddress: false,
-      ));
+      emit(
+        state.copyWith(
+          currentAddress: address,
+          currentLat: position.latitude,
+          currentLng: position.longitude,
+          isLoadingAddress: false,
+        ),
+      );
     } catch (e) {
       debugPrint('[HomeClientBloc] Error obteniendo ubicación: $e');
-      emit(state.copyWith(
-        currentAddress: 'Ubicación no disponible',
-        isLoadingAddress: false,
-      ));
+      emit(
+        state.copyWith(
+          currentAddress: 'Ubicación no disponible',
+          isLoadingAddress: false,
+        ),
+      );
     }
   }
 

@@ -50,7 +50,8 @@ class ClientPositionListener {
               final update = DriverPositionUpdate.fromJson(data);
               _controller.add(update);
               debugPrint(
-                  '[ClientPosition] driver at ${update.latitude}, ${update.longitude}');
+                '[ClientPosition] driver at ${update.latitude}, ${update.longitude}',
+              );
             }
           } catch (e) {
             debugPrint('[ClientPosition] parse error: $e');

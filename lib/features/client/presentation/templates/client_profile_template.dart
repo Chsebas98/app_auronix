@@ -50,26 +50,27 @@ class _ClientProfileTemplateState extends State<ClientProfileTemplate> {
         : 0;
 
     context.read<ClientProfileBloc>().add(
-          ClientProfileUpdateEvent(
-            userId: userId,
-            firstName: _firstNameCtrl.text.trim().isNotEmpty
-                ? _firstNameCtrl.text.trim()
-                : null,
-            lastName: _lastNameCtrl.text.trim().isNotEmpty
-                ? _lastNameCtrl.text.trim()
-                : null,
-            phone: _phoneCtrl.text.trim().isNotEmpty
-                ? _phoneCtrl.text.trim()
-                : null,
-          ),
-        );
+      ClientProfileUpdateEvent(
+        userId: userId,
+        firstName: _firstNameCtrl.text.trim().isNotEmpty
+            ? _firstNameCtrl.text.trim()
+            : null,
+        lastName: _lastNameCtrl.text.trim().isNotEmpty
+            ? _lastNameCtrl.text.trim()
+            : null,
+        phone: _phoneCtrl.text.trim().isNotEmpty
+            ? _phoneCtrl.text.trim()
+            : null,
+      ),
+    );
     setState(() => _editing = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<ClientProfileBloc, ClientProfileState>(
-      listenWhen: (prev, curr) => curr.status == ClientProfileStatus.ready &&
+      listenWhen: (prev, curr) =>
+          curr.status == ClientProfileStatus.ready &&
           prev.status == ClientProfileStatus.loading,
       listener: (_, state) {
         _firstNameCtrl.text = state.profile.firstName;
@@ -87,8 +88,11 @@ class _ClientProfileTemplateState extends State<ClientProfileTemplate> {
               backgroundColor: context.appColors.background,
               elevation: 0,
               leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios_rounded,
-                    color: context.appColors.icon, size: 20.r),
+                icon: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: context.appColors.icon,
+                  size: 20.r,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
               title: AppText(
@@ -116,7 +120,9 @@ class _ClientProfileTemplateState extends State<ClientProfileTemplate> {
                 ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
                     padding: EdgeInsets.symmetric(
-                        horizontal: 24.w, vertical: 24.h),
+                      horizontal: 24.w,
+                      vertical: 24.h,
+                    ),
                     child: Column(
                       children: [
                         // ── Avatar ──────────────────────────────────────
@@ -146,8 +152,11 @@ class _ClientProfileTemplateState extends State<ClientProfileTemplate> {
                                       color: AppColors.third,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(Icons.camera_alt_rounded,
-                                        color: AppColors.secondary, size: 14.r),
+                                    child: Icon(
+                                      Icons.camera_alt_rounded,
+                                      color: AppColors.secondary,
+                                      size: 14.r,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -184,7 +193,9 @@ class _ClientProfileTemplateState extends State<ClientProfileTemplate> {
                         16.verticalSpace,
                         _ProfileField(
                           label: 'Correo electrónico',
-                          controller: TextEditingController(text: profile.email),
+                          controller: TextEditingController(
+                            text: profile.email,
+                          ),
                           readOnly: true,
                         ),
 
@@ -204,7 +215,8 @@ class _ClientProfileTemplateState extends State<ClientProfileTemplate> {
                             label: 'GUARDAR CAMBIOS',
                             variant: AppButtonVariant.filled,
                             expand: true,
-                            isLoading: state.status == ClientProfileStatus.saving,
+                            isLoading:
+                                state.status == ClientProfileStatus.saving,
                             onPressed: () => _save(context, state),
                           ),
                           12.verticalSpace,
@@ -267,18 +279,17 @@ class _ProfileField extends StatelessWidget {
             controller: controller,
             readOnly: readOnly,
             keyboardType: keyboardType,
-            style: TextStyle(
-              color: context.appColors.text,
-              fontSize: 14.sp,
-            ),
+            style: TextStyle(color: context.appColors.text, fontSize: 14.sp),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
                 color: context.appColors.textSecondary,
                 fontSize: 14.sp,
               ),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 14.w,
+                vertical: 12.h,
+              ),
               border: InputBorder.none,
             ),
           ),

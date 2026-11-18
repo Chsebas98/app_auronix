@@ -18,7 +18,7 @@ class AuthPasswordField extends StatelessWidget {
   final String hint;
   final TextInputAction textInputAction;
 
-  static Set<ValidationRule> _registerRules = {
+  static final Set<ValidationRule> _registerRules = {
     MinCharactersValidationRule(8),
     DigitValidationRule(),
     UppercaseValidationRule(),

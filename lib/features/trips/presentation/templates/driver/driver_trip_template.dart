@@ -27,9 +27,9 @@ class DriverTripTemplate extends StatelessWidget {
           listener: (context, state) {
             context.read<DialogCubit>().hideAll();
             context.read<DialogCubit>().showMessage(
-                  title: 'Error',
-                  message: state.errorMessage ?? 'Ha ocurrido un error',
-                );
+              title: 'Error',
+              message: state.errorMessage ?? 'Ha ocurrido un error',
+            );
           },
         ),
       ],

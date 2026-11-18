@@ -17,8 +17,9 @@ class ClientHomePage extends StatelessWidget {
         : const AuthenticationCredentials.empty();
 
     return BlocProvider(
-      create: (_) => sl<HomeClientBloc>()
-        ..add(HomeClientInitEvent(credentials: credentials)),
+      create: (_) =>
+          sl<HomeClientBloc>()
+            ..add(HomeClientInitEvent(credentials: credentials)),
       child: const ClientHomeTemplate(),
     );
   }

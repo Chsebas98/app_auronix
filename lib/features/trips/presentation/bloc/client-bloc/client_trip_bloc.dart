@@ -30,12 +30,12 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     required RateDriverUseCase rateDriver,
     required TripStatusSocket socket,
     required ClientPositionListener positionListener,
-  })  : _requestTrip = requestTrip,
-        _cancelTrip = cancelTrip,
-        _rateDriver = rateDriver,
-        _socket = socket,
-        _positionListener = positionListener,
-        super(const ClientTripState()) {
+  }) : _requestTrip = requestTrip,
+       _cancelTrip = cancelTrip,
+       _rateDriver = rateDriver,
+       _socket = socket,
+       _positionListener = positionListener,
+       super(const ClientTripState()) {
     on<ClientTripSetRouteEvent>(_onSetRoute);
     on<ClientTripRequestEvent>(_onRequest);
     on<ClientTripConnectSocketEvent>(_onConnectSocket);
@@ -51,15 +51,17 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     ClientTripSetRouteEvent event,
     Emitter<ClientTripState> emit,
   ) {
-    emit(state.copyWith(
-      origenLatitud: event.origenLatitud,
-      origenLongitud: event.origenLongitud,
-      origenDireccion: event.origenDireccion,
-      destinoLatitud: event.destinoLatitud,
-      destinoLongitud: event.destinoLongitud,
-      destinoDireccion: event.destinoDireccion,
-      distanciaEstimadaKm: event.distanciaEstimadaKm,
-    ));
+    emit(
+      state.copyWith(
+        origenLatitud: event.origenLatitud,
+        origenLongitud: event.origenLongitud,
+        origenDireccion: event.origenDireccion,
+        destinoLatitud: event.destinoLatitud,
+        destinoLongitud: event.destinoLongitud,
+        destinoDireccion: event.destinoDireccion,
+        distanciaEstimadaKm: event.distanciaEstimadaKm,
+      ),
+    );
   }
 
   FutureOr<void> _onRequest(
@@ -80,15 +82,16 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ClientTripStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: ClientTripStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (trip) {
-        emit(state.copyWith(
-          status: ClientTripStatus.searching,
-          activeTrip: trip,
-        ));
+        emit(
+          state.copyWith(status: ClientTripStatus.searching, activeTrip: trip),
+        );
         add(ClientTripConnectSocketEvent(tripId: trip.id));
       },
     );
@@ -99,9 +102,9 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     Emitter<ClientTripState> emit,
   ) {
     _socketSub?.cancel();
-    _socketSub = _socket.connect(event.tripId).listen(
-      (e) => add(ClientTripStatusUpdatedEvent(socketEvent: e)),
-    );
+    _socketSub = _socket
+        .connect(event.tripId)
+        .listen((e) => add(ClientTripStatusUpdatedEvent(socketEvent: e)));
   }
 
   FutureOr<void> _onStatusUpdated(
@@ -115,10 +118,12 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
       _ => state.status,
     };
 
-    emit(state.copyWith(
-      status: status,
-      activeTrip: event.socketEvent.trip ?? state.activeTrip,
-    ));
+    emit(
+      state.copyWith(
+        status: status,
+        activeTrip: event.socketEvent.trip ?? state.activeTrip,
+      ),
+    );
 
     if (status == ClientTripStatus.completed) {
       _socketSub?.cancel();
@@ -137,15 +142,13 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     );
 
     result.fold(
-      (failure) =>
-          emit(state.copyWith(errorMessage: failure.message)),
+      (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (_) {
         _socketSub?.cancel();
         _socket.disconnect();
-        emit(state.copyWith(
-          status: ClientTripStatus.cancelled,
-          clearTrip: true,
-        ));
+        emit(
+          state.copyWith(status: ClientTripStatus.cancelled, clearTrip: true),
+        );
       },
     );
   }
@@ -173,23 +176,26 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     Emitter<ClientTripState> emit,
   ) {
     _positionSub?.cancel();
-    _positionSub = _positionListener.connect(event.tripId).listen(
-      (update) => add(ClientTripDriverPositionEvent(
-        latitude: update.latitude,
-        longitude: update.longitude,
-      )),
+    _positionSub = _positionListener
+        .connect(event.tripId)
+        .listen(
+          (update) => add(
+            ClientTripDriverPositionEvent(
+              latitude: update.latitude,
+              longitude: update.longitude,
+            ),
+          ),
+        );
+    debugPrint(
+      '[ClientTrip] listening driver position for trip ${event.tripId}',
     );
-    debugPrint('[ClientTrip] listening driver position for trip ${event.tripId}');
   }
 
   FutureOr<void> _onDriverPosition(
     ClientTripDriverPositionEvent event,
     Emitter<ClientTripState> emit,
   ) {
-    emit(state.copyWith(
-      driverLat: event.latitude,
-      driverLng: event.longitude,
-    ));
+    emit(state.copyWith(driverLat: event.latitude, driverLng: event.longitude));
   }
 
   FutureOr<void> _onReset(
@@ -203,10 +209,12 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     emit(const ClientTripState());
   }
 
-  // ignore: must_call_super
   @override
-  Future<void> close() async {
-    // Singleton gestionado por GetIt — no cerrar para evitar
-    // "Cannot add new events after calling close"
+  Future<void> close() {
+    _socketSub?.cancel();
+    _socket.disconnect();
+    _positionSub?.cancel();
+    _positionListener.disconnect();
+    return super.close();
   }
 }

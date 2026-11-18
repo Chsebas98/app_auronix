@@ -7,11 +7,7 @@ sealed class Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure({
-    required super.message,
-    super.detail,
-    super.statusCode,
-  });
+  const ServerFailure({required super.message, super.detail, super.statusCode});
 }
 
 class NetworkFailure extends Failure {
@@ -23,11 +19,7 @@ class CacheFailure extends Failure {
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure({
-    required super.message,
-    super.detail,
-    super.statusCode,
-  });
+  const AuthFailure({required super.message, super.detail, super.statusCode});
 }
 
 class UnexpectedFailure extends Failure {

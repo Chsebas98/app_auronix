@@ -12,11 +12,10 @@ class CompleteTripUseCase {
     required int tripId,
     required double distanciaFinalKm,
     required int duracionMinutos,
-  }) =>
-      _repo.completeTrip(
-        userId: userId,
-        tripId: tripId,
-        distanciaFinalKm: distanciaFinalKm,
-        duracionMinutos: duracionMinutos,
-      );
+  }) => _repo.completeTrip(
+    userId: userId,
+    tripId: tripId,
+    distanciaFinalKm: distanciaFinalKm,
+    duracionMinutos: duracionMinutos,
+  );
 }

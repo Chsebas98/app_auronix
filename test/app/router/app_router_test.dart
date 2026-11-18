@@ -47,36 +47,37 @@ void main() {
     },
   );
 
-  testWidgets('T3-C2 T3-C6: muestra ambiente, API y URL WebSocket configurados', (
-    tester,
-  ) async {
-    final environment = sl<Environment>();
-    environment.config = _TestEnvironmentConfig('https://api.example.test/api');
-    final apiUrl = environment.config!.apiBaseUrl;
-    final apiUri = Uri.parse(apiUrl);
-    final expectedWebSocketUrl = apiUri
-        .replace(
-          scheme: apiUri.scheme == 'https' ? 'wss' : 'ws',
-          path: '',
-          query: null,
-          fragment: null,
-        )
-        .toString();
+  testWidgets(
+    'T3-C2 T3-C6: muestra ambiente, API y URL WebSocket configurados',
+    (tester) async {
+      final environment = sl<Environment>();
+      environment.config = _TestEnvironmentConfig(
+        'https://api.example.test/api',
+      );
+      final apiUrl = environment.config!.apiBaseUrl;
+      final apiUri = Uri.parse(apiUrl);
+      final expectedWebSocketUrl = apiUri
+          .replace(
+            scheme: apiUri.scheme == 'https' ? 'wss' : 'ws',
+            path: '',
+            query: null,
+            fragment: null,
+          )
+          .toString();
 
-    await tester.pumpWidget(
-      const MaterialApp(home: HealthCheckScreen()),
-    );
+      await tester.pumpWidget(const MaterialApp(home: HealthCheckScreen()));
 
-    expect(find.text('Ambiente: DEV'), findsOneWidget);
-    expect(find.text('API URL: $apiUrl'), findsOneWidget);
-    expect(find.text('WebSocket: $expectedWebSocketUrl'), findsOneWidget);
+      expect(find.text('Ambiente: DEV'), findsOneWidget);
+      expect(find.text('API URL: $apiUrl'), findsOneWidget);
+      expect(find.text('WebSocket: $expectedWebSocketUrl'), findsOneWidget);
 
-    environment.config = _TestEnvironmentConfig('http://api.example.test/api');
-    await tester.pumpWidget(
-      const MaterialApp(home: HealthCheckScreen()),
-    );
-    expect(find.text('WebSocket: ws://api.example.test'), findsOneWidget);
-  });
+      environment.config = _TestEnvironmentConfig(
+        'http://api.example.test/api',
+      );
+      await tester.pumpWidget(const MaterialApp(home: HealthCheckScreen()));
+      expect(find.text('WebSocket: ws://api.example.test'), findsOneWidget);
+    },
+  );
 
   testWidgets('T3-C4: rutas inexistentes muestran NotFoundScreen', (
     tester,

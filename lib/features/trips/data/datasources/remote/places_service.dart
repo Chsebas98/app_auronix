@@ -23,14 +23,14 @@ class PlacePrediction {
   });
 
   PlacePrediction copyWith({double? distanceKm}) => PlacePrediction(
-        placeId: placeId,
-        description: description,
-        mainText: mainText,
-        secondaryText: secondaryText,
-        latitude: latitude,
-        longitude: longitude,
-        distanceKm: distanceKm ?? this.distanceKm,
-      );
+    placeId: placeId,
+    description: description,
+    mainText: mainText,
+    secondaryText: secondaryText,
+    latitude: latitude,
+    longitude: longitude,
+    distanceKm: distanceKm ?? this.distanceKm,
+  );
 
   factory PlacePrediction.fromGooglePlaces(Map<String, dynamic> json) {
     final mainText =
@@ -99,12 +99,14 @@ class PlacesService {
       final predictions =
           (response.data['predictions'] as List<dynamic>?) ?? [];
       debugPrint(
-          '[PlacesService] Google Places: ${predictions.length} resultados para "$input"');
+        '[PlacesService] Google Places: ${predictions.length} resultados para "$input"',
+      );
 
       final results = <PlacePrediction>[];
       for (final p in predictions) {
-        final pred =
-            PlacePrediction.fromGooglePlaces(p as Map<String, dynamic>);
+        final pred = PlacePrediction.fromGooglePlaces(
+          p as Map<String, dynamic>,
+        );
         if (pred.placeId.isEmpty) continue;
 
         final details = await getDetails(pred.placeId);
@@ -124,8 +126,7 @@ class PlacesService {
         );
 
         if (lat != null && lng != null) {
-          final d =
-              _haversineKm(lat, lng, details.latitude, details.longitude);
+          final d = _haversineKm(lat, lng, details.latitude, details.longitude);
           enriched = enriched.copyWith(distanceKm: d);
         }
         results.add(enriched);
@@ -157,14 +158,14 @@ class PlacesService {
       final result = response.data['result'] as Map<String, dynamic>?;
       if (result == null) return null;
 
-      final location =
-          result['geometry']?['location'] as Map<String, dynamic>?;
+      final location = result['geometry']?['location'] as Map<String, dynamic>?;
       if (location == null) return null;
 
       return PlaceDetails(
         latitude: (location['lat'] as num).toDouble(),
         longitude: (location['lng'] as num).toDouble(),
-        formattedAddress: result['formatted_address'] as String? ??
+        formattedAddress:
+            result['formatted_address'] as String? ??
             result['name'] as String? ??
             '',
       );
@@ -186,8 +187,7 @@ class PlacesService {
         },
       );
 
-      final results =
-          (response.data['results'] as List<dynamic>?) ?? [];
+      final results = (response.data['results'] as List<dynamic>?) ?? [];
       if (results.isEmpty) return null;
 
       return results.first['formatted_address'] as String?;
@@ -214,12 +214,10 @@ class PlacesService {
         },
       );
 
-      final routes =
-          (response.data['routes'] as List<dynamic>?) ?? [];
+      final routes = (response.data['routes'] as List<dynamic>?) ?? [];
       if (routes.isEmpty) return [];
 
-      final polyline =
-          routes.first['overview_polyline']?['points'] as String?;
+      final polyline = routes.first['overview_polyline']?['points'] as String?;
       if (polyline == null) return [];
 
       return _decodePolyline(polyline);
@@ -261,12 +259,16 @@ class PlacesService {
   }
 
   static double _haversineKm(
-    double lat1, double lng1, double lat2, double lng2,
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
   ) {
     const r = 6371.0;
     final dLat = _toRad(lat2 - lat1);
     final dLng = _toRad(lng2 - lng1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_toRad(lat1)) *
             math.cos(_toRad(lat2)) *
             math.sin(dLng / 2) *

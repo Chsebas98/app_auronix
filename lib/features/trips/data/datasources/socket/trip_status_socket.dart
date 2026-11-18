@@ -44,13 +44,13 @@ class TripStatusSocket {
         final tripId = payload['trip_id'] as int;
         final status = payload['status'] as String;
         final data = payload['data'] as Map<String, dynamic>?;
-        final trip = data != null ? TripResponseModel.fromJson(data).toEntity() : null;
+        final trip = data != null
+            ? TripResponseModel.fromJson(data).toEntity()
+            : null;
 
-        _controller?.add(TripStatusEvent(
-          tripId: tripId,
-          status: status,
-          trip: trip,
-        ));
+        _controller?.add(
+          TripStatusEvent(tripId: tripId, status: status, trip: trip),
+        );
       }
     } catch (_) {}
   }
