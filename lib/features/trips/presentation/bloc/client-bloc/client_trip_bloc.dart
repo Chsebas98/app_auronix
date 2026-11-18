@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auronix_app/app/network/websocket_manager.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/client_position_listener.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/trip_status_socket.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_entity.dart';
@@ -22,7 +23,7 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
   final ClientPositionListener _positionListener;
 
   StreamSubscription<TripStatusEvent>? _socketSub;
-  StreamSubscription<DriverPositionUpdate>? _positionSub;
+  StreamSubscription<DriverLocationUpdate>? _positionSub;
 
   ClientTripBloc({
     required RequestTripUseCase requestTrip,
