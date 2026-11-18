@@ -166,7 +166,11 @@ Future<void> initDependencies() async {
   // ── 6. Auth — blocs ───────────────────────────────────────────────────────
 
   sl.registerLazySingleton<SessionBloc>(
-    () => SessionBloc(sl<AuthUnifiedRepository>(), sl<RxSharedPreferences>()),
+    () => SessionBloc(
+      sl<AuthUnifiedRepository>(),
+      sl<RxSharedPreferences>(),
+      secureStorage: sl<SecureStorageService>(),
+    ),
   );
 
   sl.registerFactory<AuthUnifiedBloc>(
