@@ -89,6 +89,44 @@ lib/
 3. **Icono de carro inconsistente:** `driver_nearby_map.dart` sí usa un icono de carro
    (`assets/images/png/car_marker.png`), pero `client_trip_in_progress_template.dart` no — debería
    usarse el mismo asset en ambos para consistencia visual.
+4. **Widgets muertos relacionados al mapa:** `lib/features/trips/presentation/atoms/
+   driver_car_marker.dart` y `trip_request_marker.dart` no tienen ninguna referencia en el resto del
+   código (confirmado por búsqueda exhaustiva) — son widgets Flutter normales, no compatibles
+   directamente como ícono de `Marker` de `google_maps_flutter` (que requiere un `BitmapDescriptor`,
+   no un árbol de widgets). Parecen un intento anterior abandonado. Decidir: o se eliminan (tarea
+   T48), o se retoma la idea convirtiéndolos a `BitmapDescriptor` vía captura de widget-a-imagen para
+   un ícono más rico que el PNG estático actual (relacionado con T27).
+5. **Historial de viajes incompleto:** `lib/features/client/presentation/{pages,templates}/
+   client_save_trips_{page,template}.dart` ("Viajes guardados") existe pero es una pantalla simple de
+   82 líneas — sin paginación, sin bloc propio, y `client_trip_remote_datasource.dart` no tiene ningún
+   método de historial. A diferencia del resto de la auditoría, **esto sí es trabajo mayormente
+   nuevo** (tareas T39-T41, T43-T44) — partir de adaptar la pantalla existente, no de construir una
+   nueva desde cero para la parte visual.
+6. **Sin bloc de búsqueda de ubicación confirmado:** no se encontró un `LocationSearchBloc` ni
+   equivalente (T19) — la lógica de autocompletado de origen/destino probablemente vive embebida en
+   `client_select_destination_template.dart`. A diferencia de la mayoría de hallazgos de este
+   documento, no se pudo confirmar con certeza si hay algo que reusar aquí — verificar antes de
+   asumir.
+
+## Mapa de cobertura por tarea del plan (T1-T46)
+
+Leyenda: ✅ ya existe, adaptar (no recrear) · ⚠️ parcial o sin confirmar, verificar antes de asumir ·
+🆕 genuinamente nuevo, no hay nada que reusar.
+
+| Tareas | Cobertura | Qué ya existe |
+|---|---|---|
+| T1, T2, T3, T6, T7, T8 | ✅ | Theme/tokens/átomos, DI (get_it), router (go_router), DioClient+interceptores, sockets de viaje, jerarquía de errores — ver secciones de arriba |
+| T5 | 🆕 (legítimo) | Mejora de seguridad real, no duplicación — ver hallazgo 1 |
+| T10-T17, T20-T26, T28 | ✅ | Auth completo, places/directions, ciclo de viaje del pasajero completo, incluida protección de rutas por rol (T15) |
+| T18 | ✅ | `flutter_polyline_points` ya integrado — verificar qué parte puntual falta |
+| T19 | ⚠️ | Sin bloc dedicado confirmado — ver hallazgo 6 |
+| T27, T32 | ✅ (con gaps concretos) | Mapa + sockets ya existen, faltan rotación/animación/heading — ver hallazgos 2-4 |
+| T29, T38 | 🆕 | Tests E2E — cero cobertura de tests existe hoy |
+| T30, T31, T33-T37 | ✅ | Ciclo de viaje del conductor completo, incluido DriverTripBloc y el modal de solicitud entrante ya conectado |
+| T39-T41, T43-T44 | ⚠️ (mayormente 🆕) | Ver hallazgo 5 |
+| T42, T45 | ✅ | ProfileBloc y pantalla de perfil ya completos |
+| T46 | ✅ | Rutas/menús por rol ya existen, falta wiring fino |
+| T47-T60 | 🆕 | Hardening y release engineering (auditoría de dependencias, accesibilidad, splash/launcher icons, permisos, firma Android/iOS, política de privacidad, DEPLOY.md, smoke testing) — nada que reusar, con la excepción de T48 (código muerto), que ya tiene semilla confirmada: ver hallazgo 4 |
 
 ## Verificación de línea base
 
