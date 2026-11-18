@@ -109,11 +109,19 @@ void _initializeRouter() {
   );
 }
 
-List<String> _routePaths(Iterable<RouteBase> routes) => [
-  for (final route in routes)
-    if (route is GoRoute) ...[route.path, ..._routePaths(route.routes)],
-    if (route is ShellRoute) ..._routePaths(route.routes),
-];
+List<String> _routePaths(Iterable<RouteBase> routes) {
+  final paths = <String>[];
+  for (final route in routes) {
+    if (route is GoRoute) {
+      paths
+        ..add(route.path)
+        ..addAll(_routePaths(route.routes));
+    } else if (route is ShellRoute) {
+      paths.addAll(_routePaths(route.routes));
+    }
+  }
+  return paths;
+}
 
 class _UnauthenticatedSessionBloc implements SessionBloc {
   @override
