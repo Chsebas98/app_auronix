@@ -1,6 +1,7 @@
 import 'package:auronix_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:auronix_app/features/auth/presentation/atoms/auth_email_field.dart';
 import 'package:auronix_app/features/auth/presentation/atoms/auth_password_field.dart';
+import 'package:auronix_app/features/auth/presentation/molecules/login_button_signals.dart';
 import 'package:auronix_app/shared/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,9 @@ class ClientLoginForm extends StatelessWidget {
       key: formKey,
       child: BlocBuilder<AuthFormCubit, AuthFormState>(
         builder: (context, state) {
+          final authState = context.watch<AuthUnifiedBloc>().state;
+          final isLoading = isAuthLoginInProgress(authState);
+          final isFormInvalid = isClientLoginDisabled(state, authState);
           return Column(
             children: [
               const AuthEmailField(),
@@ -48,6 +52,8 @@ class ClientLoginForm extends StatelessWidget {
               AppButton(
                 label: 'Iniciar sesión',
                 expand: true,
+                isDisabled: isFormInvalid,
+                isLoading: isLoading,
                 onPressed: () {
                   if (formKey.currentState!.validate()) {
                     context.read<AuthUnifiedBloc>().add(
