@@ -6,11 +6,13 @@ import 'package:auronix_app/app/router/app_router.dart';
 import 'package:auronix_app/core/firebase/dev/firebase_options_dev.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:rive/rive.dart';
 
 final rootNavKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env.dev');
   String environment = const String.fromEnvironment(
     'ENVIRONMENT',
     defaultValue: Environment.dev,

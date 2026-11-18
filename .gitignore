@@ -47,3 +47,8 @@ app.*.map.json
 # ando_context.txt
 # consumir_endpoints_mvp.md
 /.claude
+
+# Secretos (nunca commitear). Usar .env.example como plantilla.
+.env
+.env.*
+!.env.example
