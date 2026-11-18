@@ -1,35 +1,25 @@
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:auronix_app/app/network/websocket_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
+/// Envía la posición del conductor cada 5s por STOMP
+/// (`/app/driver.location.update`, ver `WebSocketManager`).
 class DriverPositionSender {
-  final String serverUrl;
+  DriverPositionSender({required WebSocketManager wsManager})
+    : _wsManager = wsManager;
 
-  DriverPositionSender({required this.serverUrl});
-
-  WebSocketChannel? _channel;
+  final WebSocketManager _wsManager;
   Timer? _timer;
-  StreamSubscription<Position>? _positionSub;
 
   void start(int driverId) {
     stop();
-    final url = '$serverUrl/ws/driver/$driverId/position';
-    debugPrint('[DriverPosition] connecting to $url');
-
-    try {
-      _channel = WebSocketChannel.connect(Uri.parse(url));
-
-      _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-        _sendCurrentPosition();
-      });
-
+    unawaited(_wsManager.connect());
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       _sendCurrentPosition();
-    } catch (e) {
-      debugPrint('[DriverPosition] connection error: $e');
-    }
+    });
+    _sendCurrentPosition();
   }
 
   Future<void> _sendCurrentPosition() async {
@@ -46,12 +36,11 @@ class DriverPositionSender {
         pos = await Geolocator.getLastKnownPosition();
       }
 
-      if (pos != null && _channel != null) {
-        final data = jsonEncode({
-          'latitude': pos.latitude,
-          'longitude': pos.longitude,
-        });
-        _channel!.sink.add(data);
+      if (pos != null) {
+        _wsManager.sendDriverLocation(
+          latitude: pos.latitude,
+          longitude: pos.longitude,
+        );
         debugPrint('[DriverPosition] sent: ${pos.latitude}, ${pos.longitude}');
       }
     } catch (e) {
@@ -62,10 +51,5 @@ class DriverPositionSender {
   void stop() {
     _timer?.cancel();
     _timer = null;
-    _positionSub?.cancel();
-    _positionSub = null;
-    _channel?.sink.close();
-    _channel = null;
-    debugPrint('[DriverPosition] stopped');
   }
 }

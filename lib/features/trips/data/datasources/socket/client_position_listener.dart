@@ -1,82 +1,26 @@
-import 'dart:async';
-import 'dart:convert';
+import 'package:auronix_app/app/network/websocket_manager.dart';
 
-import 'package:flutter/foundation.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-
-class DriverPositionUpdate {
-  final double latitude;
-  final double longitude;
-  final int driverId;
-
-  const DriverPositionUpdate({
-    required this.latitude,
-    required this.longitude,
-    required this.driverId,
-  });
-
-  factory DriverPositionUpdate.fromJson(Map<String, dynamic> json) {
-    return DriverPositionUpdate(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      driverId: json['driver_id'] as int? ?? 0,
-    );
-  }
-}
-
+/// Escucha la posición del conductor de un viaje por STOMP
+/// (`/topic/trip.{tripId}`, ver `WebSocketManager`).
 class ClientPositionListener {
-  final String serverUrl;
+  ClientPositionListener({required WebSocketManager wsManager})
+    : _wsManager = wsManager;
 
-  ClientPositionListener({required this.serverUrl});
+  final WebSocketManager _wsManager;
+  int? _activeTripId;
 
-  WebSocketChannel? _channel;
-  final _controller = StreamController<DriverPositionUpdate>.broadcast();
-
-  Stream<DriverPositionUpdate> connect(int tripId) {
-    disconnect();
-    final url = '$serverUrl/ws/trip/$tripId/position';
-    debugPrint('[ClientPosition] connecting to $url');
-
-    try {
-      _channel = WebSocketChannel.connect(Uri.parse(url));
-      _channel!.stream.listen(
-        (raw) {
-          try {
-            final envelope = jsonDecode(raw as String) as Map<String, dynamic>;
-            final event = envelope['event'] as String?;
-
-            if (event == 'driver.position.updated') {
-              final data = envelope['data'] as Map<String, dynamic>;
-              final update = DriverPositionUpdate.fromJson(data);
-              _controller.add(update);
-              debugPrint(
-                '[ClientPosition] driver at ${update.latitude}, ${update.longitude}',
-              );
-            }
-          } catch (e) {
-            debugPrint('[ClientPosition] parse error: $e');
-          }
-        },
-        onError: (e) {
-          debugPrint('[ClientPosition] stream error: $e');
-          Future.delayed(const Duration(seconds: 3), () {
-            if (!_controller.isClosed) connect(tripId);
-          });
-        },
-        onDone: () {
-          debugPrint('[ClientPosition] stream closed');
-        },
-      );
-    } catch (e) {
-      debugPrint('[ClientPosition] connection error: $e');
+  Stream<DriverLocationUpdate> connect(int tripId) {
+    if (_activeTripId != null && _activeTripId != tripId) {
+      _wsManager.stopWatchingTrip(_activeTripId!);
     }
-
-    return _controller.stream;
+    _activeTripId = tripId;
+    return _wsManager.watchTrip(tripId);
   }
 
   void disconnect() {
-    _channel?.sink.close();
-    _channel = null;
-    debugPrint('[ClientPosition] disconnected');
+    if (_activeTripId != null) {
+      _wsManager.stopWatchingTrip(_activeTripId!);
+      _activeTripId = null;
+    }
   }
 }

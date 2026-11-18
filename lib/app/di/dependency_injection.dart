@@ -9,6 +9,7 @@ import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/app/environments/environment.dart';
 import 'package:auronix_app/app/environments/flavors/env_base_config.dart';
+import 'package:auronix_app/app/network/websocket_manager.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/client/data/datasources/remote/client_profile_remote_datasource.dart';
@@ -229,12 +230,18 @@ Future<void> initDependencies() async {
     () => TripStatusSocket(serverUrl: wsBaseUrl),
   );
 
+  // WebSocketManager es singleton: una sola sesion STOMP (T7) compartida por
+  // quien envia posicion (conductor) y quien la escucha (cliente).
+  sl.registerLazySingleton<WebSocketManager>(
+    () => WebSocketManager(wsBaseUrl: wsBaseUrl),
+  );
+
   sl.registerFactory<DriverPositionSender>(
-    () => DriverPositionSender(serverUrl: wsBaseUrl),
+    () => DriverPositionSender(wsManager: sl<WebSocketManager>()),
   );
 
   sl.registerFactory<ClientPositionListener>(
-    () => ClientPositionListener(serverUrl: wsBaseUrl),
+    () => ClientPositionListener(wsManager: sl<WebSocketManager>()),
   );
 
   sl.registerLazySingleton<TripRepository>(

@@ -26,4 +26,7 @@ jobs:
           [ -f .env.prod ] || cp .env.example .env.prod
       - run: flutter analyze --fatal-infos
       - run: dart format --output=none --set-exit-if-changed .
-      - run: flutter test --coverage
+      # --concurrency=1: varios archivos de test usan la AppDatabase real
+      # (sqflite_common_ffi) sobre el mismo archivo .db — correrlos en
+      # paralelo produce "database is locked" de forma intermitente.
+      - run: flutter test --coverage --concurrency=1
