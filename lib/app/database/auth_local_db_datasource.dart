@@ -12,7 +12,9 @@ class AuthLocalDbDataSource {
 
   /// Guardar usuario completo (login/registro inicial)
   Future<void> saveUser(AuthenticationCredentials creds) {
-    debugPrint('[DB] saveUser type=$userType role=${creds.role.name} email=${creds.email}');
+    debugPrint(
+      '[DB] saveUser type=$userType role=${creds.role.name} email=${creds.email}',
+    );
     return _db.upsertUserMap({
       DbConstants.colTokenAccess: creds.tokenAccess,
       DbConstants.colTokenRefresh: creds.tokenRefresh,

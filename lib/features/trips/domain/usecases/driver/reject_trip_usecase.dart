@@ -10,6 +10,5 @@ class RejectTripUseCase {
     required int userId,
     required int tripId,
     String? motivo,
-  }) =>
-      _repo.rejectTrip(userId: userId, tripId: tripId, motivo: motivo);
+  }) => _repo.rejectTrip(userId: userId, tripId: tripId, motivo: motivo);
 }

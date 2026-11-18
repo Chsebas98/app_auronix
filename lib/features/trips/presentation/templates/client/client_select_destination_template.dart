@@ -54,8 +54,7 @@ class _ClientSelectDestinationTemplateState
       RegExp(r'^-?\d+\.\d+,\s*-?\d+\.\d+$').hasMatch(text.trim());
 
   Future<void> _initOrigin() async {
-    final extra =
-        GoRouterState.of(context).extra as Map<String, dynamic>?;
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
 
     if (extra != null) {
       final lat = extra['lat'] as double? ?? 0;
@@ -72,8 +71,7 @@ class _ClientSelectDestinationTemplateState
         } else {
           _originAddress = 'Obteniendo dirección...';
           if (mounted) setState(() {});
-          final geocoded =
-              await sl<PlacesService>().reverseGeocode(lat, lng);
+          final geocoded = await sl<PlacesService>().reverseGeocode(lat, lng);
           _originAddress = geocoded ?? 'Mi ubicación actual';
           if (mounted) setState(() {});
         }
@@ -107,8 +105,10 @@ class _ClientSelectDestinationTemplateState
       _originAddress = 'Obteniendo dirección...';
       if (mounted) setState(() {});
 
-      final geocoded = await sl<PlacesService>()
-          .reverseGeocode(position.latitude, position.longitude);
+      final geocoded = await sl<PlacesService>().reverseGeocode(
+        position.latitude,
+        position.longitude,
+      );
       _originAddress = geocoded ?? 'Mi ubicación actual';
       if (mounted) setState(() {});
     } catch (_) {
@@ -138,10 +138,7 @@ class _ClientSelectDestinationTemplateState
     if (!_originReady) return;
     final controller = await _mapCompleter.future;
     controller.animateCamera(
-      CameraUpdate.newLatLngZoom(
-        LatLng(_originLat, _originLng),
-        15,
-      ),
+      CameraUpdate.newLatLngZoom(LatLng(_originLat, _originLng), 15),
     );
   }
 
@@ -160,10 +157,7 @@ class _ClientSelectDestinationTemplateState
           // disparen su frame callback de offset a mitad de layout.
           RepaintBoundary(
             child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: target,
-                zoom: 15,
-              ),
+              initialCameraPosition: CameraPosition(target: target, zoom: 15),
               style: context.isDark ? _darkMapStyle : null,
               onMapCreated: (controller) {
                 if (!_mapCompleter.isCompleted) {
@@ -211,8 +205,11 @@ class _ClientSelectDestinationTemplateState
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search_rounded,
-                        color: context.appColors.textSecondary, size: 20.r),
+                    Icon(
+                      Icons.search_rounded,
+                      color: context.appColors.textSecondary,
+                      size: 20.r,
+                    ),
                     12.horizontalSpace,
                     AppText(
                       '¿A dónde vas?',
@@ -232,8 +229,7 @@ class _ClientSelectDestinationTemplateState
               left: 16.w,
               right: 72.w,
               child: Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                 decoration: BoxDecoration(
                   color: context.appColors.surface,
                   borderRadius: BorderRadius.circular(12.r),
@@ -247,8 +243,11 @@ class _ClientSelectDestinationTemplateState
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.my_location_rounded,
-                        color: AppColors.fifth, size: 18.r),
+                    Icon(
+                      Icons.my_location_rounded,
+                      color: AppColors.fifth,
+                      size: 18.r,
+                    ),
                     10.horizontalSpace,
                     Expanded(
                       child: AppText(

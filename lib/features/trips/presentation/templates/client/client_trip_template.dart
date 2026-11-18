@@ -72,8 +72,7 @@ class _ClientTripTemplateState extends State<ClientTripTemplate> {
           listenWhen: (prev, curr) =>
               curr.status == ClientTripStatus.searching &&
               prev.status != ClientTripStatus.searching,
-          listener: (_, __) =>
-              context.push(ClientRoutesPath.searchingDriver),
+          listener: (_, __) => context.push(ClientRoutesPath.searchingDriver),
         ),
         BlocListener<ClientTripBloc, ClientTripState>(
           listenWhen: (prev, curr) =>
@@ -116,13 +115,17 @@ class _ClientTripTemplateState extends State<ClientTripTemplate> {
               child: SafeArea(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                      horizontal: 16.w, vertical: 8.h),
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   child: GestureDetector(
                     onTap: () =>
                         context.push(ClientRoutesPath.selectDestination),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w, vertical: 14.h),
+                        horizontal: 16.w,
+                        vertical: 14.h,
+                      ),
                       decoration: BoxDecoration(
                         color: context.appColors.mapCardBg,
                         borderRadius: BorderRadius.circular(12.r),

@@ -15,14 +15,13 @@ class DriverHomeTemplate extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<HomeDriverBloc, HomeDriverState>(
       listenWhen: (prev, curr) =>
-          curr.errorMessage != null &&
-          curr.errorMessage != prev.errorMessage,
+          curr.errorMessage != null && curr.errorMessage != prev.errorMessage,
       listener: (context, state) {
         context.read<DialogCubit>().hideAll();
         context.read<DialogCubit>().showMessage(
-              title: 'Error',
-              message: state.errorMessage!,
-            );
+          title: 'Error',
+          message: state.errorMessage!,
+        );
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
@@ -38,8 +37,8 @@ class DriverHomeTemplate extends StatelessWidget {
                 label: 'Iniciar Turno',
                 onPressed: () {
                   context.read<HomeDriverBloc>().add(
-                        const HomeDriverToggleAvailabilityEvent(),
-                      );
+                    const HomeDriverToggleAvailabilityEvent(),
+                  );
                   AppRouter.push(ConductorRoutesPath.startTrips);
                 },
               ),

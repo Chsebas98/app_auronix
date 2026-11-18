@@ -71,8 +71,7 @@ class _ClientTripInProgressTemplateState
 
     if (mounted && points.isNotEmpty) {
       setState(() {
-        _routePoints =
-            points.map((p) => LatLng(p[0], p[1])).toList();
+        _routePoints = points.map((p) => LatLng(p[0], p[1])).toList();
       });
     }
   }
@@ -83,8 +82,7 @@ class _ClientTripInProgressTemplateState
       listenWhen: (prev, curr) =>
           curr.status == ClientTripStatus.completed &&
           prev.status != ClientTripStatus.completed,
-      listener: (_, __) =>
-          context.pushReplacement(ClientRoutesPath.rateTrip),
+      listener: (_, __) => context.pushReplacement(ClientRoutesPath.rateTrip),
       child: BlocBuilder<ClientTripBloc, ClientTripState>(
         builder: (context, state) {
           final trip = state.activeTrip;
@@ -145,23 +143,24 @@ class _ClientTripInProgressTemplateState
                         markerId: const MarkerId('origin'),
                         position: origin,
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueAzure),
+                          BitmapDescriptor.hueAzure,
+                        ),
                       ),
                       Marker(
                         markerId: const MarkerId('destination'),
                         position: destination,
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueRed),
+                          BitmapDescriptor.hueRed,
+                        ),
                       ),
                       if (state.hasDriverPosition)
                         Marker(
                           markerId: const MarkerId('driver'),
-                          position: LatLng(
-                              state.driverLat!, state.driverLng!),
+                          position: LatLng(state.driverLat!, state.driverLng!),
                           icon: BitmapDescriptor.defaultMarkerWithHue(
-                              BitmapDescriptor.hueYellow),
-                          infoWindow:
-                              const InfoWindow(title: 'Conductor'),
+                            BitmapDescriptor.hueYellow,
+                          ),
+                          infoWindow: const InfoWindow(title: 'Conductor'),
                         ),
                     },
                     polylines: {
@@ -190,7 +189,9 @@ class _ClientTripInProgressTemplateState
                   child: SafeArea(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w, vertical: 8.h),
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
                       child: Container(
                         padding: EdgeInsets.all(14.r),
                         decoration: BoxDecoration(
@@ -211,17 +212,18 @@ class _ClientTripInProgressTemplateState
                               height: 40.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color:
-                                    AppColors.third.withValues(alpha: 0.15),
+                                color: AppColors.third.withValues(alpha: 0.15),
                               ),
-                              child: Icon(Icons.directions_car_rounded,
-                                  color: AppColors.third, size: 22.r),
+                              child: Icon(
+                                Icons.directions_car_rounded,
+                                color: AppColors.third,
+                                size: 22.r,
+                              ),
                             ),
                             12.horizontalSpace,
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   AppText(
                                     'VIAJE EN CURSO',
@@ -235,8 +237,7 @@ class _ClientTripInProgressTemplateState
                                         state.destinoDireccion ??
                                         '--',
                                     variant: AppTextVariant.bodySmall,
-                                    color:
-                                        context.appColors.textSecondary,
+                                    color: context.appColors.textSecondary,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -258,7 +259,9 @@ class _ClientTripInProgressTemplateState
                     right: 24.w,
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 14.h),
+                        horizontal: 20.w,
+                        vertical: 14.h,
+                      ),
                       decoration: BoxDecoration(
                         color: context.appColors.mapCardBg,
                         borderRadius: BorderRadius.circular(12.r),

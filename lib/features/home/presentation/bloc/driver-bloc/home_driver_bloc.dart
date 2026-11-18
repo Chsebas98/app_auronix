@@ -19,9 +19,9 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
   HomeDriverBloc({
     required GetDriverHomeUseCase getDriverHome,
     required HomeDriverRemoteDatasource remote,
-  })  : _getDriverHome = getDriverHome,
-        _remote = remote,
-        super(const HomeDriverState()) {
+  }) : _getDriverHome = getDriverHome,
+       _remote = remote,
+       super(const HomeDriverState()) {
     on<HomeDriverInitEvent>(_onInit);
     on<GetCurrentLocationEvent>(_onGetCurrentLocationEvent);
     on<HomeDriverToggleAvailabilityEvent>(_onToggleAvailability);
@@ -41,24 +41,28 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
     final result = await _getDriverHome(event.userId);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: HomeDriverStatus.error,
-        errorMessage: failure.message,
-      )),
-      (data) => emit(state.copyWith(
-        status: HomeDriverStatus.ready,
-        dataProfile: state.dataProfile.copyWith(
-          firstName: data.firstName,
-          lastName: data.lastName,
-          username: data.username,
-          photoUrl: data.photoUrl,
+      (failure) => emit(
+        state.copyWith(
+          status: HomeDriverStatus.error,
+          errorMessage: failure.message,
         ),
-        isAvailable: data.isAvailable,
-        currentAddress: data.currentAddress ?? '',
-        dailyEarnings: data.dailyEarnings,
-        completedTrips: data.completedTrips,
-        earningsHistory: data.earningsHistory,
-      )),
+      ),
+      (data) => emit(
+        state.copyWith(
+          status: HomeDriverStatus.ready,
+          dataProfile: state.dataProfile.copyWith(
+            firstName: data.firstName,
+            lastName: data.lastName,
+            username: data.username,
+            photoUrl: data.photoUrl,
+          ),
+          isAvailable: data.isAvailable,
+          currentAddress: data.currentAddress ?? '',
+          dailyEarnings: data.dailyEarnings,
+          completedTrips: data.completedTrips,
+          earningsHistory: data.earningsHistory,
+        ),
+      ),
     );
   }
 
@@ -70,10 +74,12 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        emit(state.copyWith(
-          currentAddress: 'Activa el GPS para ver tu ubicación',
-          isLoadingAddress: false,
-        ));
+        emit(
+          state.copyWith(
+            currentAddress: 'Activa el GPS para ver tu ubicación',
+            isLoadingAddress: false,
+          ),
+        );
         return;
       }
 
@@ -83,10 +89,12 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        emit(state.copyWith(
-          currentAddress: 'Permiso de ubicación no otorgado',
-          isLoadingAddress: false,
-        ));
+        emit(
+          state.copyWith(
+            currentAddress: 'Permiso de ubicación no otorgado',
+            isLoadingAddress: false,
+          ),
+        );
         return;
       }
 
@@ -103,14 +111,17 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
       }
 
       if (position == null) {
-        emit(state.copyWith(
-          currentAddress: 'No se pudo obtener la ubicación',
-          isLoadingAddress: false,
-        ));
+        emit(
+          state.copyWith(
+            currentAddress: 'No se pudo obtener la ubicación',
+            isLoadingAddress: false,
+          ),
+        );
         return;
       }
 
-      String address = '${position.latitude.toStringAsFixed(4)}, '
+      String address =
+          '${position.latitude.toStringAsFixed(4)}, '
           '${position.longitude.toStringAsFixed(4)}';
 
       try {
@@ -130,18 +141,22 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
         // Si geocoding falla, mostramos coordenadas
       }
 
-      emit(state.copyWith(
-        currentAddress: address,
-        currentLat: position.latitude,
-        currentLng: position.longitude,
-        isLoadingAddress: false,
-      ));
+      emit(
+        state.copyWith(
+          currentAddress: address,
+          currentLat: position.latitude,
+          currentLng: position.longitude,
+          isLoadingAddress: false,
+        ),
+      );
     } catch (e) {
       debugPrint('[HomeDriverBloc] Error obteniendo ubicación: $e');
-      emit(state.copyWith(
-        currentAddress: 'Ubicación no disponible',
-        isLoadingAddress: false,
-      ));
+      emit(
+        state.copyWith(
+          currentAddress: 'Ubicación no disponible',
+          isLoadingAddress: false,
+        ),
+      );
     }
   }
 
@@ -156,15 +171,13 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
         emit(state.copyWith(isAvailable: newValue));
         debugPrint('[DriverHome] disponibilidad: $newValue');
       } else {
-        emit(state.copyWith(
-          errorMessage: 'No se pudo cambiar la disponibilidad',
-        ));
+        emit(
+          state.copyWith(errorMessage: 'No se pudo cambiar la disponibilidad'),
+        );
       }
     } catch (e) {
       debugPrint('[DriverHome] setAvailability error: $e');
-      emit(state.copyWith(
-        errorMessage: 'Error al cambiar disponibilidad',
-      ));
+      emit(state.copyWith(errorMessage: 'Error al cambiar disponibilidad'));
     }
   }
 
@@ -172,29 +185,34 @@ class HomeDriverBloc extends Bloc<HomeDriverEvent, HomeDriverState> {
     HomeDriverLocationUpdatedEvent event,
     Emitter<HomeDriverState> emit,
   ) {
-    emit(state.copyWith(
-        currentAddress: event.address, isLoadingAddress: false));
+    emit(
+      state.copyWith(currentAddress: event.address, isLoadingAddress: false),
+    );
   }
 
   FutureOr<void> _onTripRequested(
     HomeDriverTripRequestedEvent event,
     Emitter<HomeDriverState> emit,
   ) {
-    emit(state.copyWith(
-      incomingTrip: event.trip,
-      status: HomeDriverStatus.tripIncoming,
-    ));
+    emit(
+      state.copyWith(
+        incomingTrip: event.trip,
+        status: HomeDriverStatus.tripIncoming,
+      ),
+    );
   }
 
   FutureOr<void> _onTripAccepted(
     HomeDriverTripAcceptedEvent event,
     Emitter<HomeDriverState> emit,
   ) {
-    emit(state.copyWith(
-      activeTrip: state.incomingTrip,
-      incomingTrip: null,
-      status: HomeDriverStatus.tripActive,
-    ));
+    emit(
+      state.copyWith(
+        activeTrip: state.incomingTrip,
+        incomingTrip: null,
+        status: HomeDriverStatus.tripActive,
+      ),
+    );
   }
 
   FutureOr<void> _onTripRejected(

@@ -24,8 +24,7 @@ class ClientTripCompletedTemplate extends StatelessWidget {
           backgroundColor: context.appColors.background,
           body: SafeArea(
             child: Padding(
-              padding:
-                  EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -39,8 +38,11 @@ class ClientTripCompletedTemplate extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: AppColors.eleventh.withValues(alpha: 0.12),
                     ),
-                    child: Icon(Icons.check_circle_rounded,
-                        color: AppColors.eleventh, size: 56.r),
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.eleventh,
+                      size: 56.r,
+                    ),
                   ),
                   24.verticalSpace,
 
@@ -105,7 +107,8 @@ class ClientTripCompletedTemplate extends StatelessWidget {
                         12.verticalSpace,
                         _SummaryRow(
                           label: 'Origen',
-                          value: state.origenDireccion ??
+                          value:
+                              state.origenDireccion ??
                               trip?.origenDireccion ??
                               '--',
                           compact: true,
@@ -113,7 +116,8 @@ class ClientTripCompletedTemplate extends StatelessWidget {
                         12.verticalSpace,
                         _SummaryRow(
                           label: 'Destino',
-                          value: state.destinoDireccion ??
+                          value:
+                              state.destinoDireccion ??
                               trip?.destinoDireccion ??
                               '--',
                           compact: true,
@@ -148,9 +152,9 @@ class ClientTripCompletedTemplate extends StatelessWidget {
                     variant: AppButtonVariant.filled,
                     expand: true,
                     onPressed: () {
-                      context
-                          .read<ClientTripBloc>()
-                          .add(const ClientTripResetEvent());
+                      context.read<ClientTripBloc>().add(
+                        const ClientTripResetEvent(),
+                      );
                       context.go(ClientRoutesPath.home);
                     },
                   ),

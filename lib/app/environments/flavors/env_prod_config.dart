@@ -13,6 +13,7 @@ class EnvProdConfig extends EnvBaseConfig {
   String get googleMapsApiKey => dotenv.env['GOOGLE_MAPS_API_KEY']!;
 
   @override
-  RSAPublicKey get publicKey =>
-      parsePublicKeyFromPem(decodeBase64Pem(dotenv.env['RSA_PUBLIC_KEY_BASE64']!));
+  RSAPublicKey get publicKey => parsePublicKeyFromPem(
+    decodeBase64Pem(dotenv.env['RSA_PUBLIC_KEY_BASE64']!),
+  );
 }

@@ -20,8 +20,8 @@ class ClientProfilePage extends StatelessWidget {
         : const AuthenticationCredentials.empty();
 
     return BlocProvider(
-      create: (_) => sl<ClientProfileBloc>()
-        ..add(ClientProfileLoadEvent(userId: userId)),
+      create: (_) =>
+          sl<ClientProfileBloc>()..add(ClientProfileLoadEvent(userId: userId)),
       child: ClientProfileTemplate(initialCredentials: credentials),
     );
   }

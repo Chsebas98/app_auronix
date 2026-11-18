@@ -10,6 +10,5 @@ class GetTripStatusUseCase {
   Future<Either<Failure, TripEntity>> call({
     required int userId,
     required String codigoViaje,
-  }) =>
-      _repo.getTripStatus(userId: userId, codigoViaje: codigoViaje);
+  }) => _repo.getTripStatus(userId: userId, codigoViaje: codigoViaje);
 }

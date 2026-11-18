@@ -9,10 +9,8 @@ class ClientProfileRemoteDatasource {
 
   ClientProfileRemoteDatasource({required Dio dio}) : _dio = dio;
 
-  Options _headers(int userId) => Options(
-        contentType: 'application/json',
-        headers: {'X-User-Id': userId},
-      );
+  Options _headers(int userId) =>
+      Options(contentType: 'application/json', headers: {'X-User-Id': userId});
 
   Future<Map<String, dynamic>> getProfile(int userId) async {
     final response = await _dio.post(

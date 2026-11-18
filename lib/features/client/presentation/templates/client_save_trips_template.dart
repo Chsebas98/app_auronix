@@ -18,8 +18,11 @@ class ClientSaveTripsTemplate extends StatelessWidget {
         backgroundColor: context.appColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded,
-              color: context.appColors.icon, size: 20.r),
+          icon: Icon(
+            Icons.arrow_back_ios_rounded,
+            color: context.appColors.icon,
+            size: 20.r,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: AppText(

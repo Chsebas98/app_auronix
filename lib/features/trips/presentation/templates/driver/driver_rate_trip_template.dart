@@ -109,7 +109,9 @@ class _DriverRateTripTemplateState extends State<DriverRateTripTemplate> {
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 6.w),
                             child: Icon(
-                              filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                              filled
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
                               color: filled
                                   ? AppColors.third
                                   : context.appColors.border,
@@ -147,20 +149,20 @@ class _DriverRateTripTemplateState extends State<DriverRateTripTemplate> {
                               final session = context.read<SessionBloc>().state;
                               final userId = session is SessionAuthenticated
                                   ? JwtHelpers.getUserId(
-                                          session.dataUser.tokenAccess) ??
-                                      0
+                                          session.dataUser.tokenAccess,
+                                        ) ??
+                                        0
                                   : 0;
                               context.read<DriverTripBloc>().add(
-                                    DriverTripRatePassengerEvent(
-                                      userId: userId,
-                                      tripId: state.activeTrip?.id ?? 0,
-                                      calificacion: _selectedStars,
-                                      comentario:
-                                          _commentController.text.isEmpty
-                                              ? null
-                                              : _commentController.text,
-                                    ),
-                                  );
+                                DriverTripRatePassengerEvent(
+                                  userId: userId,
+                                  tripId: state.activeTrip?.id ?? 0,
+                                  calificacion: _selectedStars,
+                                  comentario: _commentController.text.isEmpty
+                                      ? null
+                                      : _commentController.text,
+                                ),
+                              );
                             },
                     ),
                     16.verticalSpace,
@@ -170,7 +172,8 @@ class _DriverRateTripTemplateState extends State<DriverRateTripTemplate> {
                       onPressed: isRating
                           ? null
                           : () => context.pushReplacement(
-                              ConductorRoutesPath.tripCompleted),
+                              ConductorRoutesPath.tripCompleted,
+                            ),
                       child: AppText(
                         'Omitir',
                         variant: AppTextVariant.bodyMedium,

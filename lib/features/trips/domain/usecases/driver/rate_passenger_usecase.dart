@@ -11,11 +11,10 @@ class RatePassengerUseCase {
     required int tripId,
     required int calificacion,
     String? comentario,
-  }) =>
-      _repo.ratePassenger(
-        userId: userId,
-        tripId: tripId,
-        calificacion: calificacion,
-        comentario: comentario,
-      );
+  }) => _repo.ratePassenger(
+    userId: userId,
+    tripId: tripId,
+    calificacion: calificacion,
+    comentario: comentario,
+  );
 }

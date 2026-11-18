@@ -10,6 +10,5 @@ class CancelTripUseCase {
     required int userId,
     required int tripId,
     required String motivo,
-  }) =>
-      _repo.cancelTrip(userId: userId, tripId: tripId, motivo: motivo);
+  }) => _repo.cancelTrip(userId: userId, tripId: tripId, motivo: motivo);
 }

@@ -14,18 +14,20 @@ class TripRepositoryImpl implements TripRepository {
   TripRepositoryImpl({
     required ClientTripRemoteDatasource clientRemote,
     required DriverTripRemoteDatasource driverRemote,
-  })  : _clientRemote = clientRemote,
-        _driverRemote = driverRemote;
+  }) : _clientRemote = clientRemote,
+       _driverRemote = driverRemote;
 
   // ──────────────────── Helpers ────────────────────
 
   Either<Failure, T> _handleError<T>(Object e) {
     if (e is DioException && e.response?.data != null) {
       final body = e.response!.data as Map<String, dynamic>;
-      return Left(ServerFailure(
-        message: body['message'] as String? ?? 'Error del servidor',
-        statusCode: e.response?.statusCode,
-      ));
+      return Left(
+        ServerFailure(
+          message: body['message'] as String? ?? 'Error del servidor',
+          statusCode: e.response?.statusCode,
+        ),
+      );
     }
     return Left(UnexpectedFailure(message: e.toString()));
   }
@@ -86,7 +88,10 @@ class TripRepositoryImpl implements TripRepository {
   }) async {
     try {
       await _clientRemote.cancelTrip(
-          userId: userId, tripId: tripId, motivo: motivo);
+        userId: userId,
+        tripId: tripId,
+        motivo: motivo,
+      );
       return const Right(null);
     } catch (e) {
       return _handleError(e);
@@ -117,7 +122,8 @@ class TripRepositoryImpl implements TripRepository {
 
   @override
   Future<Either<Failure, List<TripEntity>>> getAvailableTrips(
-      int userId) async {
+    int userId,
+  ) async {
     try {
       final models = await _driverRemote.getAvailableTrips(userId);
       return Right(models.map((m) => m.toEntity()).toList());
@@ -132,8 +138,10 @@ class TripRepositoryImpl implements TripRepository {
     required int tripId,
   }) async {
     try {
-      final model =
-          await _driverRemote.acceptTrip(userId: userId, tripId: tripId);
+      final model = await _driverRemote.acceptTrip(
+        userId: userId,
+        tripId: tripId,
+      );
       return Right(model.toEntity());
     } catch (e) {
       return _handleError(e);
@@ -148,7 +156,10 @@ class TripRepositoryImpl implements TripRepository {
   }) async {
     try {
       await _driverRemote.rejectTrip(
-          userId: userId, tripId: tripId, motivo: motivo);
+        userId: userId,
+        tripId: tripId,
+        motivo: motivo,
+      );
       return const Right(null);
     } catch (e) {
       return _handleError(e);
@@ -161,8 +172,10 @@ class TripRepositoryImpl implements TripRepository {
     required int tripId,
   }) async {
     try {
-      final model =
-          await _driverRemote.startTrip(userId: userId, tripId: tripId);
+      final model = await _driverRemote.startTrip(
+        userId: userId,
+        tripId: tripId,
+      );
       return Right(model.toEntity());
     } catch (e) {
       return _handleError(e);

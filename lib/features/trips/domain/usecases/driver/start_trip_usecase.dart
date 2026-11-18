@@ -10,6 +10,5 @@ class StartTripUseCase {
   Future<Either<Failure, TripEntity>> call({
     required int userId,
     required int tripId,
-  }) =>
-      _repo.startTrip(userId: userId, tripId: tripId);
+  }) => _repo.startTrip(userId: userId, tripId: tripId);
 }

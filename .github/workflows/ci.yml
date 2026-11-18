@@ -20,6 +20,10 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Copiar .env.example a .env.dev/.env.prod si no existen
+        run: |
+          [ -f .env.dev ] || cp .env.example .env.dev
+          [ -f .env.prod ] || cp .env.example .env.prod
       - run: flutter analyze --fatal-infos
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter test --coverage

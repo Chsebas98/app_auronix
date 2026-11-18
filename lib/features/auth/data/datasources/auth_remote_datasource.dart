@@ -172,9 +172,7 @@ class AuthRemoteDatasource {
     }
   }
 
-  Future<Map<String, dynamic>> registerDriver(
-    Map<String, dynamic> data,
-  ) async {
+  Future<Map<String, dynamic>> registerDriver(Map<String, dynamic> data) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/auth/drivers/register',

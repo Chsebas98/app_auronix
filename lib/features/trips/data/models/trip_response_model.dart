@@ -55,20 +55,20 @@ class TripResponseModel {
       );
 
   TripEntity toEntity() => TripEntity(
-        id: id,
-        codigoViaje: codigoViaje,
-        passengerId: passengerId,
-        driverId: driverId,
-        cooperativaId: cooperativaId,
-        origenLatitud: origenLatitud,
-        origenLongitud: origenLongitud,
-        origenDireccion: origenDireccion,
-        destinoLatitud: destinoLatitud,
-        destinoLongitud: destinoLongitud,
-        destinoDireccion: destinoDireccion,
-        distanciaKm: distanciaKm,
-        precioTotal: precioTotal,
-        estado: estado,
-        fechaSolicitud: fechaSolicitud,
-      );
+    id: id,
+    codigoViaje: codigoViaje,
+    passengerId: passengerId,
+    driverId: driverId,
+    cooperativaId: cooperativaId,
+    origenLatitud: origenLatitud,
+    origenLongitud: origenLongitud,
+    origenDireccion: origenDireccion,
+    destinoLatitud: destinoLatitud,
+    destinoLongitud: destinoLongitud,
+    destinoDireccion: destinoDireccion,
+    distanciaKm: distanciaKm,
+    precioTotal: precioTotal,
+    estado: estado,
+    fechaSolicitud: fechaSolicitud,
+  );
 }

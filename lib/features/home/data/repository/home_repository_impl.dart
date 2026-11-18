@@ -9,7 +9,7 @@ class HomeRepositoryImpl implements HomeRepository {
   final HomeDriverRemoteDatasource _remote;
 
   HomeRepositoryImpl({required HomeDriverRemoteDatasource remote})
-      : _remote = remote;
+    : _remote = remote;
 
   @override
   Future<Either<Failure, DriverHomeData>> getDriverHome(int userId) async {
@@ -19,10 +19,12 @@ class HomeRepositoryImpl implements HomeRepository {
     } on DioException catch (e) {
       if (e.response?.data != null) {
         final body = e.response!.data as Map<String, dynamic>;
-        return Left(ServerFailure(
-          message: body['message'] as String? ?? 'Error al cargar datos',
-          statusCode: e.response?.statusCode,
-        ));
+        return Left(
+          ServerFailure(
+            message: body['message'] as String? ?? 'Error al cargar datos',
+            statusCode: e.response?.statusCode,
+          ),
+        );
       }
       return Left(NetworkFailure(message: e.message ?? 'Error de red'));
     } catch (e) {

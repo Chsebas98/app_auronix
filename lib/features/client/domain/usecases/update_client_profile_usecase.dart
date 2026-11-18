@@ -11,6 +11,5 @@ class UpdateClientProfileUseCase {
   Future<Either<Failure, AuthenticationCredentials>> call({
     required int userId,
     required ProfileUpdateRequestModel data,
-  }) =>
-      _repo.updateProfile(userId: userId, data: data);
+  }) => _repo.updateProfile(userId: userId, data: data);
 }

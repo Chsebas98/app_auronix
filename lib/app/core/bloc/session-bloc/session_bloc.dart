@@ -67,10 +67,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     emit(SessionUnauthenticated());
   }
 
-  void _onLoginUser(
-    LoginUserEvent event,
-    Emitter<SessionState> emit,
-  ) {
+  void _onLoginUser(LoginUserEvent event, Emitter<SessionState> emit) {
     emit(SessionAuthenticated(dataUser: event.dataUser));
   }
 
