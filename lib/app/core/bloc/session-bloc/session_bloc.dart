@@ -107,6 +107,10 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) async {
     emit(SessionLoading());
     await _repository.logout();
+    // T16: logout() solo limpia el SQLite legacy — la sesion "real" (T11/T12)
+    // vive en SecureStorageService y debe borrarse tambien, o un proximo
+    // arranque de la app la restaura via _onCheckLoggedUser.
+    await _secureStorage.clearSession();
     emit(SessionUnauthenticated());
   }
 
