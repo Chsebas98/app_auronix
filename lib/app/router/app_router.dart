@@ -8,6 +8,7 @@ import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/presentation/pages/client/auth_page.dart';
+import 'package:auronix_app/features/onBoarding/presentation/screens/register_screen.dart';
 import 'package:auronix_app/features/home/presentation/pages/health_check_screen.dart';
 import 'package:auronix_app/features/onBoarding/onboarding_screen.dart';
 import 'package:auronix_app/shared/pages/not_found_screen.dart';
@@ -147,6 +148,14 @@ class AppRouter {
           path: Routes.auth,
           builder: (context, state) {
             return const AuthPage();
+          },
+        ),
+
+        GoRoute(
+          name: 'register',
+          path: Routes.register,
+          builder: (context, state) {
+            return const RegisterScreen();
           },
         ),
 
