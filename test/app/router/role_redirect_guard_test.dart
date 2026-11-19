@@ -36,7 +36,7 @@ void main() {
   });
 
   test(
-    'T15-C2: usuario no autenticado en ruta protegida es enviado a login',
+    'T15-C6: usuario no autenticado en ruta protegida es enviado a login',
     () {
       final target = resolveRedirect(
         sessionState: const SessionUnauthenticated(),
@@ -57,7 +57,7 @@ void main() {
   });
 
   test(
-    'T15-C1: pasajero autenticado en ruta publica es enviado a /client/home',
+    'T15-C5: pasajero autenticado en ruta publica es enviado a /client/home',
     () {
       final target = resolveRedirect(
         sessionState: _authenticatedAs(Roles.rolUser),
@@ -87,7 +87,7 @@ void main() {
   });
 
   test(
-    'T15-C1: pasajero autenticado no accede a /driver/* y es enviado a /client/home',
+    'T15-C5: pasajero autenticado no accede a /driver/* y es enviado a /client/home',
     () {
       final target = resolveRedirect(
         sessionState: _authenticatedAs(Roles.rolUser),
@@ -99,7 +99,7 @@ void main() {
   );
 
   test(
-    'T15-C1: conductor autenticado no accede a /client/* y es enviado a /driver/home',
+    'T15-C5: conductor autenticado no accede a /client/* y es enviado a /driver/home',
     () {
       final target = resolveRedirect(
         sessionState: _authenticatedAs(Roles.rolDriver),
