@@ -13,6 +13,9 @@ import 'package:auronix_app/app/network/websocket_manager.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/client/data/datasources/remote/client_profile_remote_datasource.dart';
+import 'package:auronix_app/features/home/data/datasources/places_remote_data_source.dart';
+import 'package:auronix_app/features/home/data/repositories/places_repository_impl.dart';
+import 'package:auronix_app/features/home/domain/repositories/places_repository.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/client/presentation/bloc/client_profile_bloc.dart';
 import 'package:auronix_app/features/client/data/repositories/client_profile_repository_impl.dart';
@@ -213,6 +216,16 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<PlacesService>(
     () => PlacesService(apiKey: Environment().config!.googleMapsApiKey),
+  );
+
+  // T17: nueva capa Clean Architecture para autocompletado/detalle de
+  // lugares, adaptando PlacesService (no un datasource paralelo).
+  sl.registerLazySingleton<PlacesRemoteDataSource>(
+    () => PlacesRemoteDataSource(sl<PlacesService>()),
+  );
+
+  sl.registerLazySingleton<PlacesRepository>(
+    () => PlacesRepositoryImpl(sl<PlacesRemoteDataSource>()),
   );
 
   sl.registerLazySingleton<ClientTripRemoteDatasource>(
