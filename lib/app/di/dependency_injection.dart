@@ -13,8 +13,11 @@ import 'package:auronix_app/app/network/websocket_manager.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/client/data/datasources/remote/client_profile_remote_datasource.dart';
+import 'package:auronix_app/features/home/data/datasources/directions_remote_data_source.dart';
 import 'package:auronix_app/features/home/data/datasources/places_remote_data_source.dart';
+import 'package:auronix_app/features/home/data/repositories/directions_repository_impl.dart';
 import 'package:auronix_app/features/home/data/repositories/places_repository_impl.dart';
+import 'package:auronix_app/features/home/domain/repositories/directions_repository.dart';
 import 'package:auronix_app/features/home/domain/repositories/places_repository.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/client/presentation/bloc/client_profile_bloc.dart';
@@ -226,6 +229,15 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<PlacesRepository>(
     () => PlacesRepositoryImpl(sl<PlacesRemoteDataSource>()),
+  );
+
+  // T18: idem para rutas/tarifa estimada, misma adaptacion de PlacesService.
+  sl.registerLazySingleton<DirectionsRemoteDataSource>(
+    () => DirectionsRemoteDataSource(sl<PlacesService>()),
+  );
+
+  sl.registerLazySingleton<DirectionsRepository>(
+    () => DirectionsRepositoryImpl(sl<DirectionsRemoteDataSource>()),
   );
 
   sl.registerLazySingleton<ClientTripRemoteDatasource>(
