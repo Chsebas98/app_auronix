@@ -36,3 +36,14 @@ class IdempotencyConflictFailure extends Failure {
   const IdempotencyConflictFailure({required super.message, super.detail})
     : super(statusCode: 409);
 }
+
+/// No existe una ruta transitable entre origen y destino (T18): Google
+/// Directions responde HTTP 200 con status ZERO_RESULTS/NOT_FOUND, no un
+/// error HTTP — se distingue de un ServerFailure generico para que la UI
+/// pueda mostrar "sin ruta disponible" en vez de un error tecnico.
+class RouteNotFoundFailure extends Failure {
+  const RouteNotFoundFailure({
+    super.message = 'No se encontró una ruta entre los puntos indicados.',
+    super.detail,
+  });
+}

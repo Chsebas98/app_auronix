@@ -255,14 +255,37 @@ class PlacesService {
       final polyline = routes.first['overview_polyline']?['points'] as String?;
       if (polyline == null) return [];
 
-      return _decodePolyline(polyline);
+      return decodePolyline(polyline);
     } catch (e) {
       debugPrint('[PlacesService] getRoutePoints error: $e');
       return [];
     }
   }
 
-  static List<List<double>> _decodePolyline(String encoded) {
+  /// Ver [fetchAutocompleteRaw]: equivalente sin captura de errores para
+  /// direcciones/ruta (T18), usado por DirectionsRemoteDataSource. Devuelve
+  /// el JSON crudo de Directions (incluye `status`: la API responde HTTP 200
+  /// con `ZERO_RESULTS`/`NOT_FOUND` para una ruta no transitable, no un
+  /// error HTTP).
+  Future<Map<String, dynamic>> fetchDirectionsRaw({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+  }) async {
+    final response = await _dio.get(
+      '$_baseUrl/directions/json',
+      queryParameters: {
+        'origin': '$originLat,$originLng',
+        'destination': '$destLat,$destLng',
+        'key': _apiKey,
+        'mode': 'driving',
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  static List<List<double>> decodePolyline(String encoded) {
     final points = <List<double>>[];
     int index = 0;
     int lat = 0;
