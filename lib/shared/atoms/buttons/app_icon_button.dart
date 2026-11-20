@@ -10,6 +10,7 @@ class AppIconButton extends StatelessWidget {
     this.isLoading = false,
     this.size,
     this.color,
+    this.tooltip,
     super.key,
   });
 
@@ -21,10 +22,15 @@ class AppIconButton extends StatelessWidget {
   final Color? color;
   final bool isLoading;
 
+  /// Tambien sirve como etiqueta semantica para lectores de pantalla
+  /// (IconButton.tooltip la expone como Semantics.label).
+  final String? tooltip;
+
   @override
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: isDisabled ? null : onPressed,
+      tooltip: tooltip,
       icon: Icon(
         Theme.of(context).platform == TargetPlatform.iOS
             ? iconIOS

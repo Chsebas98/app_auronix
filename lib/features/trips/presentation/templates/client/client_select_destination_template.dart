@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
-import 'package:auronix_app/features/home/presentation/organisms/client/client_home_search_sheet.dart';
+import 'package:auronix_app/app/router/app_router.dart';
+import 'package:auronix_app/app/router/client/client_routes_path.dart';
+import 'package:auronix_app/features/home/presentation/views/location_search_view.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
+import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -126,10 +129,27 @@ class _ClientSelectDestinationTemplateState
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (_) => ClientHomeSearchSheet(
-        originLat: _originLat,
-        originLng: _originLng,
-        originAddress: _originAddress,
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.of(sheetContext).size.height * 0.9,
+        child: LocationSearchView(
+          initialOriginCoords: LatLng(_originLat, _originLng),
+          initialOriginAddress: _originAddress,
+          onRouteReady: (state) {
+            Navigator.of(sheetContext).pop();
+            sl<ClientTripBloc>().add(
+              ClientTripSetRouteEvent(
+                origenLatitud: state.origin!.coords.latitude,
+                origenLongitud: state.origin!.coords.longitude,
+                origenDireccion: state.origin!.address,
+                destinoLatitud: state.destination!.coords.latitude,
+                destinoLongitud: state.destination!.coords.longitude,
+                destinoDireccion: state.destination!.address,
+                distanciaEstimadaKm: state.routeInfo!.distanceMeters / 1000,
+              ),
+            );
+            AppRouter.push(ClientRoutesPath.confirmTrip);
+          },
+        ),
       ),
     );
   }
