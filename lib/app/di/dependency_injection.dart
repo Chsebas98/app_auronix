@@ -19,6 +19,7 @@ import 'package:auronix_app/features/home/data/repositories/directions_repositor
 import 'package:auronix_app/features/home/data/repositories/places_repository_impl.dart';
 import 'package:auronix_app/features/home/domain/repositories/directions_repository.dart';
 import 'package:auronix_app/features/home/domain/repositories/places_repository.dart';
+import 'package:auronix_app/features/home/presentation/bloc/location_search_bloc.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/client/presentation/bloc/client_profile_bloc.dart';
 import 'package:auronix_app/features/client/data/repositories/client_profile_repository_impl.dart';
@@ -238,6 +239,14 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<DirectionsRepository>(
     () => DirectionsRepositoryImpl(sl<DirectionsRemoteDataSource>()),
+  );
+
+  // T19: orquesta busqueda/seleccion de origen-destino sobre ambos repos.
+  sl.registerFactory<LocationSearchBloc>(
+    () => LocationSearchBloc(
+      placesRepository: sl<PlacesRepository>(),
+      directionsRepository: sl<DirectionsRepository>(),
+    ),
   );
 
   sl.registerLazySingleton<ClientTripRemoteDatasource>(
