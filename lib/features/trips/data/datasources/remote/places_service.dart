@@ -62,9 +62,10 @@ class PlaceDetails {
 }
 
 class PlacesService {
-  static const _baseUrl = 'https://maps.googleapis.com/maps/api';
+  static const _defaultBaseUrl = 'https://maps.googleapis.com/maps/api';
 
   final String _apiKey;
+  final String _baseUrl;
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -73,7 +74,9 @@ class PlacesService {
     ),
   );
 
-  PlacesService({required String apiKey}) : _apiKey = apiKey;
+  PlacesService({required String apiKey, String? baseUrl})
+    : _apiKey = apiKey,
+      _baseUrl = baseUrl ?? _defaultBaseUrl;
 
   Future<List<PlacePrediction>> autocomplete(
     String input, {
@@ -141,6 +144,38 @@ class PlacesService {
       debugPrint('[PlacesService] Google Places error: $e');
       return [];
     }
+  }
+
+  /// Variante sin captura de errores, para PlacesRemoteDataSource (T17): deja
+  /// propagar DioException para que la capa de repositorio pueda mapearla a
+  /// un Failure tipado, en vez de colapsarla en una lista vacia como
+  /// [autocomplete] (que las UI existentes ya asumen que nunca lanza).
+  Future<List<dynamic>> fetchAutocompleteRaw(String input) async {
+    final response = await _dio.get(
+      '$_baseUrl/place/autocomplete/json',
+      queryParameters: {
+        'input': input,
+        'key': _apiKey,
+        'components': 'country:ec',
+        'language': 'es',
+      },
+    );
+    return (response.data['predictions'] as List<dynamic>?) ?? [];
+  }
+
+  /// Ver [fetchAutocompleteRaw]: equivalente sin captura de errores para el
+  /// detalle de un lugar.
+  Future<Map<String, dynamic>?> fetchDetailsRaw(String placeId) async {
+    final response = await _dio.get(
+      '$_baseUrl/place/details/json',
+      queryParameters: {
+        'place_id': placeId,
+        'key': _apiKey,
+        'fields': 'geometry,formatted_address,name',
+        'language': 'es',
+      },
+    );
+    return response.data['result'] as Map<String, dynamic>?;
   }
 
   Future<PlaceDetails?> getDetails(String placeId) async {
