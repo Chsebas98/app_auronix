@@ -39,6 +39,7 @@ class LocationSearchBloc
     on<SwapLocations>(_onSwapLocations);
     on<ClearLocation>(_onClearLocation);
     on<ResetSearch>(_onResetSearch);
+    on<RetryRouteCalculation>(_onRetryRouteCalculation);
   }
 
   final PlacesRepository _places;
@@ -138,6 +139,13 @@ class LocationSearchBloc
 
   void _onResetSearch(ResetSearch event, Emitter<LocationSearchState> emit) {
     emit(const LocationSearchState());
+  }
+
+  Future<void> _onRetryRouteCalculation(
+    RetryRouteCalculation event,
+    Emitter<LocationSearchState> emit,
+  ) async {
+    await _maybeCalculateRoute(emit);
   }
 
   /// Si origin y destination ya estan definidos, recalcula ruta y tarifa
