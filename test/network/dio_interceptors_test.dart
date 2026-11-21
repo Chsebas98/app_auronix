@@ -115,7 +115,7 @@ void main() {
 
   group('IdempotencyInterceptor', () {
     test(
-      'T6-C2 T6-C4 T6-C7: POST a /api/v1/trips recibe un Idempotency-Key UUID v4 unico',
+      'T6-C2 T6-C4 T6-C7 T23-C3: POST a /api/v1/trips recibe un X-Idempotency-Key UUID v4 unico',
       () {
         final interceptor = IdempotencyInterceptor();
         const uuidV4Pattern =
@@ -126,12 +126,16 @@ void main() {
         interceptor.onRequest(optionsA, RequestInterceptorHandler());
         interceptor.onRequest(optionsB, RequestInterceptorHandler());
 
-        final keyA = optionsA.headers['Idempotency-Key'] as String?;
-        final keyB = optionsB.headers['Idempotency-Key'] as String?;
+        final keyA = optionsA.headers['X-Idempotency-Key'] as String?;
+        final keyB = optionsB.headers['X-Idempotency-Key'] as String?;
 
         expect(keyA, matches(uuidV4Pattern));
         expect(keyB, matches(uuidV4Pattern));
         expect(keyA, isNot(keyB));
+        // El backend real (micro-auronix IdempotencyFilter) solo reconoce el
+        // header con prefijo 'X-' — sin prefijo el filtro lo ignora por
+        // completo y la idempotencia queda rota en silencio.
+        expect(optionsA.headers['Idempotency-Key'], isNull);
       },
     );
 
@@ -148,8 +152,8 @@ void main() {
         interceptor.onRequest(getOptions, RequestInterceptorHandler());
         interceptor.onRequest(otherPostOptions, RequestInterceptorHandler());
 
-        expect(getOptions.headers['Idempotency-Key'], isNull);
-        expect(otherPostOptions.headers['Idempotency-Key'], isNull);
+        expect(getOptions.headers['X-Idempotency-Key'], isNull);
+        expect(otherPostOptions.headers['X-Idempotency-Key'], isNull);
       },
     );
   });
