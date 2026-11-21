@@ -61,3 +61,9 @@ class ClearLocation extends LocationSearchEvent {
 class ResetSearch extends LocationSearchEvent {
   const ResetSearch();
 }
+
+/// Reintenta el calculo de ruta/tarifa con el origen y destino actuales
+/// (T21-C11: boton "Reintentar" cuando el calculo previo fallo).
+class RetryRouteCalculation extends LocationSearchEvent {
+  const RetryRouteCalculation();
+}
