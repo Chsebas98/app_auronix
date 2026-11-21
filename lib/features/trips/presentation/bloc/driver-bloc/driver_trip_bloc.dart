@@ -173,7 +173,7 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
       },
       (trip) {
         debugPrint(
-          '[DriverTrip] accept OK → trip ${trip.id} estado: ${trip.estado}',
+          '[DriverTrip] accept OK → trip ${trip.id} estado: ${trip.estado.toBackendValue()}',
         );
         _positionSender.start(_driverId);
         emit(
