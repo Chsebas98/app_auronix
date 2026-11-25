@@ -1,14 +1,17 @@
 import 'dart:async';
 
 import 'package:auronix_app/app/network/websocket_manager.dart';
+import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/client_position_listener.dart';
 import 'package:auronix_app/features/trips/data/datasources/socket/trip_status_socket.dart';
+import 'package:auronix_app/features/trips/domain/exceptions/active_trip_exception.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_entity.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_socket_events.dart';
 import 'package:auronix_app/features/trips/domain/usecases/client/cancel_trip_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/client/rate_driver_usecase.dart';
 import 'package:auronix_app/features/trips/domain/usecases/client/request_trip_usecase.dart';
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
@@ -71,16 +74,24 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
   ) async {
     emit(state.copyWith(status: ClientTripStatus.requesting));
 
-    final result = await _requestTrip(
-      userId: event.userId,
-      origenLatitud: event.origenLatitud,
-      origenLongitud: event.origenLongitud,
-      origenDireccion: event.origenDireccion,
-      destinoLatitud: event.destinoLatitud,
-      destinoLongitud: event.destinoLongitud,
-      destinoDireccion: event.destinoDireccion,
-      distanciaEstimadaKm: event.distanciaEstimadaKm,
-    );
+    Either<Failure, TripEntity> result;
+    try {
+      result = await _requestTrip(
+        userId: event.userId,
+        origenLatitud: event.origenLatitud,
+        origenLongitud: event.origenLongitud,
+        origenDireccion: event.origenDireccion,
+        destinoLatitud: event.destinoLatitud,
+        destinoLongitud: event.destinoLongitud,
+        destinoDireccion: event.destinoDireccion,
+        distanciaEstimadaKm: event.distanciaEstimadaKm,
+      );
+    } on ActiveTripException catch (e) {
+      emit(
+        state.copyWith(status: ClientTripStatus.error, errorMessage: e.message),
+      );
+      return;
+    }
 
     result.fold(
       (failure) => emit(
