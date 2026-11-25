@@ -68,10 +68,32 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     );
   }
 
+  /// Estados en los que ya hay un viaje en curso (mismo criterio que los
+  /// estados "activos" del backend real: SOLICITADO/OFERTADO/ACEPTADO/
+  /// EN_CURSO — ver CreateTripUseCase/ActiveTripException, T23).
+  static const _inProgressStatuses = {
+    ClientTripStatus.requesting,
+    ClientTripStatus.searching,
+    ClientTripStatus.accepted,
+    ClientTripStatus.inProgress,
+  };
+
   FutureOr<void> _onRequest(
     ClientTripRequestEvent event,
     Emitter<ClientTripState> emit,
   ) async {
+    // T24-C3: bloquea una nueva solicitud si el estado local ya indica un
+    // viaje en curso, sin esperar a que el backend responda 409.
+    if (_inProgressStatuses.contains(state.status)) {
+      emit(
+        state.copyWith(
+          status: ClientTripStatus.error,
+          errorMessage: const ActiveTripException().message,
+        ),
+      );
+      return;
+    }
+
     emit(state.copyWith(status: ClientTripStatus.requesting));
 
     Either<Failure, TripEntity> result;
