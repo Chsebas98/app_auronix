@@ -227,19 +227,16 @@ void main() {
       },
     );
 
-    test(
-      'T24-C4: emite FailureState ante un error de red',
-      () async {
-        repo.requestTripResult = () =>
-            const Left(NetworkFailure(message: 'Sin conexión'));
+    test('T24-C4: emite FailureState ante un error de red', () async {
+      repo.requestTripResult = () =>
+          const Left(NetworkFailure(message: 'Sin conexión'));
 
-        requestTrip();
-        await pumpEventQueue();
+      requestTrip();
+      await pumpEventQueue();
 
-        expect(bloc.state.status, ClientTripStatus.error);
-        expect(bloc.state.errorMessage, 'Sin conexión');
-      },
-    );
+      expect(bloc.state.status, ClientTripStatus.error);
+      expect(bloc.state.errorMessage, 'Sin conexión');
+    });
 
     test(
       'T24-C4: emite FailureState ante un conflicto de idempotencia',
