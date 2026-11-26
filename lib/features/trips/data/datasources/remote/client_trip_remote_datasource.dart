@@ -10,10 +10,8 @@ class ClientTripRemoteDatasource {
 
   ClientTripRemoteDatasource({required Dio dio}) : _dio = dio;
 
-  Options _headers(int userId) => Options(
-        contentType: 'application/json',
-        headers: {'X-User-Id': userId},
-      );
+  Options _headers(int userId) =>
+      Options(contentType: 'application/json', headers: {'X-User-Id': userId});
 
   Future<TripResponseModel> requestTrip({
     required int userId,

@@ -1,11 +1,9 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
-import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
 import 'package:auronix_app/app/router/router.dart';
 import 'package:auronix_app/features/home/presentation/bloc/driver-bloc/home_driver_bloc.dart';
-import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer.dart';
 import 'package:auronix_app/shared/templates/drawer/profile-drawer/profile_drawer_config.dart';
 import 'package:flutter/material.dart';
@@ -76,8 +74,6 @@ class DriverHomeDrawer extends StatelessWidget {
               // ProfileDrawerItem(
               //   title: 'Notificaciones',
               //   icon: Icons.notifications_outlined,
-              //   // Atom extraido
-              //   trailing: _NotificationBadge(count: 3),
               //   onTap: () => debugPrint('Notificaciones'),
               //   showDivider: true,
               // ),
@@ -100,25 +96,6 @@ class DriverHomeDrawer extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-// Atom inline — si se reutiliza en driver, mover a lib/shared/atoms/
-class _NotificationBadge extends StatelessWidget {
-  const _NotificationBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.error,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: AppText('$count', color: AppColors.white),
     );
   }
 }

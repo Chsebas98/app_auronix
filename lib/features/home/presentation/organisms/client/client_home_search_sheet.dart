@@ -62,8 +62,10 @@ class _ClientHomeSearchSheetState extends State<ClientHomeSearchSheet> {
       return;
     }
     _debounce?.cancel();
-    _debounce =
-        Timer(const Duration(milliseconds: 300), () => _doSearch(query));
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => _doSearch(query),
+    );
   }
 
   Future<void> _doSearch(String query) async {
@@ -148,8 +150,11 @@ class _ClientHomeSearchSheetState extends State<ClientHomeSearchSheet> {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      child: Icon(Icons.search_rounded,
-                          color: context.appColors.textSecondary, size: 20.r),
+                      child: Icon(
+                        Icons.search_rounded,
+                        color: context.appColors.textSecondary,
+                        size: 20.r,
+                      ),
                     ),
                     Expanded(
                       child: TextField(
@@ -167,8 +172,7 @@ class _ClientHomeSearchSheetState extends State<ClientHomeSearchSheet> {
                             fontSize: 14.sp,
                           ),
                           border: InputBorder.none,
-                          contentPadding:
-                              EdgeInsets.symmetric(vertical: 14.h),
+                          contentPadding: EdgeInsets.symmetric(vertical: 14.h),
                         ),
                       ),
                     ),
@@ -186,9 +190,11 @@ class _ClientHomeSearchSheetState extends State<ClientHomeSearchSheet> {
                       )
                     else if (_searchCtrl.text.isNotEmpty)
                       IconButton(
-                        icon: Icon(Icons.clear_rounded,
-                            color: context.appColors.textSecondary,
-                            size: 18.r),
+                        icon: Icon(
+                          Icons.clear_rounded,
+                          color: context.appColors.textSecondary,
+                          size: 18.r,
+                        ),
                         onPressed: () {
                           _searchCtrl.clear();
                           setState(() => _suggestions = []);
@@ -204,24 +210,26 @@ class _ClientHomeSearchSheetState extends State<ClientHomeSearchSheet> {
               child: _suggestions.isEmpty && _searchCtrl.text.length < 2
                   ? _QuickOptions()
                   : _suggestions.isEmpty && !_isSearching
-                      ? _NoResults(query: _searchCtrl.text)
-                      : ListView.separated(
-                          controller: scrollController,
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          itemCount: _suggestions.length,
-                          separatorBuilder: (_, __) => Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: Divider(
-                                color: context.appColors.border, height: 1),
-                          ),
-                          itemBuilder: (_, i) {
-                            final s = _suggestions[i];
-                            return _SuggestionTile(
-                              prediction: s,
-                              onTap: () => _onSelectPrediction(s),
-                            );
-                          },
+                  ? _NoResults(query: _searchCtrl.text)
+                  : ListView.separated(
+                      controller: scrollController,
+                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      itemCount: _suggestions.length,
+                      separatorBuilder: (_, __) => Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Divider(
+                          color: context.appColors.border,
+                          height: 1,
                         ),
+                      ),
+                      itemBuilder: (_, i) {
+                        final s = _suggestions[i];
+                        return _SuggestionTile(
+                          prediction: s,
+                          onTap: () => _onSelectPrediction(s),
+                        );
+                      },
+                    ),
             ),
           ],
         );
@@ -252,8 +260,11 @@ class _SuggestionTile extends StatelessWidget {
                 color: context.appColors.card,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.location_on_outlined,
-                  color: AppColors.sevent, size: 18.r),
+              child: Icon(
+                Icons.location_on_outlined,
+                color: AppColors.sevent,
+                size: 18.r,
+              ),
             ),
             12.horizontalSpace,
             Expanded(
@@ -316,8 +327,7 @@ class _QuickOptions extends StatelessWidget {
           8.verticalSpace,
           _QuickOptionRow(icon: Icons.home_outlined, label: 'Casa'),
           8.verticalSpace,
-          _QuickOptionRow(
-              icon: Icons.star_outline_rounded, label: 'Favoritos'),
+          _QuickOptionRow(icon: Icons.star_outline_rounded, label: 'Favoritos'),
         ],
       ),
     );
@@ -340,8 +350,7 @@ class _QuickOptionRow extends StatelessWidget {
             color: context.appColors.card,
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child:
-              Icon(icon, color: context.appColors.textSecondary, size: 18.r),
+          child: Icon(icon, color: context.appColors.textSecondary, size: 18.r),
         ),
         12.horizontalSpace,
         AppText(
@@ -366,8 +375,11 @@ class _NoResults extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off_rounded,
-                color: context.appColors.textSecondary, size: 48.r),
+            Icon(
+              Icons.search_off_rounded,
+              color: context.appColors.textSecondary,
+              size: 48.r,
+            ),
             16.verticalSpace,
             AppText(
               'Sin resultados para "$query"',

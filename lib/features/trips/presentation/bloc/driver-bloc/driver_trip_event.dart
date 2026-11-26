@@ -95,7 +95,12 @@ final class DriverTripCompleteEvent extends DriverTripEvent {
   });
 
   @override
-  List<Object?> get props => [userId, tripId, distanciaFinalKm, duracionMinutos];
+  List<Object?> get props => [
+    userId,
+    tripId,
+    distanciaFinalKm,
+    duracionMinutos,
+  ];
 }
 
 final class DriverTripRatePassengerEvent extends DriverTripEvent {

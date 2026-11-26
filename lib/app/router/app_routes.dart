@@ -1,6 +1,7 @@
 class Routes {
   static const String onBoarding = '/';
   static const String about = '/about';
+  static const String health = '/health';
   static const String auth = '/auth';
   static const String register = '/register';
   static const String login = '/login';

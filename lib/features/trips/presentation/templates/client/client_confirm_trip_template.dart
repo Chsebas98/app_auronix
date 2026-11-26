@@ -35,8 +35,7 @@ class ClientConfirmTripTemplate extends StatefulWidget {
       _ClientConfirmTripTemplateState();
 }
 
-class _ClientConfirmTripTemplateState
-    extends State<ClientConfirmTripTemplate> {
+class _ClientConfirmTripTemplateState extends State<ClientConfirmTripTemplate> {
   static const _precioKm = 1.8;
   static const _maxPickupDistanceM = 200.0;
 
@@ -109,10 +108,7 @@ class _ClientConfirmTripTemplateState
     if (_pickupLat != 0 && _mapCompleter.isCompleted) {
       final controller = await _mapCompleter.future;
       controller.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(_pickupLat, _pickupLng),
-          16,
-        ),
+        CameraUpdate.newLatLngZoom(LatLng(_pickupLat, _pickupLng), 16),
       );
     }
   }
@@ -158,12 +154,19 @@ class _ClientConfirmTripTemplateState
   void _recalculate() {
     if (_gpsLat != 0 && _pickupLat != 0) {
       _pickupDistanceM = Geolocator.distanceBetween(
-        _gpsLat, _gpsLng, _pickupLat, _pickupLng,
+        _gpsLat,
+        _gpsLng,
+        _pickupLat,
+        _pickupLng,
       );
     }
     if (_hasRoute && _pickupLat != 0) {
-      _distanceKm = Geolocator.distanceBetween(
-            _pickupLat, _pickupLng, _destLat, _destLng,
+      _distanceKm =
+          Geolocator.distanceBetween(
+            _pickupLat,
+            _pickupLng,
+            _destLat,
+            _destLng,
           ) /
           1000;
     }
@@ -173,7 +176,8 @@ class _ClientConfirmTripTemplateState
     final address = await _places.reverseGeocode(_pickupLat, _pickupLng);
     if (!mounted) return;
     setState(() {
-      _pickupAddress = address ??
+      _pickupAddress =
+          address ??
           '${_pickupLat.toStringAsFixed(4)}, ${_pickupLng.toStringAsFixed(4)}';
       _isGeocodingPickup = false;
     });
@@ -188,29 +192,29 @@ class _ClientConfirmTripTemplateState
         : 0;
 
     context.read<ClientTripBloc>().add(
-          ClientTripSetRouteEvent(
-            origenLatitud: _pickupLat,
-            origenLongitud: _pickupLng,
-            origenDireccion: _pickupAddress,
-            destinoLatitud: _destLat,
-            destinoLongitud: _destLng,
-            destinoDireccion: _destAddress,
-            distanciaEstimadaKm: _distanceKm,
-          ),
-        );
+      ClientTripSetRouteEvent(
+        origenLatitud: _pickupLat,
+        origenLongitud: _pickupLng,
+        origenDireccion: _pickupAddress,
+        destinoLatitud: _destLat,
+        destinoLongitud: _destLng,
+        destinoDireccion: _destAddress,
+        distanciaEstimadaKm: _distanceKm,
+      ),
+    );
 
     context.read<ClientTripBloc>().add(
-          ClientTripRequestEvent(
-            userId: userId,
-            origenLatitud: _pickupLat,
-            origenLongitud: _pickupLng,
-            origenDireccion: _pickupAddress,
-            destinoLatitud: _destLat,
-            destinoLongitud: _destLng,
-            destinoDireccion: _destAddress,
-            distanciaEstimadaKm: _distanceKm,
-          ),
-        );
+      ClientTripRequestEvent(
+        userId: userId,
+        origenLatitud: _pickupLat,
+        origenLongitud: _pickupLng,
+        origenDireccion: _pickupAddress,
+        destinoLatitud: _destLat,
+        destinoLongitud: _destLng,
+        destinoDireccion: _destAddress,
+        distanciaEstimadaKm: _distanceKm,
+      ),
+    );
   }
 
   @override
@@ -236,9 +240,9 @@ class _ClientConfirmTripTemplateState
           listener: (context, state) {
             context.read<DialogCubit>().hideAll();
             context.read<DialogCubit>().showMessage(
-                  title: 'Error',
-                  message: state.errorMessage ?? 'Ha ocurrido un error',
-                );
+              title: 'Error',
+              message: state.errorMessage ?? 'Ha ocurrido un error',
+            );
           },
         ),
       ],
@@ -284,7 +288,8 @@ class _ClientConfirmTripTemplateState
                           markerId: const MarkerId('destination'),
                           position: LatLng(_destLat, _destLng),
                           icon: BitmapDescriptor.defaultMarkerWithHue(
-                              BitmapDescriptor.hueRed),
+                            BitmapDescriptor.hueRed,
+                          ),
                         ),
                     },
                     myLocationEnabled: true,
@@ -356,9 +361,14 @@ class _ClientConfirmTripTemplateState
                         Expanded(
                           child: Container(
                             margin: EdgeInsets.only(
-                                right: 16.w, top: 12.h, bottom: 12.h),
+                              right: 16.w,
+                              top: 12.h,
+                              bottom: 12.h,
+                            ),
                             padding: EdgeInsets.symmetric(
-                                horizontal: 14.w, vertical: 10.h),
+                              horizontal: 14.w,
+                              vertical: 10.h,
+                            ),
                             decoration: BoxDecoration(
                               color: context.appColors.mapCardBg,
                               borderRadius: BorderRadius.circular(12.r),
@@ -390,15 +400,20 @@ class _ClientConfirmTripTemplateState
                     right: 16.w,
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 14.w, vertical: 10.h),
+                        horizontal: 14.w,
+                        vertical: 10.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.sevent.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: AppColors.white, size: 18.r),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: AppColors.white,
+                            size: 18.r,
+                          ),
                           8.horizontalSpace,
                           Expanded(
                             child: AppText(
@@ -420,8 +435,9 @@ class _ClientConfirmTripTemplateState
                   child: Container(
                     decoration: BoxDecoration(
                       color: context.appColors.mapCardBg,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20.r)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20.r),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.2),
@@ -433,8 +449,7 @@ class _ClientConfirmTripTemplateState
                     child: SafeArea(
                       top: false,
                       child: Padding(
-                        padding:
-                            EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -462,9 +477,10 @@ class _ClientConfirmTripTemplateState
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Container(
-                                    width: 2,
-                                    height: 16.h,
-                                    color: context.appColors.border),
+                                  width: 2,
+                                  height: 16.h,
+                                  color: context.appColors.border,
+                                ),
                               ),
                             ),
                             8.verticalSpace,
@@ -472,32 +488,29 @@ class _ClientConfirmTripTemplateState
                               icon: Icons.location_on_rounded,
                               color: AppColors.sevent,
                               label: 'Destino',
-                              address:
-                                  _destAddress.isEmpty ? '--' : _destAddress,
+                              address: _destAddress.isEmpty
+                                  ? '--'
+                                  : _destAddress,
                             ),
                             16.verticalSpace,
                             Divider(color: context.appColors.border),
                             12.verticalSpace,
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceAround,
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 _MetricChip(
                                   icon: Icons.straighten_rounded,
-                                  value:
-                                      '${_distanceKm.toStringAsFixed(1)} km',
+                                  value: '${_distanceKm.toStringAsFixed(1)} km',
                                   label: 'Distancia',
                                 ),
                                 _MetricChip(
                                   icon: Icons.access_time_rounded,
-                                  value:
-                                      '~${(_distanceKm * 3).round()} min',
+                                  value: '~${(_distanceKm * 3).round()} min',
                                   label: 'Tiempo est.',
                                 ),
                                 _MetricChip(
                                   icon: Icons.attach_money_rounded,
-                                  value:
-                                      '\$${precio.toStringAsFixed(2)}',
+                                  value: '\$${precio.toStringAsFixed(2)}',
                                   label: 'Precio est.',
                                   highlight: true,
                                 ),
@@ -556,9 +569,11 @@ class _AddressRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText(label,
-                  variant: AppTextVariant.labelSmall,
-                  color: context.appColors.textSecondary),
+              AppText(
+                label,
+                variant: AppTextVariant.labelSmall,
+                color: context.appColors.textSecondary,
+              ),
               2.verticalSpace,
               isLoading
                   ? SizedBox(
@@ -569,11 +584,13 @@ class _AddressRow extends StatelessWidget {
                         backgroundColor: context.appColors.border,
                       ),
                     )
-                  : AppText(address,
+                  : AppText(
+                      address,
                       variant: AppTextVariant.bodySmall,
                       color: context.appColors.text,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis),
+                      overflow: TextOverflow.ellipsis,
+                    ),
             ],
           ),
         ),
@@ -607,20 +624,25 @@ class _MetricChip extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(
-            color: highlight ? AppColors.third : context.appColors.border),
+          color: highlight ? AppColors.third : context.appColors.border,
+        ),
       ),
       child: Column(
         children: [
           Icon(icon, color: textColor, size: 16.r),
           4.verticalSpace,
-          AppText(value,
-              variant: AppTextVariant.labelMedium,
-              color: textColor,
-              fontWeight: FontWeight.w700),
+          AppText(
+            value,
+            variant: AppTextVariant.labelMedium,
+            color: textColor,
+            fontWeight: FontWeight.w700,
+          ),
           2.verticalSpace,
-          AppText(label,
-              variant: AppTextVariant.labelSmall,
-              color: context.appColors.textSecondary),
+          AppText(
+            label,
+            variant: AppTextVariant.labelSmall,
+            color: context.appColors.textSecondary,
+          ),
         ],
       ),
     );

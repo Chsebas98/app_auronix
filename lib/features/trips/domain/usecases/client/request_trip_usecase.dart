@@ -17,16 +17,15 @@ class RequestTripUseCase {
     required String destinoDireccion,
     required double distanciaEstimadaKm,
     int? metodoPagoId,
-  }) =>
-      _repo.requestTrip(
-        userId: userId,
-        origenLatitud: origenLatitud,
-        origenLongitud: origenLongitud,
-        origenDireccion: origenDireccion,
-        destinoLatitud: destinoLatitud,
-        destinoLongitud: destinoLongitud,
-        destinoDireccion: destinoDireccion,
-        distanciaEstimadaKm: distanciaEstimadaKm,
-        metodoPagoId: metodoPagoId,
-      );
+  }) => _repo.requestTrip(
+    userId: userId,
+    origenLatitud: origenLatitud,
+    origenLongitud: origenLongitud,
+    origenDireccion: origenDireccion,
+    destinoLatitud: destinoLatitud,
+    destinoLongitud: destinoLongitud,
+    destinoDireccion: destinoDireccion,
+    distanciaEstimadaKm: distanciaEstimadaKm,
+    metodoPagoId: metodoPagoId,
+  );
 }

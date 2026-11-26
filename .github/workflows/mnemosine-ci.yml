@@ -1,0 +1,375 @@
+# Añadido desde Mnemosine: pruebas automáticas en cada pull request del agente y en la rama del
+# proyecto. Nunca dan por buena una entrega sin ejecutar tests, y guardan sus resultados para que
+# Mnemosine verifique cada criterio de aceptación. Si defines los secretos del repositorio
+# MNEMOSINE_DEPLOY_HOOK_DEVELOPMENT y MNEMOSINE_DEPLOY_HOOK_PRODUCTION con el deploy hook de tu
+# hosting, despliega la rama en desarrollo y cada versión publicada (etiqueta v...) en producción.
+# Puedes editarlo; Mnemosine solo lo reemplaza si se lo pides desde la pestaña Configuración.
+# mnemosine-ci-version: 3
+name: Mnemosine CI
+
+on:
+  pull_request:
+  push:
+    branches: ["environment/dev"]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - if: hashFiles('.python-version') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - if: hashFiles('.python-version') == '' && hashFiles('**/pyproject.toml', '**/requirements.txt', '**/setup.py') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: hashFiles('.nvmrc') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - if: hashFiles('.nvmrc') == '' && hashFiles('.node-version') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - if: hashFiles('.nvmrc', '.node-version') == '' && hashFiles('**/package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - if: hashFiles('**/pom.xml', '**/build.gradle', '**/build.gradle.kts') != ''
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - if: hashFiles('global.json') != ''
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - if: hashFiles('global.json') == '' && hashFiles('**/*.csproj', '**/*.fsproj', '**/*.vbproj') != ''
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - if: hashFiles('**/go.mod') != ''
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - if: hashFiles('**/composer.json') != ''
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer
+          coverage: none
+      - if: hashFiles('.ruby-version') != ''
+        uses: ruby/setup-ruby@v1
+      - if: hashFiles('.ruby-version') == '' && hashFiles('**/Gemfile') != ''
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - if: hashFiles('**/pubspec.yaml') != ''
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Instalar, compilar y probar
+        shell: sh
+        env:
+          CI: "true"
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+          DOTNET_ROLL_FORWARD: Major
+          DOTNET_NOLOGO: "1"
+          DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+          MNEMOSINE_REQUEST: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -eu
+          # GitLab runs bash with pipefail; these scripts are written for plain sh.
+          if (set +o pipefail) 2>/dev/null; then set +o pipefail; fi
+          MNEMOSINE_STATUS=0
+          MNEMOSINE_TESTED="${MNEMOSINE_TESTED:-}"
+          MNEMOSINE_LOG="/tmp/mnemosine-ci-$$.log"
+          # Test results for Mnemosine (it verifies each acceptance criterion with them).
+          MNEMOSINE_REPORTS="$PWD/mnemosine-reports"
+          mkdir -p "$MNEMOSINE_REPORTS"
+          if [ -n "${MNEMOSINE_TESTED_VAR:-}" ]; then echo "${MNEMOSINE_TESTED_VAR}_RAN=true" > "${CI_PROJECT_DIR:-.}/mnemosine-tested.env"; fi
+
+          # Files of the repository, without dependencies, build output or the memory copy in docs/.
+          list() {
+            find . \( -path ./.git -o -path ./docs -o -name node_modules -o -name vendor -o -name .venv -o -name venv \
+              -o -name build -o -name dist -o -name target -o -name .dart_tool -o -name .gradle -o -name mnemosine-reports \) -prune -o \( "$@" \) -type f -print
+          }
+          roots() { list "$@" | xargs -r -n1 dirname | sort -u; }
+          top_level() { awk '{ for (i = 1; i <= n; i++) if (index($0, kept[i] "/") == 1) next; kept[++n] = $0; print }'; }
+          in_dir() { ( cd "$1" && shift && "$@" ); }
+          name_of() { if [ "$1" = . ]; then echo "raíz del repositorio"; else echo "${1#./}"; fi; }
+          # Report file of a tool run in a folder: mnemosine-reports/pytest-backend.xml
+          report_path() { echo "$MNEMOSINE_REPORTS/$1-$(printf '%s' "$2" | sed -e 's#^\./##' -e 's#^\.$#root#' -e 's#[^A-Za-z0-9._-]#_#g').$3"; }
+          run_logged() { rc=0; "$@" > "$MNEMOSINE_LOG" 2>&1 || rc=$?; cat "$MNEMOSINE_LOG"; return "$rc"; }
+          # Reports a failure with the end of the log: GitHub keeps it as an annotation of the check.
+          fail() {
+            MNEMOSINE_STATUS=1
+            message="$1"
+            if [ -n "${2:-}" ] && [ -s "$2" ]; then message="$message
+          $(tail -n 40 "$2" | cut -c1-240)"; fi
+            if [ -n "${GITHUB_ACTIONS:-}" ]; then
+              printf '::error title=Mnemosine CI::%s\n' "$(printf '%s' "$message" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'NR > 1 { printf "%%0A" } { printf "%s", $0 }')"
+            else
+              printf '\nERROR (Mnemosine CI): %s\n' "$message"
+            fi
+          }
+          tested() {
+            MNEMOSINE_TESTED=true
+            if [ -n "${MNEMOSINE_TESTED_VAR:-}" ]; then echo "${MNEMOSINE_TESTED_VAR}=true" >> "${CI_PROJECT_DIR:-.}/mnemosine-tested.env"; fi
+          }
+          has_code() {
+            [ -n "$(list -name '*.py' -o -name '*.js' -o -name '*.jsx' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' \
+              -o -name '*.vue' -o -name '*.svelte' -o -name '*.java' -o -name '*.kt' -o -name '*.go' -o -name '*.cs' -o -name '*.fs' \
+              -o -name '*.php' -o -name '*.rb' -o -name '*.dart' -o -name '*.swift' -o -name '*.rs' -o -name '*.c' -o -name '*.cpp' \
+              -o -name '*.scala' -o -name '*.ex' -o -name '*.exs')" ]
+          }
+          NO_TESTS="Cada entrega debe incluir tests que prueben lo implementado."
+
+          run_python() {
+            for dir in $(roots -name pyproject.toml -o -name requirements.txt -o -name setup.py); do
+              echo "== Python: $dir"
+              venv="/tmp/mnemosine-venv-$$"
+              rm -rf "$venv"
+              rc=0; run_logged python -m venv "$venv" || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudo crear el entorno virtual de Python." "$MNEMOSINE_LOG"; continue; fi
+              saved_path="$PATH"
+              PATH="$venv/bin:$PATH"
+              rc=0; run_logged in_dir "$dir" python_install || rc=$?
+              if [ "$rc" -ne 0 ]; then
+                fail "$(name_of "$dir"): no se pudieron instalar las dependencias de Python." "$MNEMOSINE_LOG"
+              else
+                rc=0; run_logged in_dir "$dir" python -m pytest -q --junitxml="$(report_path pytest "$dir" xml)" || rc=$?
+                if [ "$rc" -eq 5 ]; then fail "$(name_of "$dir"): pytest no encontró ningún test. $NO_TESTS"
+                elif [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron los tests de Python." "$MNEMOSINE_LOG"
+                else tested; fi
+              fi
+              PATH="$saved_path"
+              rm -rf "$venv"
+            done
+          }
+          python_install() {
+            python -m pip install --quiet --upgrade pip &&
+            { [ ! -f requirements.txt ] || python -m pip install --quiet -r requirements.txt; } &&
+            { [ ! -f requirements-dev.txt ] || python -m pip install --quiet -r requirements-dev.txt; } &&
+            { ! grep -qs -e '^\[project\]' -e '^\[tool\.poetry\]' pyproject.toml || python -m pip install --quiet -e ".[dev]" || python -m pip install --quiet -e .; } &&
+            { [ ! -f setup.py ] || [ -f pyproject.toml ] || python -m pip install --quiet -e .; } &&
+            python -m pip install --quiet pytest
+          }
+
+          run_node() {
+            for dir in $(roots -name package.json); do
+              echo "== Node: $dir"
+              test_script=$(in_dir "$dir" package_field scripts.test || true)
+              workspaces=$(in_dir "$dir" package_field workspaces || true)
+              rc=0; run_logged in_dir "$dir" node_install || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudieron instalar las dependencias de Node." "$MNEMOSINE_LOG"; continue; fi
+              rc=0; run_logged in_dir "$dir" npm run build --if-present || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): falló la compilación (npm run build)." "$MNEMOSINE_LOG"; continue; fi
+              case "$test_script" in
+                ""|*"no test specified"*)
+                  if [ -n "$workspaces" ]; then echo "$dir agrupa paquetes (workspaces): cada uno se prueba en su carpeta."; continue; fi
+                  fail "$(name_of "$dir"): package.json no tiene un script \"test\" que ejecute tests. $NO_TESTS"
+                  continue ;;
+              esac
+              rc=0; run_logged in_dir "$dir" node_test "$test_script" "$(report_path node "$dir" xml)" || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron los tests de Node (npm test)." "$MNEMOSINE_LOG"; else tested; fi
+            done
+          }
+          package_field() {
+            node -e 'const p = require("./package.json"); const v = process.argv[1].split(".").reduce((o, k) => (o == null ? undefined : o[k]), p); process.stdout.write(v == null ? "" : typeof v === "string" ? v : "yes");' "$1"
+          }
+          # npm test, with a JUnit report when the script is the test runner itself (Vitest, Jest, node --test).
+          node_test() {
+            case "$1" in
+              vitest*) npm test -- --reporter=default --reporter=junit --outputFile.junit="$2" ;;
+              jest*)
+                if [ ! -f pnpm-lock.yaml ] && [ ! -f yarn.lock ] && npm install --no-save --no-audit --no-fund jest-junit > /dev/null 2>&1; then
+                  JEST_JUNIT_OUTPUT_FILE="$2" npm test -- --reporters=default --reporters=jest-junit
+                else npm test; fi ;;
+              "node --test"*) npm test -- --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination="$2" ;;
+              *) npm test ;;
+            esac
+          }
+          node_install() {
+            if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm install --frozen-lockfile
+            elif [ -f yarn.lock ]; then corepack enable && { yarn install --immutable || yarn install --frozen-lockfile; }
+            elif [ -f package-lock.json ]; then npm ci
+            else npm install --no-audit --no-fund; fi
+          }
+
+          # The android/ folder of a React Native or Flutter app is built by its own toolchain.
+          jvm_roots() {
+            mobile=$(roots -name package.json -o -name pubspec.yaml | while read -r d; do if [ -d "$d/android" ]; then echo "$d/android"; fi; done)
+            roots -name pom.xml -o -name build.gradle -o -name build.gradle.kts -o -name settings.gradle -o -name settings.gradle.kts |
+              while read -r d; do
+                skip=""
+                for m in $mobile; do case "$d/" in "$m"/*) skip=1 ;; esac; done
+                if [ -z "$skip" ]; then echo "$d"; fi
+              done | top_level
+          }
+          run_jvm() {
+            for dir in $(jvm_roots); do
+              if [ -f "$dir/pom.xml" ]; then
+                if [ "${MNEMOSINE_JVM_TOOL:-maven}" != maven ]; then continue; fi
+                echo "== Java/Kotlin (Maven): $dir"
+                if [ -f "$dir/mvnw" ]; then tool="sh ./mvnw"; else tool="mvn"; fi
+                rc=0; run_logged in_dir "$dir" $tool -B -ntp verify || rc=$?
+                reports=$(find "$dir" -path '*/surefire-reports/TEST-*.xml' -o -path '*/failsafe-reports/TEST-*.xml')
+              else
+                if [ "${MNEMOSINE_JVM_TOOL:-gradle}" != gradle ]; then continue; fi
+                echo "== Java/Kotlin (Gradle): $dir"
+                if [ -f "$dir/gradlew" ]; then tool="sh ./gradlew"; else tool="gradle"; fi
+                rc=0; run_logged in_dir "$dir" $tool test --no-daemon || rc=$?
+                reports=$(find "$dir" -path '*/test-results/*' -name 'TEST-*.xml')
+              fi
+              for report in $reports; do cp "$report" "$MNEMOSINE_REPORTS/" 2>/dev/null || true; done
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron la compilación o los tests ($tool)." "$MNEMOSINE_LOG"
+              elif [ -z "$reports" ]; then fail "$(name_of "$dir"): no se ejecutó ningún test. $NO_TESTS"
+              else tested; fi
+            done
+          }
+
+          run_dotnet() {
+            projects=$(list -name '*.csproj' -o -name '*.fsproj' -o -name '*.vbproj')
+            if [ -z "$projects" ]; then return 0; fi
+            test_projects=$(echo "$projects" | xargs -r grep -l -e 'Microsoft.NET.Test.Sdk' -e 'MSTest.Sdk' || true)
+            if [ -z "$test_projects" ]; then fail "No hay ningún proyecto de tests de .NET (Microsoft.NET.Test.Sdk o MSTest.Sdk). $NO_TESTS"; return 0; fi
+            results="/tmp/mnemosine-dotnet-$$"
+            dotnet_failed=""
+            for project in $test_projects; do
+              echo "== .NET: $project"
+              rc=0; run_logged dotnet test "$project" --logger trx --results-directory "$results" || rc=$?
+              if [ "$rc" -ne 0 ]; then dotnet_failed=1; fail "$(name_of "$project"): fallaron la compilación o los tests de .NET." "$MNEMOSINE_LOG"; fi
+            done
+            find "$results" -name '*.trx' -exec cp {} "$MNEMOSINE_REPORTS/" \; 2>/dev/null || true
+            if [ -n "$dotnet_failed" ]; then return 0; fi
+            if [ -n "$(find "$results" -name '*.trx' 2>/dev/null)" ]; then tested; else fail "dotnet test no ejecutó ningún test. $NO_TESTS"; fi
+          }
+
+          run_go() {
+            for dir in $(roots -name go.mod); do
+              echo "== Go: $dir"
+              with_tests=$(in_dir "$dir" go list -e -f '{{if or .TestGoFiles .XTestGoFiles}}{{.ImportPath}}{{end}}' ./... 2>/dev/null || true)
+              if [ -z "$with_tests" ]; then fail "$(name_of "$dir"): el módulo de Go no tiene tests (archivos _test.go). $NO_TESTS"; continue; fi
+              rc=0; run_logged in_dir "$dir" go test -v ./... || rc=$?
+              cp "$MNEMOSINE_LOG" "$(report_path go "$dir" txt)" 2>/dev/null || true
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron la compilación o los tests de Go." "$MNEMOSINE_LOG"; else tested; fi
+            done
+          }
+
+          run_php() {
+            for dir in $(roots -name composer.json); do
+              echo "== PHP: $dir"
+              rc=0; run_logged in_dir "$dir" php_install || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudieron instalar las dependencias de PHP (composer install)." "$MNEMOSINE_LOG"; continue; fi
+              if [ -z "$(in_dir "$dir" list -name '*Test.php')" ]; then fail "$(name_of "$dir"): no hay tests de PHP (archivos *Test.php). $NO_TESTS"; continue; fi
+              test_command=$(in_dir "$dir" php_test_command || true)
+              if [ -z "$test_command" ]; then fail "$(name_of "$dir"): no se encontró cómo ejecutar los tests (script \"test\" de composer.json, Pest o PHPUnit)."; continue; fi
+              case "$test_command" in vendor/bin/*) test_command="$test_command --log-junit $(report_path php "$dir" xml)" ;; esac
+              rc=0; run_logged in_dir "$dir" $test_command || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron los tests de PHP ($test_command)." "$MNEMOSINE_LOG"; else tested; fi
+            done
+          }
+          php_install() {
+            composer install --no-interaction --prefer-dist --no-progress &&
+            { [ ! -f artisan ] || [ -f .env ] || [ ! -f .env.example ] || { cp .env.example .env && php artisan key:generate --no-interaction; }; }
+          }
+          php_test_command() {
+            if php -r '$c = json_decode((string) file_get_contents("composer.json"), true); exit(isset($c["scripts"]["test"]) ? 0 : 1);'; then echo "composer test"
+            elif [ -f vendor/bin/pest ]; then echo "vendor/bin/pest"
+            elif [ -f vendor/bin/phpunit ]; then echo "vendor/bin/phpunit"
+            fi
+          }
+
+          run_ruby() {
+            for dir in $(roots -name Gemfile); do
+              echo "== Ruby: $dir"
+              if [ -z "$(in_dir "$dir" list -name '*_spec.rb' -o -name '*_test.rb')" ]; then fail "$(name_of "$dir"): no hay tests de Ruby (*_spec.rb o *_test.rb). $NO_TESTS"; continue; fi
+              rc=0; run_logged in_dir "$dir" bundle install || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudieron instalar las gemas (bundle install)." "$MNEMOSINE_LOG"; continue; fi
+              if [ -d "$dir/spec" ]; then test_command="bundle exec rspec"; elif [ -f "$dir/bin/rails" ]; then test_command="bin/rails test"; else test_command="bundle exec rake test"; fi
+              rc=0; run_logged in_dir "$dir" $test_command || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron los tests de Ruby ($test_command)." "$MNEMOSINE_LOG"; else tested; fi
+            done
+          }
+
+          run_dart() {
+            # example/ folders are the demo apps of Flutter and Dart packages.
+            for dir in $(roots -name pubspec.yaml | grep -v -e '/example$' -e '/example/' || true); do
+              echo "== Dart/Flutter: $dir"
+              if grep -qs 'sdk: *flutter' "$dir/pubspec.yaml"; then tool=flutter; else tool=dart; fi
+              # Si el proyecto declara .env.* como asset (ver .env.example) y la CI no tiene los
+              # secretos reales, usar valores de mentira para que el bundle de assets no falle.
+              for env_file in "$dir/.env.dev" "$dir/.env.prod"; do
+                [ -f "$env_file" ] || { [ -f "$dir/.env.example" ] && cp "$dir/.env.example" "$env_file"; } || true
+              done
+              if [ -z "$(in_dir "$dir" list -name '*_test.dart')" ]; then fail "$(name_of "$dir"): no hay tests de Dart (*_test.dart). $NO_TESTS"; continue; fi
+              rc=0; run_logged in_dir "$dir" $tool pub get || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): no se pudieron instalar las dependencias ($tool pub get)." "$MNEMOSINE_LOG"; continue; fi
+              # --concurrency=1: evita "database is locked" cuando varios
+              # archivos de test usan una AppDatabase real (sqflite) sobre
+              # el mismo .db y corren en paralelo.
+              rc=0; run_logged in_dir "$dir" $tool test --concurrency=1 --file-reporter "json:$(report_path dart "$dir" json)" || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron los tests ($tool test)." "$MNEMOSINE_LOG"; else tested; fi
+            done
+          }
+
+          run_swift() {
+            for dir in $(roots -name Package.swift | top_level); do
+              echo "== Swift: $dir"
+              if ! command -v swift >/dev/null 2>&1; then fail "$(name_of "$dir"): Swift no está disponible en la máquina de la CI."; continue; fi
+              if [ -z "$(in_dir "$dir" list -name '*.swift' -path '*Tests*')" ]; then fail "$(name_of "$dir"): el paquete Swift no tiene tests (Tests/). $NO_TESTS"; continue; fi
+              rc=0; run_logged in_dir "$dir" swift test || rc=$?
+              if [ "$rc" -ne 0 ]; then fail "$(name_of "$dir"): fallaron la compilación o los tests de Swift." "$MNEMOSINE_LOG"; else tested; fi
+            done
+          }
+
+          # The final check: tests ran, or there is no code yet. On a pull/merge request (every delivery of
+          # the agent) code without any test run fails; on a push to the branch it is only a warning.
+          gate() {
+            if [ "$MNEMOSINE_STATUS" -ne 0 ]; then return 0; fi
+            if [ -n "$MNEMOSINE_TESTED" ]; then echo "Tests ejecutados."; return 0; fi
+            if ! has_code; then echo "El repositorio todavía no tiene código que probar."; return 0; fi
+            message="No se ejecutó ningún test: el repositorio tiene código, pero ningún proyecto reconocido ejecutó tests. Mnemosine CI prueba proyectos Python, Node, Java/Kotlin (Maven o Gradle), .NET, Go, PHP, Ruby, Dart/Flutter y paquetes Swift; para otro stack, añade sus pasos a este archivo."
+            if [ "${MNEMOSINE_REQUEST:-}" = "true" ]; then fail "$message"; else echo "Aviso: $message"; fi
+          }
+          for stack in python node jvm dotnet go php ruby dart swift; do "run_$stack"; done
+          gate
+          exit "$MNEMOSINE_STATUS"
+      - name: Guardar los resultados de los tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnemosine-test-reports
+          path: mnemosine-reports/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  deploy:
+    name: Desplegar
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pedir el despliegue al hosting
+        shell: sh
+        env:
+          DEVELOPMENT_HOOK: ${{ secrets.MNEMOSINE_DEPLOY_HOOK_DEVELOPMENT }}
+          PRODUCTION_HOOK: ${{ secrets.MNEMOSINE_DEPLOY_HOOK_PRODUCTION }}
+          REF: ${{ github.ref }}
+        run: |
+          case "$REF" in
+            refs/tags/v*) hook="$PRODUCTION_HOOK"; where="producción" ;;
+            *) hook="$DEVELOPMENT_HOOK"; where="desarrollo" ;;
+          esac
+          if [ -z "$hook" ]; then echo "No hay deploy hook de $where configurado: no se despliega."; exit 0; fi
+          curl -fsS -X POST "$hook" -o /dev/null
+          echo "Despliegue en $where solicitado al hosting."

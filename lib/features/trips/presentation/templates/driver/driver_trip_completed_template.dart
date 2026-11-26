@@ -84,10 +84,7 @@ class DriverTripCompletedTemplate extends StatelessWidget {
                           valueColor: context.appColors.text,
                           bold: true,
                         ),
-                        Divider(
-                          height: 24.h,
-                          color: context.appColors.divider,
-                        ),
+                        Divider(height: 24.h, color: context.appColors.divider),
                         _SummaryRow(
                           label: 'Comisión plataforma',
                           value:
@@ -114,8 +111,7 @@ class DriverTripCompletedTemplate extends StatelessWidget {
                     label: 'VOLVER AL INICIO',
                     variant: AppButtonVariant.filled,
                     expand: true,
-                    onPressed: () =>
-                        context.go(ConductorRoutesPath.startTrips),
+                    onPressed: () => context.go(ConductorRoutesPath.startTrips),
                   ),
                   16.verticalSpace,
                 ],
@@ -155,7 +151,9 @@ class _SummaryRow extends StatelessWidget {
         ),
         AppText(
           value,
-          variant: large ? AppTextVariant.titleMedium : AppTextVariant.bodyMedium,
+          variant: large
+              ? AppTextVariant.titleMedium
+              : AppTextVariant.bodyMedium,
           color: valueColor,
           fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
         ),

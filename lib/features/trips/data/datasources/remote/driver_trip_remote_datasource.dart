@@ -11,13 +11,13 @@ class DriverTripRemoteDatasource {
 
   DriverTripRemoteDatasource({required Dio dio}) : _dio = dio;
 
-  Options _headers(int userId) => Options(
-        contentType: 'application/json',
-        headers: {'X-User-Id': userId},
-      );
+  Options _headers(int userId) =>
+      Options(contentType: 'application/json', headers: {'X-User-Id': userId});
 
   Future<List<TripResponseModel>> getAvailableTrips(int userId) async {
-    debugPrint('[DriverTrip] getAvailableTrips userId=$userId url=$_baseUrl/trips/get-available');
+    debugPrint(
+      '[DriverTrip] getAvailableTrips userId=$userId url=$_baseUrl/trips/get-available',
+    );
     try {
       final response = await _dio.post(
         '$_baseUrl/trips/get-available',
@@ -25,7 +25,9 @@ class DriverTripRemoteDatasource {
         data: {},
       );
       final body = response.data as Map<String, dynamic>;
-      debugPrint('[DriverTrip] getAvailableTrips response: ${body['response']} message: ${body['message']}');
+      debugPrint(
+        '[DriverTrip] getAvailableTrips response: ${body['response']} message: ${body['message']}',
+      );
       final list = body['result'] as List<dynamic>? ?? [];
       debugPrint('[DriverTrip] getAvailableTrips count: ${list.length}');
       return list
@@ -57,10 +59,7 @@ class DriverTripRemoteDatasource {
     required int tripId,
     String? motivo,
   }) async {
-    final data = {
-      'tripId': tripId,
-      if (motivo != null) 'motivo': motivo,
-    };
+    final data = {'tripId': tripId, if (motivo != null) 'motivo': motivo};
     debugPrint('[DriverTrip] rejectTrip data=$data');
     await _dio.post(
       '$_baseUrl/trips/reject',
@@ -102,7 +101,8 @@ class DriverTripRemoteDatasource {
     );
     final body = response.data as Map<String, dynamic>;
     return CompleteTripResultModel.fromJson(
-        body['result'] as Map<String, dynamic>);
+      body['result'] as Map<String, dynamic>,
+    );
   }
 
   Future<void> ratePassenger({

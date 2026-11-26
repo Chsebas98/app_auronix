@@ -2,13 +2,24 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/core/network/dio_client.dart';
 import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
+import 'package:auronix_app/app/core/network/interceptors/idempotency_interceptor.dart';
+import 'package:auronix_app/app/core/network/secure_storage_service.dart';
 import 'package:auronix_app/app/database/app_database.dart';
 import 'package:auronix_app/app/database/auth_local_db_datasource.dart';
 import 'package:auronix_app/app/database/db_constants.dart';
 import 'package:auronix_app/app/environments/environment.dart';
+import 'package:auronix_app/app/environments/flavors/env_base_config.dart';
+import 'package:auronix_app/app/network/websocket_manager.dart';
 import 'package:auronix_app/features/auth/auth.dart';
 import 'package:auronix_app/features/auth/data/datasources/auth_local_services.dart';
 import 'package:auronix_app/features/client/data/datasources/remote/client_profile_remote_datasource.dart';
+import 'package:auronix_app/features/home/data/datasources/directions_remote_data_source.dart';
+import 'package:auronix_app/features/home/data/datasources/places_remote_data_source.dart';
+import 'package:auronix_app/features/home/data/repositories/directions_repository_impl.dart';
+import 'package:auronix_app/features/home/data/repositories/places_repository_impl.dart';
+import 'package:auronix_app/features/home/domain/repositories/directions_repository.dart';
+import 'package:auronix_app/features/home/domain/repositories/places_repository.dart';
+import 'package:auronix_app/features/home/presentation/bloc/location_search_bloc.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
 import 'package:auronix_app/features/client/presentation/bloc/client_profile_bloc.dart';
 import 'package:auronix_app/features/client/data/repositories/client_profile_repository_impl.dart';
@@ -51,13 +62,29 @@ import 'package:rx_shared_preferences/rx_shared_preferences.dart';
 
 final sl = GetIt.instance;
 
+/// T2-C7: EnvironmentConfig debe poder resolverse vía GetIt, no solo vía el singleton manual
+/// Environment() que ya usan otros puntos del código. Separado de initDependencies() para poder
+/// probarlo sin levantar el resto del árbol de dependencias (Dio, sockets, Hive, etc.).
+void registerEnvironmentConfig(GetIt getIt) {
+  if (!getIt.isRegistered<EnvBaseConfig>()) {
+    getIt.registerLazySingleton<EnvBaseConfig>(() => Environment().config!);
+  }
+}
+
 Future<void> initDependencies() async {
+  // ── 0. Configuración de ambiente ─────────────────────────────────────────
+  registerEnvironmentConfig(sl);
+  sl.registerLazySingleton<SecureStorageService>(
+    () => SecureStorageServiceImpl(),
+  );
+
   // ── 1. Globales ───────────────────────────────────────────────────────────
 
   sl.registerFactory<GlobalCubit>(() => GlobalCubit());
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   sl.registerFactory<AppLifeCycleCubit>(() => AppLifeCycleCubit());
   sl.registerFactory<PermissionCubit>(() => PermissionCubit());
+  sl.registerLazySingleton<Environment>(() => Environment());
 
   sl.registerLazySingleton<RxSharedPreferences>(
     () => RxSharedPreferences.getInstance(),
@@ -113,8 +140,10 @@ Future<void> initDependencies() async {
       db: sl<AppDatabase>(),
       dio: dioBasic,
       authRemote: authRemote,
+      sessionBloc: () => sl<SessionBloc>(),
     ),
   );
+  dioBasic.interceptors.add(IdempotencyInterceptor());
 
   sl.registerLazySingleton<Dio>(() => dioBasic);
 
@@ -137,13 +166,18 @@ Future<void> initDependencies() async {
       ),
       local: sl<AuthLocalServices>(),
       prefs: sl<RxSharedPreferences>(),
+      secureStorage: sl<SecureStorageService>(),
     ),
   );
 
   // ── 6. Auth — blocs ───────────────────────────────────────────────────────
 
   sl.registerLazySingleton<SessionBloc>(
-    () => SessionBloc(sl<AuthUnifiedRepository>(), sl<RxSharedPreferences>()),
+    () => SessionBloc(
+      sl<AuthUnifiedRepository>(),
+      sl<RxSharedPreferences>(),
+      secureStorage: sl<SecureStorageService>(),
+    ),
   );
 
   sl.registerFactory<AuthUnifiedBloc>(
@@ -188,6 +222,33 @@ Future<void> initDependencies() async {
     () => PlacesService(apiKey: Environment().config!.googleMapsApiKey),
   );
 
+  // T17: nueva capa Clean Architecture para autocompletado/detalle de
+  // lugares, adaptando PlacesService (no un datasource paralelo).
+  sl.registerLazySingleton<PlacesRemoteDataSource>(
+    () => PlacesRemoteDataSource(sl<PlacesService>()),
+  );
+
+  sl.registerLazySingleton<PlacesRepository>(
+    () => PlacesRepositoryImpl(sl<PlacesRemoteDataSource>()),
+  );
+
+  // T18: idem para rutas/tarifa estimada, misma adaptacion de PlacesService.
+  sl.registerLazySingleton<DirectionsRemoteDataSource>(
+    () => DirectionsRemoteDataSource(sl<PlacesService>()),
+  );
+
+  sl.registerLazySingleton<DirectionsRepository>(
+    () => DirectionsRepositoryImpl(sl<DirectionsRemoteDataSource>()),
+  );
+
+  // T19: orquesta busqueda/seleccion de origen-destino sobre ambos repos.
+  sl.registerFactory<LocationSearchBloc>(
+    () => LocationSearchBloc(
+      placesRepository: sl<PlacesRepository>(),
+      directionsRepository: sl<DirectionsRepository>(),
+    ),
+  );
+
   sl.registerLazySingleton<ClientTripRemoteDatasource>(
     () => ClientTripRemoteDatasource(dio: sl<Dio>()),
   );
@@ -196,12 +257,9 @@ Future<void> initDependencies() async {
     () => DriverTripRemoteDatasource(dio: sl<Dio>()),
   );
 
-  // WebSocket URL derivada de apiBaseUrl: http://host:port/api → ws://host:port
-  final wsBaseUrl = Environment()
-      .config!
-      .apiBaseUrl
-      .replaceFirst(RegExp(r'https?://'), 'ws://')
-      .replaceFirst(RegExp(r'/api.*'), '');
+  // WebSocket URL derivada de apiBaseUrl (T2-C6: wss:// obligatorio en
+  // desarrollo/producción, antes siempre caía en ws:// sin cifrar).
+  final wsBaseUrl = deriveWsBaseUrl(Environment().config!.apiBaseUrl);
 
   sl.registerFactory<DriverTripSocket>(
     () => DriverTripSocket(serverUrl: wsBaseUrl),
@@ -211,12 +269,18 @@ Future<void> initDependencies() async {
     () => TripStatusSocket(serverUrl: wsBaseUrl),
   );
 
+  // WebSocketManager es singleton: una sola sesion STOMP (T7) compartida por
+  // quien envia posicion (conductor) y quien la escucha (cliente).
+  sl.registerLazySingleton<WebSocketManager>(
+    () => WebSocketManager(wsBaseUrl: wsBaseUrl),
+  );
+
   sl.registerFactory<DriverPositionSender>(
-    () => DriverPositionSender(serverUrl: wsBaseUrl),
+    () => DriverPositionSender(wsManager: sl<WebSocketManager>()),
   );
 
   sl.registerFactory<ClientPositionListener>(
-    () => ClientPositionListener(serverUrl: wsBaseUrl),
+    () => ClientPositionListener(wsManager: sl<WebSocketManager>()),
   );
 
   sl.registerLazySingleton<TripRepository>(

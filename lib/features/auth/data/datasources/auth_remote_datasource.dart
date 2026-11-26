@@ -1,5 +1,10 @@
 import 'package:auronix_app/app/core/network/types/request_extras.dart';
 import 'package:auronix_app/app/environments/environment.dart';
+import 'package:auronix_app/app/network/error_mapper.dart';
+import 'package:auronix_app/core/errors/failure.dart';
+import 'package:auronix_app/features/auth/data/models/auth_response_model.dart';
+import 'package:auronix_app/features/auth/data/models/login_request_model.dart';
+import 'package:auronix_app/features/auth/data/models/register_request_model.dart';
 import 'package:auronix_app/features/auth/domain/models/interfaces/authentication_credentials.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -29,6 +34,47 @@ class AuthRemoteDatasource {
       'message': 'Error de conexión',
       'errorDetail': e.message ?? 'No se pudo conectar al servidor',
     };
+  }
+
+  // ──────────── Backend real (/api/v1/auth/{login,register}) ────────────
+  // T11: a diferencia de los metodos de abajo (que llaman rutas por rol que
+  // no existen en el backend real, ver docs/architecture/existing_foundation.md),
+  // estos dos hablan el contrato real tal como lo expone AuthController.
+  // Los errores se mapean con ErrorMapper (T8) y se relanzan como
+  // AuthRequestException en vez de devolver un Map silencioso: quien llama
+  // puede distinguir un 401 de credenciales invalidas de un 404 por falta
+  // de endpoint (relevante para loginOrRegisterWithGoogle, T11).
+
+  Future<AuthResponseModel> login(LoginRequestModel request) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/auth/login',
+        options: Options(
+          contentType: 'application/json',
+          extra: RequestExtras.withRetry(retries: 2),
+        ),
+        data: request.toJson(),
+      );
+      return AuthResponseModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AuthRequestException(ErrorMapper.fromDioException(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> register(RegisterRequestModel request) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/auth/register',
+        options: Options(
+          contentType: 'application/json',
+          extra: RequestExtras.withRetry(retries: 2),
+        ),
+        data: request.toJson(),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw AuthRequestException(ErrorMapper.fromDioException(e));
+    }
   }
 
   // ──────────────────── CLIENT ────────────────────
@@ -172,9 +218,7 @@ class AuthRemoteDatasource {
     }
   }
 
-  Future<Map<String, dynamic>> registerDriver(
-    Map<String, dynamic> data,
-  ) async {
+  Future<Map<String, dynamic>> registerDriver(Map<String, dynamic> data) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/auth/drivers/register',
@@ -204,4 +248,17 @@ class AuthRemoteDatasource {
       return _handleDioException(e);
     }
   }
+}
+
+/// Lleva un [Failure] ya tipado (ver [ErrorMapper]) desde el datasource hasta
+/// el repositorio, para distinguir p.ej. un 401 de credenciales invalidas de
+/// un 404 por falta de endpoint sin depender de inspeccionar el status code
+/// en dos capas distintas.
+class AuthRequestException implements Exception {
+  final Failure failure;
+
+  const AuthRequestException(this.failure);
+
+  @override
+  String toString() => 'AuthRequestException: ${failure.message}';
 }

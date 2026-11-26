@@ -28,11 +28,11 @@ class CompleteTripResultModel {
       );
 
   CompleteTripResult toEntity() => CompleteTripResult(
-        id: id,
-        estado: estado,
-        precioTotal: precioTotal,
-        comisionMonto: comisionMonto,
-        montoConductor: montoConductor,
-        fechaFin: fechaFin,
-      );
+    id: id,
+    estado: estado,
+    precioTotal: precioTotal,
+    comisionMonto: comisionMonto,
+    montoConductor: montoConductor,
+    fechaFin: fechaFin,
+  );
 }

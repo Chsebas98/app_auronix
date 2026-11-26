@@ -11,11 +11,10 @@ class RateDriverUseCase {
     required int tripId,
     required int calificacion,
     String? comentario,
-  }) =>
-      _repo.rateDriver(
-        userId: userId,
-        tripId: tripId,
-        calificacion: calificacion,
-        comentario: comentario,
-      );
+  }) => _repo.rateDriver(
+    userId: userId,
+    tripId: tripId,
+    calificacion: calificacion,
+    comentario: comentario,
+  );
 }

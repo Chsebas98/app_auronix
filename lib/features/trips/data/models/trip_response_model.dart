@@ -1,10 +1,12 @@
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_entity.dart';
+import 'package:auronix_app/features/trips/domain/models/interfaces/trip_status.dart';
 
 class TripResponseModel {
   final int id;
   final String codigoViaje;
   final int passengerId;
   final int? driverId;
+  final int? vehicleId;
   final int cooperativaId;
   final double origenLatitud;
   final double origenLongitud;
@@ -14,7 +16,7 @@ class TripResponseModel {
   final String destinoDireccion;
   final double distanciaKm;
   final double precioTotal;
-  final String estado;
+  final TripStatus estado;
   final String fechaSolicitud;
 
   const TripResponseModel({
@@ -22,6 +24,7 @@ class TripResponseModel {
     required this.codigoViaje,
     required this.passengerId,
     this.driverId,
+    this.vehicleId,
     required this.cooperativaId,
     required this.origenLatitud,
     required this.origenLongitud,
@@ -41,34 +44,41 @@ class TripResponseModel {
         codigoViaje: json['codigoViaje'] as String? ?? '',
         passengerId: json['passengerId'] as int? ?? 0,
         driverId: json['driverId'] as int?,
+        vehicleId: json['vehicleId'] as int?,
         cooperativaId: json['cooperativaId'] as int? ?? 0,
-        origenLatitud: (json['origenLatitud'] as num).toDouble(),
-        origenLongitud: (json['origenLongitud'] as num).toDouble(),
+        origenLatitud: (json['origenLatitud'] as num?)?.toDouble() ?? 0,
+        origenLongitud: (json['origenLongitud'] as num?)?.toDouble() ?? 0,
         origenDireccion: json['origenDireccion'] as String? ?? '',
-        destinoLatitud: (json['destinoLatitud'] as num).toDouble(),
-        destinoLongitud: (json['destinoLongitud'] as num).toDouble(),
+        // El backend permite destino nulo (viaje recien SOLICITADO, sin
+        // destino aun confirmado) — se usa 0 como placeholder en vez de
+        // fallar el parseo completo del viaje por ese campo.
+        destinoLatitud: (json['destinoLatitud'] as num?)?.toDouble() ?? 0,
+        destinoLongitud: (json['destinoLongitud'] as num?)?.toDouble() ?? 0,
         destinoDireccion: json['destinoDireccion'] as String? ?? '',
-        distanciaKm: (json['distanciaKm'] as num).toDouble(),
-        precioTotal: (json['precioTotal'] as num).toDouble(),
-        estado: json['estado'] as String? ?? '',
+        distanciaKm: (json['distanciaKm'] as num?)?.toDouble() ?? 0,
+        precioTotal: (json['precioTotal'] as num?)?.toDouble() ?? 0,
+        estado: TripStatus.fromBackendValue(
+          json['estado'] as String? ?? 'SOLICITADO',
+        ),
         fechaSolicitud: json['fechaSolicitud'] as String? ?? '',
       );
 
   TripEntity toEntity() => TripEntity(
-        id: id,
-        codigoViaje: codigoViaje,
-        passengerId: passengerId,
-        driverId: driverId,
-        cooperativaId: cooperativaId,
-        origenLatitud: origenLatitud,
-        origenLongitud: origenLongitud,
-        origenDireccion: origenDireccion,
-        destinoLatitud: destinoLatitud,
-        destinoLongitud: destinoLongitud,
-        destinoDireccion: destinoDireccion,
-        distanciaKm: distanciaKm,
-        precioTotal: precioTotal,
-        estado: estado,
-        fechaSolicitud: fechaSolicitud,
-      );
+    id: id,
+    codigoViaje: codigoViaje,
+    passengerId: passengerId,
+    driverId: driverId,
+    vehicleId: vehicleId,
+    cooperativaId: cooperativaId,
+    origenLatitud: origenLatitud,
+    origenLongitud: origenLongitud,
+    origenDireccion: origenDireccion,
+    destinoLatitud: destinoLatitud,
+    destinoLongitud: destinoLongitud,
+    destinoDireccion: destinoDireccion,
+    distanciaKm: distanciaKm,
+    precioTotal: precioTotal,
+    estado: estado,
+    fechaSolicitud: fechaSolicitud,
+  );
 }

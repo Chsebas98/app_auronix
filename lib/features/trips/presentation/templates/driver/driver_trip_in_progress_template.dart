@@ -152,17 +152,14 @@ class _DriverTripInProgressTemplateState
                   Navigator.of(sheetCtx).pop();
                   final userId = _getUserId();
                   context.read<DriverTripBloc>().add(
-                        DriverTripStartEvent(
-                          userId: userId,
-                          tripId: trip?.id ?? 0,
-                        ),
-                      );
+                    DriverTripStartEvent(userId: userId, tripId: trip?.id ?? 0),
+                  );
                 } else {
                   context.read<DialogCubit>().showMessage(
-                        title: 'Código incorrecto',
-                        message:
-                            'El código ingresado no coincide con el del pasajero.',
-                      );
+                    title: 'Código incorrecto',
+                    message:
+                        'El código ingresado no coincide con el del pasajero.',
+                  );
                 }
               },
             ),
@@ -243,13 +240,15 @@ class _DriverTripInProgressTemplateState
                         markerId: const MarkerId('origin'),
                         position: origin,
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueAzure),
+                          BitmapDescriptor.hueAzure,
+                        ),
                       ),
                       Marker(
                         markerId: const MarkerId('destination'),
                         position: destination,
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueRed),
+                          BitmapDescriptor.hueRed,
+                        ),
                       ),
                     },
                     polylines: {
@@ -277,7 +276,9 @@ class _DriverTripInProgressTemplateState
                   child: SafeArea(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w, vertical: 8.h),
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
                       child: Container(
                         padding: EdgeInsets.all(14.r),
                         decoration: BoxDecoration(
@@ -296,9 +297,11 @@ class _DriverTripInProgressTemplateState
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.directions_car_rounded,
-                                    color: context.appColors.button,
-                                    size: 20.r),
+                                Icon(
+                                  Icons.directions_car_rounded,
+                                  color: context.appColors.button,
+                                  size: 20.r,
+                                ),
                                 8.horizontalSpace,
                                 AppText(
                                   isInProgress
@@ -360,14 +363,13 @@ class _DriverTripInProgressTemplateState
                           onPressed: () {
                             final userId = _getUserId();
                             context.read<DriverTripBloc>().add(
-                                  DriverTripCompleteEvent(
-                                    userId: userId,
-                                    tripId: trip?.id ?? 0,
-                                    distanciaFinalKm:
-                                        trip?.distanciaKm ?? 0,
-                                    duracionMinutos: 10,
-                                  ),
-                                );
+                              DriverTripCompleteEvent(
+                                userId: userId,
+                                tripId: trip?.id ?? 0,
+                                distanciaFinalKm: trip?.distanciaKm ?? 0,
+                                duracionMinutos: 10,
+                              ),
+                            );
                           },
                         )
                       : AppButton(
@@ -375,8 +377,7 @@ class _DriverTripInProgressTemplateState
                           variant: AppButtonVariant.filled,
                           isLoading: isStarting,
                           expand: true,
-                          onPressed: () =>
-                              _showCodeVerification(context, trip),
+                          onPressed: () => _showCodeVerification(context, trip),
                         ),
                 ),
               ],

@@ -38,8 +38,9 @@ final class DriverTripState extends Equatable {
     return DriverTripState(
       status: status ?? this.status,
       nearbyRequests: nearbyRequests ?? this.nearbyRequests,
-      selectedRequest:
-          clearSelected ? null : selectedRequest ?? this.selectedRequest,
+      selectedRequest: clearSelected
+          ? null
+          : selectedRequest ?? this.selectedRequest,
       activeTrip: activeTrip ?? this.activeTrip,
       completedTrip: completedTrip ?? this.completedTrip,
       driverLat: driverLat ?? this.driverLat,
@@ -50,15 +51,15 @@ final class DriverTripState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        nearbyRequests,
-        selectedRequest,
-        activeTrip,
-        completedTrip,
-        driverLat,
-        driverLng,
-        errorMessage,
-      ];
+    status,
+    nearbyRequests,
+    selectedRequest,
+    activeTrip,
+    completedTrip,
+    driverLat,
+    driverLng,
+    errorMessage,
+  ];
 }
 
 enum DriverTripStatus {

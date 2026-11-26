@@ -1,76 +1,421 @@
-# Patrones de diseño y pantallas
+# Architecture decisions
 
-## 1. Patrones ya establecidos (se mantienen)
-Clean Architecture por feature, Repository pattern, `Either<Failure, T>` (dartz), BLoC (`flutter_bloc`), Service Locator (`get_it`), Atomic Design. Ver [`architecture.md`](architecture.md).
+ADR files are the SSOT for architectural decisions.
 
-## 2. Patrones nuevos requeridos
-- **Observer/Stream pattern** para `RealtimeClient` (STOMP): streams tipados por evento (ofertas, ubicación, estado de viaje, chat); los blocs se suscriben, nunca hablan STOMP directo.
-- **State machine explícita** para `viaje.estado`, como función pura testeable en `domain`.
-- **Orden de listas controlado por backend**: las listas de ofertas y de solicitudes cercanas llegan ya ordenadas/priorizadas (precio + ETA + calificación) — el cliente **no** reordena ni reimplementa ese criterio, solo renderiza en el orden recibido.
-- **Debounce/throttle** en búsqueda de dirección de destino y en el envío de actualizaciones de ubicación en vivo.
+# Reused Design_Pattern from Central Memory
 
-## 3. Inventario de pantallas, modales y vistas
-Alcance acotado: **sin pantallas de administrador ni de carga de documentos** (ambas fuera de este repo).
+## patterns/api/idempotency_key.md
 
-### 3.1 Autenticación (existente + ajustes)
-Login, Registro cliente (3 pasos + paso de OTP por email + checkbox de T&C + fecha de nacimiento con validación de edad mínima **18 años**), Registro conductor (simplificado, ver 3.3, edad mínima 18 años), Recuperar contraseña (nuevo usecase). Se elimina cualquier rama de UI para `rolAdmin`/`rolGerente` en el flujo de login — no aplican a este cliente.
-**Nuevo — Términos y condiciones**: se usa una versión estándar/genérica de T&C y Política de Privacidad como placeholder v1 (texto a definir, ver [`flow.md`](flow.md) sección 11), versionada (`terminos_version`) para poder reemplazarla por la del departamento legal sin duplicar lógica — la pantalla de registro debe apuntar a esta versión, no a un texto embebido sin control de versión.
-**Nuevo — Modal de confirmación de sesión**: al hacer login con una sesión activa en otro dispositivo sin viaje en curso, mostrar modal "Esto cerrará tu sesión en tu otro dispositivo, ¿continuar?" antes de proceder. Si la cuenta tiene un viaje en curso, mostrar un mensaje de bloqueo (no un modal de confirmación) — ver [`flow.md`](flow.md) sección 12.
-**Nuevo — Eliminar cuenta**: acción disponible desde Perfil/Configuración, con confirmación explícita (ver [`qa_checklist.md`](qa_checklist.md)).
+# Idempotency Key
 
-### 3.2 Pasajero (cliente)
-| Pantalla/Modal | Tipo | Notas |
-|---|---|---|
-| Home cliente | Page | ubicación real, botón pedir taxi, redirige directo a viaje activo si existe uno, muestra "viajes recurrentes" si aplica |
-| Seleccionar destino | Page | buscador de direcciones (ver proveedor elegido en [`requerimientos_backend.md`](requerimientos_backend.md) sección 9) + mapa con pin arrastrable (ambos métodos permitidos) + validación de distancia máxima 150 km |
-| Confirmar viaje y precio | Page/Organism | precio sugerido (número exacto, 2 decimales) + input editable con validación de mínimo (obtenido de config pública, no hardcodeado) |
-| Buscando conductores | Page | mapa con círculo de 10 km de cobertura y vehículos cercanos (íconos/animación realista), indicador de tiempo de espera estimado y distancia, lista de ofertas entrantes como **overlay/bottom sheet sobre el mapa** (no página aparte) — primeras 5 visibles, resto con scroll |
-| Tarjeta de oferta recibida | Molecule | **solo precio ofertado** (sin foto/nombre/vehículo/ETA — ocultos hasta la asignación, ver [`flow.md`](flow.md) sección 4) |
-| Modal aceptar oferta | Modal (Organism) | confirmación antes de aceptar |
-| Solicitud expirada / republicar | Modal/Page | al republicar, el input de precio no permite un valor menor al anterior (validación visible antes de enviar) |
-| Viaje asignado (conductor en camino) | Page | tracking en vivo, ETA, **ahora sí** datos conductor (nombre parcial + foto) y vehículo, botón llamar (número enmascarado, nunca real), botón chat con badge de no leídos, botón cancelar (con aviso de impacto en calificación), código OTP visible, **precio acordado siempre visible** |
-| Chat de viaje | Page | texto en vivo, habilitado desde asignación hasta fin del viaje, contador de no leídos |
-| Viaje en curso | Page | mapa con ruta en vivo, botón SOS (visible siempre, funcional solo aquí), acceso a chat, precio siempre visible |
-| Check-in de seguridad | Modal (discreto, no alarmante) | aparece si se detecta desviación/parada no planificada; "¿Todo bien con tu viaje?" con opción de confirmar o pedir ayuda; la alerta al administrador ya se disparó independientemente de esta respuesta (ver [`flow.md`](flow.md) sección 13) |
-| Viaje finalizado — resumen | Page | precio final, distancia, duración |
-| Modal calificar conductor | Modal (Organism) | estrellas 1-5 + comentario opcional; si no se completa en 15 min, el backend la autocompleta en 5 y el cliente deja de mostrar el prompt |
-| Historial de viajes | Page + lista | resalta viajes recurrentes (misma ruta solicitada más de 2 veces) con opción de repetir en un toque |
-| Detalle de viaje pasado | Page | |
-| Perfil | Page | datos, foto, contacto de emergencia (obligatorio, no se puede dejar vacío), cambio de email/teléfono con re-verificación, eliminar cuenta |
-| Modal SOS | Modal (Organism) | confirmación previa obligatoria; botón visible en toda la UI del viaje pero solo habilitado si hay viaje activo |
-| Configuración | Page | tema, notificaciones. **Sin selector de idioma en v1** (la app solo tiene español, ver [`requirements.md`](requirements.md)) — no construir este control hasta que exista un segundo idioma real |
+## Intent
+Make retryable state-changing requests safe to repeat without duplicating the logical operation.
 
-### 3.3 Conductor
-| Pantalla/Modal | Tipo | Notas |
-|---|---|---|
-| Registro conductor | Page (un solo formulario, sin wizard de documentos) | datos personales (edad mínima 18) + licencia + placa (validada según país detectado) + datos básicos de vehículo. **No incluye carga de documentos** — al enviar, la cuenta queda `PENDIENTE`. Conserva un borrador local si se abandona a mitad |
-| Pendiente de verificación | Page | mensaje claro con SLA estimado ("~24 horas"), botón para solicitar reenvío del correo de verificación. Si `estado_verificacion = RECHAZADO`, el motivo y el reenvío de documentación ocurren en el portal externo, no aquí |
-| Home conductor | Page | mapa real, toggle disponible/no disponible (solo habilitado si `APROBADO` **y GPS activo**), redirige directo a viaje activo si existe uno |
-| Solicitudes cercanas | Page | mapa con círculo de 10 km y marcadores de solicitudes cercanas + lista en tiempo real como overlay, primeras 5 con scroll |
-| Detalle de solicitud | Organism/Modal | origen, destino, distancia, precio sugerido — **sin datos del pasajero** hasta la asignación |
-| Modal enviar oferta | Modal (Organism) | aceptar precio sugerido o contraofertar dentro del rango permitido (90%-130% del sugerido, ver [`flow.md`](flow.md) sección 4) |
-| Retirar oferta | Acción (no pantalla nueva) | botón sobre la oferta ya enviada mientras esté `PENDIENTE` |
-| Esperando respuesta del pasajero | Page/Organism | |
-| Viaje asignado — ir a recoger | Page | mapa, botón "Llegué", **ahora sí** se revela nombre parcial del pasajero (primer nombre + apellido paterno), precio acordado siempre visible |
-| Validar OTP de recogida | Modal (Organism) | input de 4-6 dígitos |
-| Chat de viaje | Page | igual patrón que pasajero, con badge de no leídos |
-| Viaje en curso | Page | botón "Finalizar viaje", aviso de desviación de ruta si aplica, SOS (visible siempre, funcional solo aquí), chat, precio siempre visible |
-| Viaje finalizado — resumen | Page | muestra `precio_acordado` y `monto_neto_conductor` (tras comisión) por separado, con etiqueta clara de cuál es cuál |
-| Modal calificar pasajero | Modal (Organism) | |
-| Historial de viajes | Page | resalta viajes recurrentes del mismo pasajero si aplica |
-| Ganancias / Métricas | Page | filtro por rango de fechas, datos reales, desglose bruto/neto. **Sin exportación** en v1, solo visualización |
-| Perfil / Vehículo | Page | solo lectura de datos del vehículo y estado de verificación (no editable desde aquí), contacto de emergencia (obligatorio), eliminar cuenta |
+## Applicability
+Use for operations vulnerable to duplicate submission, especially payments, provisioning, job creation, or network-timeout retries.
 
-> **Eliminado de esta app** (vs. versión anterior de este documento): todas las pantallas de "Administrador" y "Gerente de cooperativa" — viven en el dashboard web separado. Eliminado también cualquier componente de carga de documentos (`DocumentUploadTile`).
+## Non-applicability
+Do not add idempotency where repetition is already harmless or where the operation cannot define a stable identity.
 
-## 4. Componentes atómicos nuevos en `lib/shared/`
-- `AppRatingStars` (atom) — construido con componentes existentes, sin nueva dependencia.
-- `AppOtpInput` (atom/molecule) — input de código numérico segmentado.
-- `AppPriceInput` (atom) — input numérico con formato de moneda y validación de mínimo (evitar valores cercanos a cero).
-- `VerificationStatusBadge` (atom) — chip `PENDIENTE`/`APROBADO`/`RECHAZADO`.
-- `SosButton` (atom, con confirmación) + `SosConfirmModal` (organism).
-- `ChatBubble` (molecule, en `trips/chat/presentation/molecules/` por ser específico del dominio de chat).
-- `OfferCard` (molecule, en `trips/negotiation/presentation/molecules/`).
-- `LiveTrackingMap` (organism, en `trips/presentation/organisms/`, extiende el patrón de `driver_nearby_map.dart`).
+## Structure / responsibilities
+- Client supplies a unique key for a logical operation.
+- Server validates key format and scope.
+- Server associates the key with the operation result and relevant request fingerprint.
+- Repeated valid requests return the prior outcome instead of executing the operation again.
 
-Regla: componente reutilizable entre features → `lib/shared/`; específico de un dominio → dentro de la feature (ver [`hierarchy.md`](hierarchy.md)).
+## Implementation guidance
+Define key scope, retention, concurrent-request behavior, and mismatch handling. Persist the key atomically with the protected operation when required for correctness.
+
+## Validation criteria
+- Duplicate requests do not create duplicate side effects.
+- Concurrent reuse is deterministic.
+- Reuse with materially different request data is rejected.
+- Expired keys follow documented semantics.
+
+## Security considerations
+Prevent key guessing, cross-tenant reuse, unbounded storage growth, and leakage of sensitive response data. Bind keys to the authenticated principal and operation scope where appropriate.
+
+## Trade-offs
+Improves retry safety but requires durable key storage, lifecycle management, and concurrency handling.
+
+## Related skills and patterns
+- `backend.idempotency`
+- `security.api_security`
+
+## Example decision signals
+Choose when clients may retry after uncertain network outcomes and duplicate side effects would be harmful.
+
+## patterns/api/pagination.md
+
+# Stable Pagination
+
+## Intent
+Bound collection responses while providing deterministic navigation through a changing dataset.
+
+## Applicability
+Use for endpoints that return potentially large collections or where response size must remain bounded.
+
+## Non-applicability
+Avoid pagination for inherently tiny, bounded collections where it adds needless client complexity.
+
+## Structure / responsibilities
+- API defines page size limits.
+- Ordering is explicit and stable.
+- Cursor or offset semantics are documented.
+- Response includes enough metadata for the client to continue safely.
+
+## Implementation guidance
+Prefer a stable unique ordering key. Cap client-requested page sizes. For mutable large datasets, cursor/keyset pagination is often safer than offsets for consistency and performance.
+
+## Validation criteria
+- Repeated requests with the same cursor semantics are deterministic within documented consistency guarantees.
+- Page size cannot bypass server limits.
+- Items are not unexpectedly duplicated or skipped under supported consistency semantics.
+
+## Security considerations
+Authorize access before pagination. Do not expose internal identifiers solely because they are used as cursors. Treat cursors as untrusted input and validate them.
+
+## Trade-offs
+Pagination protects performance and payload size but requires more client logic and explicit consistency semantics.
+
+## Related skills and patterns
+- `api.pagination`
+- `performance.api_optimization`
+
+## Example decision signals
+Choose when collection size is unbounded or could grow beyond a safe single response.
+
+## patterns/authentication/implementation.md
+
+# Authentication Pattern — Implementation
+
+## Intent
+Establish who is making a request through a verifiable identity proof, before authorization or business logic executes, without coupling every service to one specific credential technology.
+
+## Applicability
+Use for any system boundary that must know the identity of the caller: a public API, a user-facing application, or a service-to-service boundary that isn't fully trusted by network location alone.
+
+## Non-applicability
+Do not use this pattern to make authorization decisions — authentication only establishes identity; authorization (what the identity is allowed to do) is a separate concern (`security.zero-trust-boundary`). Do not build a custom cryptographic primitive when a vetted standard (OAuth 2.0, OpenID Connect, WebAuthn, TOTP) covers the need.
+
+## Structure / responsibilities
+- **Credential verifier**: validates the presented credential (password hash, signed token, TOTP code, WebAuthn assertion) against a trusted source.
+- **Session/token issuer**: issues a short-lived, verifiable proof of the authenticated identity (session cookie, JWT, opaque token) after successful verification.
+- **Transport boundary**: enforces that credentials and tokens never travel or persist unencrypted (TLS in transit, hashed/encrypted at rest).
+- **Second factor (when required)**: an independent verification step (TOTP, WebAuthn, push approval) that does not rely on the same secret as the first factor.
+- **Revocation/expiry mechanism**: a way to invalidate a session or token before its natural expiry (logout, credential compromise, policy change).
+
+## Implementation guidance
+1. Never store plaintext passwords; use a memory-hard hash (Argon2id, scrypt, or bcrypt with an adequate cost factor).
+2. Encrypt sensitive secrets end-to-end when the transport alone is not trusted enough for the data's sensitivity (e.g. client-side encryption before a password reaches the server).
+3. Bind sessions/tokens to an expiry and, where applicable, to a client context, without breaking legitimate mobility.
+4. When mandatory 2FA is required, enforce it at the authentication boundary itself — never as an optional client-side step that can be bypassed by calling the API directly.
+5. Rate-limit and lock out credential verification attempts to blunt brute-force and credential-stuffing attacks.
+6. Log authentication successes and failures (without secrets) for detection and audit; never log passwords, tokens, or TOTP secrets.
+7. Provide an explicit, tested logout/revocation path that invalidates the session server-side, not just client-side.
+
+## Validation criteria
+- No plaintext credential exists in logs, databases, or transport payloads at rest.
+- A session/token cannot be replayed after logout or expiry.
+- 2FA, when mandatory, cannot be bypassed by calling an underlying endpoint directly.
+- Failed-attempt rate limiting is verifiably enforced (tested, not assumed).
+- Authentication failures return a generic error that does not reveal whether the username or the credential was wrong (prevents enumeration).
+
+## Security considerations
+Authentication is the highest-value target for attackers; treat every implementation detail as security-relevant. Apply `security.web_security_baseline` in full. Never roll a custom crypto primitive. Assume credential databases will eventually leak and design so a leak of hashes does not equal a leak of plaintext credentials. Coordinate any change to this pattern with `cyber_security` before merge.
+
+## Trade-offs
+Stronger authentication (mandatory 2FA, short-lived tokens, strict rate limiting) increases security but adds friction and support burden (lockouts, recovery flows). Session-based auth simplifies revocation but complicates horizontal scaling without shared session storage; token-based auth scales more easily but makes immediate revocation harder without an additional check.
+
+## Related skills and patterns
+- `security.web_security_baseline`
+- `security.zero-trust-boundary`
+- `security.defense-in-depth`
+- `error.fail-fast-validation`
+
+## Example decision signals
+- **User-facing web application with sensitive data**: session-based auth with mandatory 2FA and short expiry.
+- **Public third-party API**: OAuth 2.0 / OpenID Connect with scoped, short-lived access tokens.
+- **Service-to-service inside a private network**: mutual TLS or signed service tokens; never rely on network location alone (`security.zero-trust-boundary`).
+- **Password reset flow**: treat as an authentication event; require re-verification and invalidate all existing sessions after a successful reset.
+
+## patterns/error_handling/fail_fast_validation.md
+
+# Fail-Fast Validation
+
+## Intent
+Reject invalid or unsafe input at the earliest trusted boundary so invalid state does not propagate through the system.
+
+## Applicability
+Use at API, command, task, file and domain boundaries where input can violate a contract, schema, constraint or security rule.
+
+## Non-applicability
+Do not use early rejection to replace business workflows that legitimately require collecting multiple validation errors or asynchronous verification. Domain validation may still be required after transport validation.
+
+## Structure / responsibilities
+- **Boundary validator:** checks syntax, type, size and required fields.
+- **Domain validator:** checks business invariants that require domain knowledge.
+- **Error contract:** returns stable, non-sensitive error identifiers and field information.
+- **Normalizer:** canonicalizes permitted input before validation where safe.
+- **Audit/telemetry:** records relevant failures without sensitive payloads.
+
+## Implementation guidance
+1. Define the input contract before implementation.
+2. Reject unexpected fields when the contract requires a closed schema.
+3. Validate types, lengths, ranges, formats and allowed values.
+4. Apply security validation before expensive processing or privileged operations.
+5. Keep transport and domain validation responsibilities explicit.
+6. Return structured errors using a stable contract.
+7. Never trust client-side validation as the security boundary.
+8. Test malformed, boundary, oversized and adversarial inputs.
+
+## Validation criteria
+- Invalid input is rejected before privileged or expensive work.
+- Validation behavior is deterministic.
+- Error responses do not reveal internal implementation details.
+- Boundary cases are covered by automated tests.
+- Client-side validation is treated only as usability support.
+
+## Security considerations
+Treat all external input as untrusted. Validate allowlists where practical, constrain sizes, prevent path traversal/injection, and encode output for the destination context. Do not expose stack traces, database details, secrets or internal paths in client-facing errors.
+
+## Trade-offs
+Early validation reduces downstream complexity and attack surface, but duplicated validation can become inconsistent if responsibilities are not clearly separated. Keep shared contracts and domain invariants explicit.
+
+## Related skills and patterns
+- `security.web_security_baseline`
+- `security.mobile_security_baseline`
+- `security.input_validation`
+- `api.contract_design`
+- `error.retry-with-backoff`
+
+## Example decision signals
+- **Malformed API payload:** reject at the API boundary.
+- **Invalid business state:** reject at the domain boundary.
+- **Oversized upload:** reject before storage or parsing.
+- **Unsafe path supplied by a client:** reject before filesystem access.
+
+## patterns/error_handling/retry_with_backoff.md
+
+# Retry with Bounded Backoff
+
+## Intent
+Retry transient operations without creating an uncontrolled retry storm or hiding permanent failures.
+
+## Applicability
+Use when an operation can fail temporarily because of network interruption, service unavailability, throttling, or another explicitly classified transient condition. The operation must be safe to retry or protected by idempotency.
+
+## Non-applicability
+Do not retry validation failures, authentication/authorization failures that will not change, malformed requests, deterministic business-rule failures, or non-idempotent operations without an explicit duplicate-prevention mechanism.
+
+## Structure / responsibilities
+- **Classifier:** distinguishes transient from permanent failures.
+- **Retry policy:** defines maximum attempts, delay and optional jitter.
+- **Operation:** performs the work and exposes a clear success/failure result.
+- **Telemetry:** records attempts, final outcome and reason without exposing secrets.
+- **Boundary:** enforces an overall timeout/deadline.
+
+## Implementation guidance
+1. Classify the failure before retrying.
+2. Set a small explicit maximum attempt count.
+3. Use bounded exponential backoff rather than immediate repeated calls.
+4. Add jitter when many clients may retry concurrently.
+5. Respect server-provided retry guidance such as `Retry-After` when applicable.
+6. Stop when the overall deadline is reached.
+7. Preserve the original failure context for diagnosis.
+8. For state-changing operations, require idempotency or another duplicate-prevention mechanism.
+
+## Validation criteria
+- Permanent errors are not retried.
+- Attempt count cannot exceed the configured limit.
+- Delay is bounded and deterministic under a fixed test configuration.
+- Overall timeout is enforced.
+- Retry attempts are observable.
+- Repeated state-changing requests do not create unintended duplicate effects.
+
+## Security considerations
+Retry policy must not become a denial-of-service amplifier. Never retry rejected credentials indefinitely. Avoid logging authorization headers, tokens, request bodies containing secrets, or sensitive response data. Respect upstream rate limits and retry-after instructions.
+
+## Trade-offs
+Bounded retries improve resilience but increase latency and can amplify load when applied incorrectly. Jitter reduces synchronized retries but makes exact timing less predictable.
+
+## Related skills and patterns
+- `backend.design_patterns`
+- `api.idempotency-key`
+- `security.defense-in-depth`
+- `error.fail-fast-validation`
+
+## Example decision signals
+- **Transient dependency outage:** use bounded retries.
+- **HTTP 429 with retry guidance:** retry within the allowed deadline.
+- **HTTP 400 caused by invalid input:** fail immediately.
+- **Payment-like state change:** combine retry with idempotency protection.
+
+## patterns/frontend/component-composition.md
+
+# Component Composition
+
+## Intent
+Build UI behavior from small composable units with explicit boundaries instead of inheritance-heavy structures.
+
+## Applicability
+Use when UI behavior, presentation, or interaction is shared across screens and can be expressed through composition.
+
+## Non-applicability
+Avoid when abstraction would obscure a small, local component or when shared behavior is not actually stable.
+
+## Structure / responsibilities
+- Small components own one coherent responsibility.
+- Parent components compose children through explicit inputs and outputs.
+- Shared behavior lives in reusable components or utilities with stable contracts.
+
+## Implementation guidance
+Keep component APIs narrow. Prefer composition and explicit data flow. Avoid creating generic abstractions before two or more real use cases justify them.
+
+## Validation criteria
+- Components can be reused without hidden global state.
+- Data and events have explicit boundaries.
+- Tests cover important composed behavior.
+
+## Security considerations
+Do not trust UI validation as the security boundary. Validate and authorize sensitive operations at the server/API boundary and encode untrusted output appropriately.
+
+## Trade-offs
+Composition improves reuse and isolation, but excessive decomposition can increase indirection and cognitive load.
+
+## Related skills and patterns
+- `frontend.design_patterns`
+- Container and Presentational
+
+## Example decision signals
+Choose when several screens need the same behavior and the shared contract is stable enough to justify composition.
+
+## patterns/mobile/unidirectional_data_flow.md
+
+# Unidirectional Data Flow
+
+## Intent
+Make mobile state changes explicit and predictable through one-way data flow.
+
+## Applicability
+Use when multiple UI states, asynchronous operations, or shared mutable state make transitions difficult to reason about.
+
+## Non-applicability
+Avoid adding a state-management layer to a simple screen with trivial local state.
+
+## Structure / responsibilities
+- State is represented explicitly.
+- Events/actions describe requested changes.
+- A deterministic update path produces the next state.
+- UI observes state and emits events rather than mutating shared state implicitly.
+
+## Implementation guidance
+Keep state transitions deterministic and serializable where practical. Make loading, success, empty, and error states explicit. Handle lifecycle recreation without losing required state.
+
+## Validation criteria
+- Every important state transition has a defined trigger.
+- Concurrent/asynchronous results cannot silently overwrite newer state.
+- Tests cover success, failure, loading, and cancellation paths.
+
+## Security considerations
+Never place secrets in client state or logs. Treat persisted client state as potentially recoverable by an attacker and enforce authorization on the API.
+
+## Trade-offs
+Predictability and testability improve, but explicit events and state models add ceremony.
+
+## Related skills and patterns
+- `mobile.navigation`
+- `mobile.state_management`
+
+## Example decision signals
+Choose when screen behavior contains several interacting states or asynchronous operations whose ordering matters.
+
+## patterns/error_handling/implementation.md
+
+# Structured Error Handling — Implementation
+
+## Intent
+Make failures explicit, classifiable and actionable across every layer of a system, instead of leaking raw exceptions, silent failures, or inconsistent ad-hoc error shapes to callers.
+
+## Applicability
+Use in any service, API, or application layer that can fail (I/O, validation, external dependency, business rule) and that has at least one caller — human or machine — who needs to react differently depending on the failure type.
+
+## Non-applicability
+Do not use this as a substitute for `error.fail-fast-validation` at input boundaries, nor for `error.retry-with-backoff` for transient failures — those are specific implementations this pattern coordinates, not replacements for it. Do not wrap every exception in a generic error just to satisfy a schema; preserve enough information to diagnose the real cause.
+
+## Structure / responsibilities
+- **Error taxonomy**: a small, closed set of error categories (validation, authorization, not-found, conflict, transient/upstream, internal) that every layer maps into.
+- **Error contract**: a stable, documented shape for errors returned across a boundary (status/type, machine-readable code, human-readable message, optional details) — see `contracts/schemas/error.schema.json`.
+- **Translation boundary**: each layer translates internal/low-level failures (driver exceptions, network errors) into the taxonomy above before they cross into the next layer.
+- **Observability hook**: every error is logged or traced with enough context to diagnose it, without leaking secrets or internal implementation details to the caller.
+
+## Implementation guidance
+1. Define the closed error taxonomy once per system and reuse it everywhere — do not invent a new shape per endpoint.
+2. Translate exceptions at architectural boundaries (e.g. persistence → domain → API), not deep inside business logic.
+3. Attach a stable machine-readable error code in addition to a human-readable message so callers can branch on it reliably.
+4. Preserve the original cause internally (for logs/traces) even when the external message is generic.
+5. Never expose stack traces, internal paths, or driver-specific error text to an external caller.
+6. Distinguish client errors (bad input, not found, conflict) from server errors (internal, upstream failure) consistently.
+7. Compose with `error.fail-fast-validation` for input boundaries and `error.retry-with-backoff` for transient/upstream failures — this pattern is the umbrella that keeps their outputs consistent.
+
+## Validation criteria
+- Every error returned across a documented boundary conforms to `contracts/schemas/error.schema.json`.
+- No response leaks a stack trace, internal file path, or raw driver error message.
+- Two different failure causes in the same category produce the same error shape (only the details differ).
+- Errors are observable (logged/traced) with enough context to reproduce the failure.
+
+## Security considerations
+Error messages are a common information-disclosure vector: verbose stack traces or database error text can reveal schema, technology, or internal paths to an attacker. Apply `security.web_security_baseline`. Authentication and authorization failures must return generic, non-enumerable errors (see `authentication.implementation`).
+
+## Trade-offs
+A strict taxonomy and contract add upfront design cost and a translation step at every boundary, but remove ambiguity for callers and prevent inconsistent, ad-hoc error formats from proliferating as the system grows.
+
+## Related skills and patterns
+- `error.fail-fast-validation`
+- `error.retry-with-backoff`
+- `authentication.implementation`
+- `security.web_security_baseline`
+
+## Example decision signals
+- **A database driver throws a connection error**: translate to a `transient` category error; consider `error.retry-with-backoff`.
+- **A request references a resource that does not exist**: translate to a `not-found` category error with no internal detail exposed.
+- **An unexpected internal exception occurs**: return a generic `internal` error externally, but log the full original exception internally.
+
+## patterns/frontend/container_presentational.md
+
+# Container and Presentational
+
+## Intent
+Separate data/state orchestration from visual presentation when that separation improves reuse and clarity.
+
+## Applicability
+Use for screens where fetching, state coordination, or workflow logic is materially more complex than rendering.
+
+## Non-applicability
+Do not split small components merely to follow the pattern mechanically.
+
+## Structure / responsibilities
+- Container/orchestrator handles state, data loading, and actions.
+- Presentational component receives explicit data and callbacks.
+- Contracts remain small and predictable.
+
+## Implementation guidance
+Keep business rules outside purely visual components. Avoid containers becoming unbounded service objects; extract cohesive logic when it grows.
+
+## Validation criteria
+- Presentation can be tested independently.
+- State transitions are explicit.
+- No hidden dependency on global mutable state is required.
+
+## Security considerations
+Client-side separation does not establish trust boundaries. Enforce authorization, validation, and output encoding on trusted server boundaries.
+
+## Trade-offs
+The pattern can improve testability and reuse, but unnecessary separation can fragment simple UI code.
+
+## Related skills and patterns
+- `frontend.design_patterns`
+- Component Composition
+
+## Example decision signals
+Choose when the same presentation can consume different data sources or when orchestration is significantly more complex than rendering.

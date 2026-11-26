@@ -1,0 +1,106 @@
+{
+  "engine": "postgresql",
+  "summary": "Base de datos PostgreSQL 16 del backend Ando (micro-auronix), consumida por Ando-UI mediante API REST y WebSockets.",
+  "tables": [
+    {
+      "name": "tb_users",
+      "description": "Usuarios registrados como pasajeros o conductores.",
+      "purpose": "Almacenar información del usuario, credenciales y rol de transporte.",
+      "usage": "Leída en inicio de sesión y perfiles por el backend.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "nullable": false,
+          "unique": true,
+          "default": "gen_random_uuid()",
+          "description": "Identificador único de usuario.",
+          "references": null
+        },
+        {
+          "name": "role",
+          "type": "varchar",
+          "primary_key": false,
+          "nullable": false,
+          "unique": false,
+          "default": "'PASAJERO'",
+          "description": "Rol asignado: PASAJERO o CONDUCTOR.",
+          "references": null
+        }
+      ]
+    },
+    {
+      "name": "tb_cooperatives",
+      "description": "Cooperativas de transporte afiliadas.",
+      "purpose": "Asociar conductores a su entidad cooperativa correspondiente.",
+      "usage": "Consultada durante la asignación de viajes.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "nullable": false,
+          "unique": true,
+          "default": "gen_random_uuid()",
+          "description": "Identificador de la cooperativa.",
+          "references": null
+        }
+      ]
+    },
+    {
+      "name": "tb_vehicles",
+      "description": "Vehículos registrados de los conductores.",
+      "purpose": "Almacenar datos del vehículo asignado a un viaje.",
+      "usage": "Consultada al ofertar o confirmar viajes.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "nullable": false,
+          "unique": true,
+          "default": "gen_random_uuid()",
+          "description": "Identificador del vehículo.",
+          "references": null
+        }
+      ]
+    },
+    {
+      "name": "tb_trips",
+      "description": "Registro del ciclo de vida de los viajes.",
+      "purpose": "Gestionar estados de viaje: SOLICITADO, OFERTADO, ACEPTADO, EN_CURSO, COMPLETADO, CANCELADO.",
+      "usage": "Leída y actualizada en cada transición de estado.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "nullable": false,
+          "unique": true,
+          "default": "gen_random_uuid()",
+          "description": "Identificador único del viaje.",
+          "references": null
+        }
+      ]
+    },
+    {
+      "name": "tb_idempotency_keys",
+      "description": "Claves de idempotencia para la creación/oferta de viajes.",
+      "purpose": "Garantizar que reintentos de red no generen múltiples viajes o transacciones duplicadas.",
+      "usage": "Verificada por el backend en cada POST con header Idempotency-Key.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "nullable": false,
+          "unique": true,
+          "default": "gen_random_uuid()",
+          "description": "Clave de idempotencia enviada por el cliente.",
+          "references": null
+        }
+      ]
+    }
+  ]
+}
