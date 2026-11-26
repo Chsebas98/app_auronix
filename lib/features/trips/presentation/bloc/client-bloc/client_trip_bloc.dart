@@ -200,7 +200,15 @@ class ClientTripBloc extends Bloc<ClientTripEvent, ClientTripState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(errorMessage: failure.message)),
+      // T28-C4: si falla, el estado debe salir de "rating" (si no, el
+      // boton de enviar queda deshabilitado para siempre y el error
+      // nunca se muestra, ya que ningun listener escucha status==rating).
+      (failure) => emit(
+        state.copyWith(
+          status: ClientTripStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => emit(state.copyWith(status: ClientTripStatus.rated)),
     );
   }

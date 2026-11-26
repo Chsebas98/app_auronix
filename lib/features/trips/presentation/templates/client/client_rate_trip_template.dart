@@ -1,4 +1,5 @@
 import 'package:auronix_app/app/core/bloc/bloc.dart';
+import 'package:auronix_app/app/core/bloc/dialog-cubit/dialog_cubit.dart';
 import 'package:auronix_app/app/design/theme/app_colors.dart';
 import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
@@ -28,17 +29,55 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
     super.dispose();
   }
 
+  // T28-C1: el viaje debe estar realmente terminado (COMPLETADO o una
+  // transicion posterior propia de esta pantalla, como enviar/reintentar
+  // la calificacion) para mostrar el formulario — nunca mientras sigue
+  // activo (p. ej. si el Bloc aun no proceso la transicion a completado).
+  static const _activeStatuses = {
+    ClientTripStatus.initial,
+    ClientTripStatus.requesting,
+    ClientTripStatus.searching,
+    ClientTripStatus.accepted,
+    ClientTripStatus.inProgress,
+    ClientTripStatus.cancelled,
+  };
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ClientTripBloc, ClientTripState>(
-      listenWhen: (prev, curr) =>
-          curr.status == ClientTripStatus.rated &&
-          prev.status != ClientTripStatus.rated,
-      listener: (_, __) =>
-          context.pushReplacement(ClientRoutesPath.tripCompleted),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ClientTripBloc, ClientTripState>(
+          listenWhen: (prev, curr) =>
+              curr.status == ClientTripStatus.rated &&
+              prev.status != ClientTripStatus.rated,
+          listener: (_, __) =>
+              context.pushReplacement(ClientRoutesPath.tripCompleted),
+        ),
+        BlocListener<ClientTripBloc, ClientTripState>(
+          listenWhen: (prev, curr) =>
+              curr.status == ClientTripStatus.error &&
+              prev.status != ClientTripStatus.error,
+          listener: (context, state) {
+            context.read<DialogCubit>().hideAll();
+            context.read<DialogCubit>().showMessage(
+              title: 'Error',
+              message:
+                  state.errorMessage ?? 'No se pudo enviar la calificación.',
+            );
+          },
+        ),
+      ],
       child: BlocBuilder<ClientTripBloc, ClientTripState>(
         builder: (context, state) {
           final isRating = state.status == ClientTripStatus.rating;
+          final tripIsOver = !_activeStatuses.contains(state.status);
+
+          if (!tripIsOver) {
+            return Scaffold(
+              backgroundColor: context.appColors.background,
+              body: const SizedBox.shrink(),
+            );
+          }
 
           return Scaffold(
             backgroundColor: context.appColors.background,
