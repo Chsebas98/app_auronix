@@ -1,4 +1,4 @@
-// Prueba ClientTripBloc (T24, el PassengerTripBloc que pide la Tarea 0 —
+// Prueba ClientTripBloc (T24/T25, el PassengerTripBloc que pide la Tarea 0 —
 // ya existia desde T6 con este nombre). Mismo patron que
 // location_search_bloc_test.dart (T19 de Ando): fakes con contador de
 // llamadas, sin mockito ni bloc_test, escuchando bloc.stream antes de
@@ -107,15 +107,27 @@ class _FakeTripRepository implements TripRepository {
 }
 
 /// No abre un socket real: solo evita que ClientTripBloc intente conectar
-/// de verdad durante el test.
-class _NoopTripStatusSocket extends TripStatusSocket {
-  _NoopTripStatusSocket() : super(serverUrl: 'ws://fake');
+/// de verdad durante el test. Controlable (T25): expone connectedTripId
+/// y un StreamController propio para inyectar eventos falsos del socket.
+class _FakeTripStatusSocket extends TripStatusSocket {
+  _FakeTripStatusSocket()
+    : controller = StreamController<TripStatusEvent>.broadcast(),
+      super(serverUrl: 'ws://fake');
+
+  final StreamController<TripStatusEvent> controller;
+  final connectedTripId = Completer<int>();
+  int disconnectCalls = 0;
 
   @override
-  Stream<TripStatusEvent> connect(int tripId) => const Stream.empty();
+  Stream<TripStatusEvent> connect(int tripId) {
+    if (!connectedTripId.isCompleted) connectedTripId.complete(tripId);
+    return controller.stream;
+  }
 
   @override
-  void disconnect() {}
+  void disconnect() {
+    disconnectCalls++;
+  }
 }
 
 class _NoopClientPositionListener extends ClientPositionListener {
@@ -148,20 +160,23 @@ TripEntity _trip({TripStatus estado = TripStatus.solicitado}) => TripEntity(
 
 void main() {
   late _FakeTripRepository repo;
+  late _FakeTripStatusSocket socket;
   late ClientTripBloc bloc;
 
   setUp(() {
     repo = _FakeTripRepository();
+    socket = _FakeTripStatusSocket();
     bloc = ClientTripBloc(
       requestTrip: RequestTripUseCase(repo),
       cancelTrip: CancelTripUseCase(repo),
       rateDriver: RateDriverUseCase(repo),
-      socket: _NoopTripStatusSocket(),
+      socket: socket,
       positionListener: _NoopClientPositionListener(),
     );
   });
 
   tearDown(() async {
+    await socket.controller.close();
     await bloc.close();
   });
 
@@ -250,6 +265,56 @@ void main() {
 
         expect(bloc.state.status, ClientTripStatus.error);
         expect(bloc.state.errorMessage, 'Solicitud duplicada');
+      },
+    );
+  });
+
+  group('ClientTripBloc socket integration', () {
+    test(
+      'T25-C3: se suscribe al topico del viaje tras la creacion exitosa',
+      () async {
+        final trip = _trip();
+        repo.requestTripResult = () => Right(trip);
+
+        requestTrip();
+        await pumpEventQueue();
+
+        expect(await socket.connectedTripId.future, trip.id);
+        expect(bloc.state.status, ClientTripStatus.searching);
+      },
+    );
+
+    test(
+      'T25-C1 T25-C4: los eventos del socket provocan transiciones de estado en el Bloc',
+      () async {
+        final trip = _trip();
+        repo.requestTripResult = () => Right(trip);
+        requestTrip();
+        await pumpEventQueue();
+        await socket.connectedTripId.future;
+
+        Future<void> expectSocketStatus(
+          String status,
+          ClientTripStatus expected,
+        ) {
+          final expectedState = expectLater(
+            bloc.stream,
+            emitsThrough(
+              predicate<ClientTripState>((state) => state.status == expected),
+            ),
+          );
+          socket.controller.add(
+            TripStatusEvent(tripId: trip.id, status: status),
+          );
+          return expectedState;
+        }
+
+        await expectSocketStatus('ACEPTADO', ClientTripStatus.accepted);
+        await expectSocketStatus('EN_CURSO', ClientTripStatus.inProgress);
+        await expectSocketStatus('COMPLETADO', ClientTripStatus.completed);
+
+        expect(bloc.state.status, ClientTripStatus.completed);
+        expect(socket.disconnectCalls, 1);
       },
     );
   });
