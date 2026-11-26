@@ -12,6 +12,11 @@ import 'package:auronix_app/features/trips/data/datasources/remote/client_trip_r
 import 'package:auronix_app/features/trips/data/datasources/remote/driver_trip_remote_datasource.dart';
 import 'package:auronix_app/features/trips/data/repository/trip_repository_impl.dart';
 import 'package:auronix_app/features/trips/domain/exceptions/active_trip_exception.dart';
+import 'package:auronix_app/features/trips/domain/models/interfaces/trip_status.dart';
+import 'package:auronix_app/features/trips/domain/usecases/driver/accept_trip_usecase.dart';
+import 'package:auronix_app/features/trips/domain/usecases/driver/complete_trip_usecase.dart';
+import 'package:auronix_app/features/trips/domain/usecases/driver/get_available_trips_usecase.dart';
+import 'package:auronix_app/features/trips/domain/usecases/driver/start_trip_usecase.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pointycastle/asymmetric/api.dart';
@@ -118,5 +123,105 @@ void main() {
         expect(result.isLeft(), isTrue);
       },
     );
+  });
+
+  test(
+    'T30-C3: los casos de uso del conductor preservan estados del backend',
+    () async {
+      server.body = {
+        'result': [
+          for (final status in [
+            'SOLICITADO',
+            'OFERTADO',
+            'ACEPTADO',
+            'EN_CURSO',
+            'COMPLETADO',
+            'CANCELADO',
+          ])
+            {'id': 1, 'cooperativaId': 2, 'estado': status},
+        ],
+      };
+      final available = await GetAvailableTripsUseCase(repository)(7);
+      expect(
+        available.fold(
+          (_) => null,
+          (trips) => trips.map((t) => t.estado).toList(),
+        ),
+        TripStatus.values,
+      );
+
+      server.body = {
+        'result': {'id': 1, 'cooperativaId': 2, 'estado': 'ACEPTADO'},
+      };
+      final accepted = await AcceptTripUseCase(repository)(
+        userId: 7,
+        tripId: 1,
+      );
+      expect(
+        accepted.fold((_) => null, (trip) => trip.estado),
+        TripStatus.aceptado,
+      );
+
+      server.body = {
+        'result': {'id': 1, 'cooperativaId': 2, 'estado': 'EN_CURSO'},
+      };
+      final started = await StartTripUseCase(repository)(userId: 7, tripId: 1);
+      expect(
+        started.fold((_) => null, (trip) => trip.estado),
+        TripStatus.enCurso,
+      );
+
+      server.body = {
+        'result': {
+          'id': 1,
+          'estado': 'COMPLETADO',
+          'precioTotal': 5,
+          'comisionMonto': 1,
+          'montoConductor': 4,
+        },
+      };
+      final completed = await CompleteTripUseCase(repository)(
+        userId: 7,
+        tripId: 1,
+        distanciaFinalKm: 3,
+        duracionMinutos: 10,
+      );
+      expect(completed.fold((_) => null, (trip) => trip.estado), 'COMPLETADO');
+    },
+  );
+
+  test('T30-C4: ofertas requieren cooperativaId entero positivo', () async {
+    final getAvailableTrips = GetAvailableTripsUseCase(repository);
+    final invalidOffers = <Map<String, dynamic>>[
+      {'id': 2},
+      {'id': 2, 'cooperativaId': null},
+      {'id': 2, 'cooperativaId': ''},
+      {'id': 2, 'cooperativaId': '2'},
+      {'id': 2, 'cooperativaId': 2.5},
+      {'id': 2, 'cooperativaId': 0},
+      {'id': 2, 'cooperativaId': -1},
+    ];
+
+    for (final invalidOffer in invalidOffers) {
+      server.body = {
+        'result': [
+          {'id': 1, 'cooperativaId': 2},
+          invalidOffer,
+        ],
+      };
+      expect((await getAvailableTrips(7)).isLeft(), isTrue);
+    }
+
+    server.body = {
+      'result': [
+        {'id': 1, 'cooperativaId': 2},
+      ],
+    };
+    final valid = await getAvailableTrips(7);
+    expect(valid.fold((_) => null, (trips) => trips.single.cooperativaId), 2);
+
+    server.body = {'result': <dynamic>[]};
+    final empty = await getAvailableTrips(7);
+    expect(empty.fold((_) => null, (trips) => trips), isEmpty);
   });
 }
