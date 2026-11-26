@@ -30,9 +30,14 @@ class DriverTripRemoteDatasource {
       );
       final list = body['result'] as List<dynamic>? ?? [];
       debugPrint('[DriverTrip] getAvailableTrips count: ${list.length}');
-      return list
-          .map((e) => TripResponseModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      return list.map((e) {
+        final json = e as Map<String, dynamic>;
+        final cooperativaId = json['cooperativaId'];
+        if (cooperativaId is! int || cooperativaId <= 0) {
+          throw const FormatException('cooperativaId de oferta invalido');
+        }
+        return TripResponseModel.fromJson(json);
+      }).toList();
     } catch (e) {
       debugPrint('[DriverTrip] getAvailableTrips ERROR: $e');
       rethrow;
