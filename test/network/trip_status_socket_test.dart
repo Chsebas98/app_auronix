@@ -39,32 +39,35 @@ void main() {
     await server.close(force: true);
   });
 
-  test('emits decoded trip status messages from the WebSocket server', () async {
-    final socket = TripStatusSocket(
-      serverUrl: 'ws://${server.address.address}:${server.port}',
-    );
-    addTearDown(socket.disconnect);
-    final eventReceived = Completer<TripStatusEvent>();
-    final subscription = socket.connect(1).listen(eventReceived.complete);
-    final webSocket = await firstConnection.future.timeout(
-      const Duration(seconds: 5),
-    );
+  test(
+    'emits decoded trip status messages from the WebSocket server',
+    () async {
+      final socket = TripStatusSocket(
+        serverUrl: 'ws://${server.address.address}:${server.port}',
+      );
+      addTearDown(socket.disconnect);
+      final eventReceived = Completer<TripStatusEvent>();
+      final subscription = socket.connect(1).listen(eventReceived.complete);
+      final webSocket = await firstConnection.future.timeout(
+        const Duration(seconds: 5),
+      );
 
-    webSocket.add(jsonEncode({
-      'event': 'trip.status.updated',
-      'data': {'trip_id': 1, 'status': 'ACEPTADO', 'data': null},
-    }));
+      webSocket.add(jsonEncode({
+        'event': 'trip.status.updated',
+        'data': {'trip_id': 1, 'status': 'ACEPTADO', 'data': null},
+      }));
 
-    final event = await eventReceived.future.timeout(
-      const Duration(seconds: 5),
-    );
-    expect(event.tripId, 1);
-    expect(event.status, 'ACEPTADO');
-    expect(event.trip, isNull);
+      final event = await eventReceived.future.timeout(
+        const Duration(seconds: 5),
+      );
+      expect(event.tripId, 1);
+      expect(event.status, 'ACEPTADO');
+      expect(event.trip, isNull);
 
-    await subscription.cancel();
-    socket.disconnect();
-  });
+      await subscription.cancel();
+      socket.disconnect();
+    },
+  );
 
   test('T25-C2 reconnects after a dropped connection on the same stream',
       () async {

@@ -42,7 +42,7 @@ void main() {
     );
   }
 
-  Future<void> requestTrip(ClientTripBloc bloc) async {
+  void requestTrip(ClientTripBloc bloc) {
     bloc.add(const ClientTripRequestEvent(
       userId: 7,
       origenLatitud: 1,
@@ -58,9 +58,10 @@ void main() {
   test('T25-C3 connects to the newly created trip after a successful request',
       () async {
     final socket = _FakeTripStatusSocket();
+    addTearDown(socket.controller.close);
     final bloc = createBloc(socket);
 
-    await requestTrip(bloc);
+    requestTrip(bloc);
 
     expect(await socket.connectedTripId.future, trip.id);
     expect(bloc.state.status, ClientTripStatus.searching);
@@ -69,8 +70,9 @@ void main() {
   test('T25-C1 T25-C4 maps socket events to passenger trip status changes',
       () async {
     final socket = _FakeTripStatusSocket();
+    addTearDown(socket.controller.close);
     final bloc = createBloc(socket);
-    await requestTrip(bloc);
+    requestTrip(bloc);
     await socket.connectedTripId.future;
 
     Future<void> expectSocketStatus(String status, ClientTripStatus expected) {
