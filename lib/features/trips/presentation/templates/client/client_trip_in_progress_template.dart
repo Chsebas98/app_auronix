@@ -5,6 +5,7 @@ import 'package:auronix_app/app/design/theme/theme_extensions.dart';
 import 'package:auronix_app/app/di/dependency_injection.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/places_service.dart';
+import 'package:auronix_app/features/trips/domain/models/interfaces/vehicle_info.dart';
 import 'package:auronix_app/features/trips/presentation/bloc/client-bloc/client_trip_bloc.dart';
 import 'package:auronix_app/shared/atoms/text/app_text.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+/// Tween de LatLng para interpolar la posicion del conductor entre
+/// actualizaciones de WebSocket (T27-C1/C3): sin esto, el marker salta de
+/// punto a punto cada ~5s en vez de "manejar" por el mapa. Publico (sin
+/// guion bajo) para poder probar la interpolacion en un test unitario sin
+/// pumpear GoogleMap — ver client_trip_in_progress_template_test.dart.
+class LatLngTween extends Tween<LatLng> {
+  LatLngTween({required LatLng begin, required LatLng end})
+    : super(begin: begin, end: end);
+
+  @override
+  LatLng lerp(double t) => LatLng(
+    begin!.latitude + (end!.latitude - begin!.latitude) * t,
+    begin!.longitude + (end!.longitude - begin!.longitude) * t,
+  );
+}
 
 const _darkMapStyle = '''[
   {"elementType":"geometry","stylers":[{"color":"#242f3e"}]},
@@ -32,10 +49,35 @@ class ClientTripInProgressTemplate extends StatefulWidget {
 }
 
 class _ClientTripInProgressTemplateState
-    extends State<ClientTripInProgressTemplate> {
+    extends State<ClientTripInProgressTemplate>
+    with SingleTickerProviderStateMixin {
   final Completer<GoogleMapController> _mapCompleter = Completer();
   bool _positionListening = false;
   List<LatLng> _routePoints = [];
+
+  late final AnimationController _driverAnimCtrl;
+  Animation<LatLng>? _driverPositionAnim;
+  LatLng? _displayedDriverPosition;
+
+  BitmapDescriptor _carIcon = BitmapDescriptor.defaultMarkerWithHue(
+    BitmapDescriptor.hueYellow,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _driverAnimCtrl =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1500),
+        )..addListener(() {
+          if (_driverPositionAnim != null) {
+            setState(
+              () => _displayedDriverPosition = _driverPositionAnim!.value,
+            );
+          }
+        });
+  }
 
   @override
   void didChangeDependencies() {
@@ -50,7 +92,40 @@ class _ClientTripInProgressTemplateState
         bloc.add(ClientTripListenPositionEvent(tripId: tripId));
       }
       _loadRoute(state);
+      _loadCarIcon();
     }
+  }
+
+  Future<void> _loadCarIcon() async {
+    try {
+      final icon = await BitmapDescriptor.asset(
+        ImageConfiguration(
+          size: const Size(48, 48),
+          devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+        ),
+        'assets/images/png/car_marker.png',
+      );
+      if (mounted) setState(() => _carIcon = icon);
+    } catch (e) {
+      debugPrint('[ClientTripInProgress] car icon error: $e');
+    }
+  }
+
+  /// Anima el marker del conductor desde su posicion actual hasta [target]
+  /// en vez de saltar directamente (T27-C1/C3).
+  void _animateDriverTo(LatLng target) {
+    final from = _displayedDriverPosition ?? target;
+    _driverPositionAnim = LatLngTween(
+      begin: from,
+      end: target,
+    ).animate(CurvedAnimation(parent: _driverAnimCtrl, curve: Curves.linear));
+    _driverAnimCtrl.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _driverAnimCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRoute(ClientTripState state) async {
@@ -78,11 +153,26 @@ class _ClientTripInProgressTemplateState
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ClientTripBloc, ClientTripState>(
-      listenWhen: (prev, curr) =>
-          curr.status == ClientTripStatus.completed &&
-          prev.status != ClientTripStatus.completed,
-      listener: (_, __) => context.pushReplacement(ClientRoutesPath.rateTrip),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ClientTripBloc, ClientTripState>(
+          listenWhen: (prev, curr) =>
+              curr.status == ClientTripStatus.completed &&
+              prev.status != ClientTripStatus.completed,
+          listener: (_, __) =>
+              context.pushReplacement(ClientRoutesPath.rateTrip),
+        ),
+        BlocListener<ClientTripBloc, ClientTripState>(
+          listenWhen: (prev, curr) =>
+              curr.driverLat != prev.driverLat ||
+              curr.driverLng != prev.driverLng,
+          listener: (_, curr) {
+            if (curr.driverLat != null && curr.driverLng != null) {
+              _animateDriverTo(LatLng(curr.driverLat!, curr.driverLng!));
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<ClientTripBloc, ClientTripState>(
         builder: (context, state) {
           final trip = state.activeTrip;
@@ -153,13 +243,11 @@ class _ClientTripInProgressTemplateState
                           BitmapDescriptor.hueRed,
                         ),
                       ),
-                      if (state.hasDriverPosition)
+                      if (_displayedDriverPosition != null)
                         Marker(
                           markerId: const MarkerId('driver'),
-                          position: LatLng(state.driverLat!, state.driverLng!),
-                          icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueYellow,
-                          ),
+                          position: _displayedDriverPosition!,
+                          icon: _carIcon,
                           infoWindow: const InfoWindow(title: 'Conductor'),
                         ),
                     },
@@ -241,6 +329,17 @@ class _ClientTripInProgressTemplateState
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
+                                  // T27-C2/C4: datos del vehiculo/conductor,
+                                  // visibles una vez el viaje tiene
+                                  // conductor asignado (ACEPTADO o
+                                  // posterior). Ver VehicleInfo.placeholder:
+                                  // el backend aun no expone este contrato.
+                                  if (trip?.driverId != null) ...[
+                                    6.verticalSpace,
+                                    VehicleInfoRow(
+                                      vehicle: VehicleInfo.placeholder(),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -296,6 +395,38 @@ class _ClientTripInProgressTemplateState
           );
         },
       ),
+    );
+  }
+}
+
+/// Fila con placa/modelo del vehiculo y nombre del conductor (T27-C2/C4).
+/// Recibe [VehicleInfo] ya resuelto (hoy siempre un placeholder — ver su
+/// docblock) para no acoplar la UI a de donde vienen los datos.
+class VehicleInfoRow extends StatelessWidget {
+  const VehicleInfoRow({required this.vehicle, super.key});
+
+  final VehicleInfo vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.directions_car_filled_rounded,
+          color: context.appColors.textSecondary,
+          size: 14.r,
+        ),
+        6.horizontalSpace,
+        Expanded(
+          child: AppText(
+            '${vehicle.modelo} · ${vehicle.placa}',
+            variant: AppTextVariant.bodySmall,
+            color: context.appColors.textSecondary,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }
