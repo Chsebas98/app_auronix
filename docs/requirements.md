@@ -1,60 +1,94 @@
-# Requerimientos del sistema
+# Technical Requirements
 
-## SDK y lenguaje
-Flutter, Dart SDK `^3.9.0`. Null safety habilitado.
+Languages, versions and frameworks selected from Central Memory are listed below. The internal analysis may propose additions.
 
-## Backend (contexto — no vive en este repo)
-API REST en **Spring Boot**, JWT emitido tras login. Tiempo real vía **STOMP sobre WebSocket** (decisión de arquitectura, ver [`architecture.md`](architecture.md)). FCM **ya integrado** en backend (se audita, no se reimplementa). Contrato exacto en [`requerimientos_backend.md`](requerimientos_backend.md).
+# Reused Version from Central Memory
 
-## Dependencias existentes y su rol final
+## versions/flutter-3.44.md
 
-| Categoría | Paquete | Decisión final |
-|---|---|---|
-| Estado | flutter_bloc | Se mantiene |
-| Routing | go_router | Se mantiene, rutas admin/gerente planificadas se descartan |
-| DI | get_it | Se mantiene |
-| Red | dio, dio_cache_interceptor, http_cache_hive_store | Se mantiene |
-| Persistencia local | sqflite, rx_shared_preferences | Se mantiene, sin tokens |
-| Errores funcionales | dartz | Se mantiene |
-| Firebase | firebase_core | Se mantiene, se amplía con messaging/crashlytics |
-| Auth social | google_sign_in | Se mantiene |
-| Cripto | encrypt, pointycastle | **Se retiran** — no hay caso de uso confirmado; el frontend no necesita cifrado adicional propio sobre HTTPS/WSS |
-| Cripto | dart_jsonwebtoken | **Se retira** — reemplazado por `jwt_decoder` |
-| Mapas | flutter_map | **Se mantiene como definitivo** (ya funcional, mejor costo-beneficio) |
-| Mapas | mapbox_maps_flutter, google_maps_flutter | **Se retiran** — nunca se usaron y no hay requisito de negocio que los justifique |
-| Geo | geolocator, geocoding | **Se activan** (reemplazan mocks) |
-| Rutas en mapa | flutter_polyline_points | Se activa (decodifica geometría del backend) |
-| Gráficos | fl_chart | Se mantiene (ganancias, con desglose bruto/neto) |
+# Flutter 3.44 / Dart 3.12
 
-## Dependencias nuevas a incorporar
+Applies to: `languages/dart.md`, `frameworks/flutter.md`
 
-| Paquete | Propósito |
-|---|---|
-| `flutter_secure_storage` | Almacenamiento cifrado de JWT (Keystore/Keychain). Prioridad más alta. |
-| `stomp_dart_client` | Cliente STOMP sobre WebSocket para negociación, tracking y chat en tiempo real. |
-| `firebase_messaging` | Consumir las notificaciones push que el backend ya envía (auditar contrato, ver [`requerimientos_backend.md`](requerimientos_backend.md)). |
-| `firebase_crashlytics` | Monitoreo de crashes en producción — hoy no existe ninguna telemetría de errores. |
-| `flutter_local_notifications` | Mostrar notificaciones en foreground (FCM no las muestra automáticamente ahí). |
-| `jwt_decoder` | Leer el claim `exp` del JWT localmente, sin verificar firma. |
-| `cached_network_image` | Fotos de conductor/vehículo y avatares de chat, con cacheo eficiente. |
-| `share_plus` | Compartir el estado del viaje en vivo con un contacto de emergencia. |
-| `url_launcher` | Llamada telefónica directa entre pasajero y conductor. |
-| `json_annotation` + `json_serializable` (dev: `build_runner`) | Reduce boilerplate y errores de parseo manual en los modelos nuevos (`SolicitudViaje`, `OfertaViaje`, `Viaje`, `MensajeChat`, `Calificacion`, etc.). |
-| `flutter_app_badger` (o equivalente vigente) | Badge de mensajes no leídos en el ícono de la app (confirmado como requisito v1) — verificar soporte Android por fabricante/launcher, degradar sin error si no está disponible. |
+Current stable line pinning Dart SDK `>=3.12.0 <4.0.0`. Brings the latest stable Impeller rendering engine improvements and continued Material 3 refinements. No breaking widget-API changes expected from 3.38 baselines; verify plugin compatibility (Firebase, platform channels) before bumping the floor version in `pubspec.yaml`.
 
-No se incorpora `image_picker`/carga de archivos: la app **no** implementa subida de documentos (fuera de alcance, ver [`context.md`](context.md)).
+# Reused Mcp from Central Memory
 
-## Dependencias de testing (dev_dependencies)
-- `bloc_test` — testear blocs/cubits.
-- `mocktail` — mockear repositorios/datasources/`RealtimeClient` sin generación de código.
+## mcp/filesystem.md
 
-## Internacionalización — revertido a solo español para v1 (confirmado)
-No hay proveedor de traducción disponible actualmente. **Decisión final**: v1 se lanza únicamente en español — se descarta el requisito previo de inglés/francés/alemán/idiomas asiáticos para este lanzamiento. Sí se recomienda seguir externalizando strings vía `lib/l10n/arb/app_es.arb` (una sola clave por texto, sin traducir a otros idiomas todavía) para que agregar idiomas en una versión futura sea un trabajo de traducción, no un refactor de la UI. No crear `app_en.arb`/`app_fr.arb`/`app_de.arb` en v1 — se pospone por completo hasta que exista un proveedor de traducción.
+# Sistema de archivos (MCP)
 
-## Configuración de entorno / secretos requeridos
-- `flutter_secure_storage` no requiere configuración adicional más allá de las plataformas nativas ya soportadas por el paquete.
-- Endpoint(s) de WebSocket/STOMP por entorno, a añadir en `lib/app/environments/flavors/env_{dev,prod}_config.dart` junto al `apiBaseUrl` existente (una vez confirmado por backend según [`requerimientos_backend.md`](requerimientos_backend.md)).
-- Credenciales de Firebase ya cubiertas por los `firebase_options_dev.dart`/`firebase_options.dart` existentes; solo se activan servicios adicionales (Messaging, Crashlytics) en la consola de Firebase.
+Leer y escribir archivos locales dentro de carpetas autorizadas.
 
-## Plataformas / flavors
-Android/iOS, flavors dev/prod, Firebase separado por entorno. **Versiones mínimas soportadas (confirmado)**: Android 7.0 (API 24), iOS 16 — configurar `minSdkVersion` en `android/app/build.gradle.kts` y el deployment target en el proyecto iOS; verificar que ninguna dependencia nueva (`flutter_secure_storage`, `flutter_local_notifications`, `geolocator`, etc.) exija una versión mayor sin confirmarlo aquí primero. **V1 se publica solo en Ecuador** (confirmado) — no se preparan fichas de tienda para Colombia/Perú en este lanzamiento. Pendiente: firma de release real de Android antes de publicar (ver [`security.md`](security.md)).
+## Cuándo usarlo
+
+Agentes que trabajan sobre una copia local del proyecto y necesitan leer o generar archivos fuera del editor.
+
+## Seguridad
+
+Autoriza solo la carpeta del proyecto. No expongas carpetas personales, claves SSH ni archivos .env.
+
+## Reglas para el agente
+
+- Usa este servidor MCP solo si el proyecto lo seleccionó.
+- La configuración y las credenciales del servidor las gestiona el usuario en su entorno; no se guardan en Mnemosine ni en el repositorio.
+
+## mcp/github.md
+
+# GitHub (MCP)
+
+Leer y gestionar repositorios, issues y pull requests de GitHub desde el agente.
+
+## Cuándo usarlo
+
+Consultar issues, revisar pull requests, buscar código en otros repositorios de la organización.
+
+## Seguridad
+
+Usa un token con el mínimo alcance necesario (solo el repositorio del proyecto). Nunca pegues el token en el repositorio ni en la memoria.
+
+## Reglas para el agente
+
+- Usa este servidor MCP solo si el proyecto lo seleccionó.
+- La configuración y las credenciales del servidor las gestiona el usuario en su entorno; no se guardan en Mnemosine ni en el repositorio.
+
+# Reused Language from Central Memory
+
+## languages/dart.md
+
+# Dart
+
+## Use when
+Building a Flutter application (mobile, web or desktop) from a single codebase, or any Flutter-adjacent tooling/package.
+
+## Key considerations
+- Sound null safety is mandatory — model absence with nullable types deliberately, not with sentinel values.
+- Dart is optimized for UI: everything (including control flow like loops inside widget builders) ends up rebuilt on every frame, so keep build methods cheap and push expensive work out of them.
+- Async/await and `Future`/`Stream` are first-class; prefer them over manual callback chains, especially for sockets and API calls.
+- Strong static typing with type inference (`var`) — don't fight it with excessive `dynamic`.
+
+## Common pitfalls
+- Using `dynamic` to silence the analyzer instead of modeling the real type, which pushes failures from compile time to runtime.
+- Holding `StreamSubscription`/`AnimationController`/socket instances without disposing them in `dispose()`, leaking memory and callbacks on disposed widgets.
+- Mutating state directly instead of going through the chosen state-management solution (Bloc/Riverpod/Provider), breaking rebuild propagation.
+
+# Reused Framework from Central Memory
+
+## frameworks/flutter.md
+
+# Flutter
+
+## Language
+Dart
+
+## Use when
+One codebase targeting mobile (iOS/Android), web and desktop with a consistent native-feeling UI.
+
+## Key considerations
+- Widget composition is the core mental model — everything is a widget.
+- State management (Riverpod, Bloc, Provider) should be chosen deliberately, not per-screen ad hoc.
+- Platform channels are needed for native APIs Flutter doesn't expose directly.
+
+## Common pitfalls
+- Rebuilding large widget trees unnecessarily hurts performance; scope `setState`/providers narrowly.
+- Ignoring platform-specific UX conventions makes the app feel foreign on iOS or Android.

@@ -1,0 +1,130 @@
+{
+  "catalog": {
+    "architecture": [
+      "architectures/clean_feature_first.md",
+      "architectures/adr.md"
+    ],
+    "design_pattern": [
+      "patterns/api/idempotency_key.md",
+      "patterns/api/pagination.md",
+      "patterns/authentication/implementation.md",
+      "patterns/error_handling/fail_fast_validation.md",
+      "patterns/error_handling/retry_with_backoff.md",
+      "patterns/frontend/component-composition.md",
+      "patterns/mobile/unidirectional_data_flow.md",
+      "patterns/error_handling/implementation.md",
+      "patterns/frontend/container_presentational.md"
+    ],
+    "version": [
+      "versions/flutter-3.44.md"
+    ],
+    "role": [
+      "roles/ui_ux/definition.md",
+      "roles/mobile_developer/definition.md"
+    ],
+    "rule": [
+      "rules/audit_before_closing.md",
+      "rules/deterministic_first.md",
+      "rules/no_hallucination.md",
+      "rules/document_after_change.md",
+      "rules/no_secrets_in_code.md",
+      "rules/no_unauthorized_scope_change.md",
+      "rules/respect_contracts.md"
+    ],
+    "testing": [
+      "testing/contract_testing.md",
+      "testing/test_pyramid.md"
+    ],
+    "security": [
+      "security/defense_in_depth.md",
+      "security/zero_trust_boundary.md"
+    ],
+    "qa": [
+      "qa/accessibility_checklist.md",
+      "qa/functional_testing_checklist.md",
+      "qa/regression_checklist.md",
+      "qa/performance_checklist.md",
+      "qa/release_readiness_checklist.md",
+      "qa/security_review_checklist.md"
+    ],
+    "design": [
+      "design/modal_dialog.md",
+      "design/loading_indicators.md",
+      "design/skeleton_loading.md",
+      "design/search_bar.md",
+      "design/smart_forms.md"
+    ],
+    "mcp": [
+      "mcp/filesystem.md",
+      "mcp/github.md"
+    ],
+    "skill": [
+      "skills/architecture/mobile.md",
+      "skills/frontend/api_integration.md",
+      "skills/mobile/accessibility.md",
+      "skills/mobile/api_integration.md",
+      "skills/mobile/authentication.md",
+      "skills/mobile/architecture.md",
+      "skills/mobile/background_tasks.md",
+      "skills/mobile/biometric_authentication.md",
+      "skills/mobile/deep_links.md",
+      "skills/mobile/local_storage.md",
+      "skills/mobile/mobile_security.md",
+      "skills/mobile/navigation.md",
+      "skills/mobile/offline_mode.md",
+      "skills/mobile/performance.md",
+      "skills/mobile/permissions.md",
+      "skills/mobile/push_notifications.md",
+      "skills/mobile/release_management.md",
+      "skills/mobile/state_management.md",
+      "skills/security/mobile_security.md",
+      "skills/security/mobile_security_baseline.md",
+      "skills/frontend/accessibility.md",
+      "skills/frontend/component_design.md",
+      "skills/frontend/component_testing.md",
+      "skills/frontend/error_handling.md",
+      "skills/frontend/form_validation.md",
+      "skills/frontend/forms.md",
+      "skills/frontend/loading_states.md",
+      "skills/frontend/notifications.md",
+      "skills/frontend/performance.md",
+      "skills/frontend/responsive_design.md",
+      "skills/frontend/routing.md",
+      "skills/frontend/security.md",
+      "skills/frontend/state_management.md",
+      "skills/ui_ux/design_system.md",
+      "skills/ui_ux/accessibility.md",
+      "skills/ui_ux/component_catalog.md",
+      "skills/ui_ux/component_design.md",
+      "skills/ui_ux/design_tokens.md",
+      "skills/ui_ux/responsive_design.md",
+      "skills/ui_ux/theming.md",
+      "skills/ui_ux/visual_hierarchy.md",
+      "skills/apis/authentication.md",
+      "skills/apis/pagination.md",
+      "skills/apis/contract_design.md",
+      "skills/apis/documentation.md",
+      "skills/testing/accessibility_testing.md",
+      "skills/testing/integration_testing.md",
+      "skills/testing/mocking.md",
+      "skills/testing/test_automation.md",
+      "skills/testing/unit_testing.md",
+      "skills/security/jwt_security.md",
+      "skills/security/secrets_management.md",
+      "skills/git/merge.md",
+      "skills/git/commit.md",
+      "skills/git/conflict_resolution.md",
+      "skills/git/branching.md",
+      "skills/performance/frontend_optimization.md",
+      "skills/documentation/adr.md",
+      "skills/documentation/changelog.md",
+      "skills/code_review/review_changes.md"
+    ],
+    "language": [
+      "languages/dart.md"
+    ],
+    "framework": [
+      "frameworks/flutter.md"
+    ]
+  }
+}

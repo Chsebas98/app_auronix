@@ -1,29 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Smoke test real sobre un átomo ya existente del design system (AppButton), reemplazando el
+// smoke test de contador que dejaba `flutter create` por defecto y que probaba una pantalla que
+// ya no existe en la app real (ver docs/architecture/existing_foundation.md, Tarea 0).
 
-import 'package:auronix_app/app/app.dart';
+import 'package:auronix_app/app/design/theme/app_theme.dart';
+import 'package:auronix_app/shared/atoms/buttons/app_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const AppAuronixMain());
+  testWidgets('AppButton renderiza su label y dispara onPressed al tocarlo', (
+    WidgetTester tester,
+  ) async {
+    var pressed = false;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(390, 844),
+        builder: (context, _) => MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: AppButton(
+              label: 'Continuar',
+              onPressed: () => pressed = true,
+            ),
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.text('Continuar'), findsOneWidget);
+    expect(pressed, isFalse);
+
+    await tester.tap(find.text('Continuar'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(pressed, isTrue);
   });
 }

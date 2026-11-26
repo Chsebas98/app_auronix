@@ -1,0 +1,242 @@
+{
+  "contract_version": "1.2",
+  "request_id": "862362eb-466d-4267-aea3-2317ce1b0f2c",
+  "project_memory_revision": 4,
+  "status": "READY",
+  "summary": "Se ha completado el análisis y la preparación inicial de Ando-UI (aplicación móvil Flutter 3.44 / Dart 3.12). Se alinea la arquitectura del frontend con el backend existente Spring Boot 3 (micro-auronix), respetando la base de datos PostgreSQL existente consumida exclusivamente vía REST y WebSockets. Se consolida el mapa de producto en 9 módulos secuenciales que cubren el 100% de las historias de usuario de pasajero y conductor, las reglas de negocio (ciclo de viaje secuencial, idempotencia, restricción de cooperativa, no concurrencia de viajes activos), el soporte multi-ambiente (local con ws://, producción con wss://) y los 21 requisitos del perfil de producción.",
+  "changes": [
+    "Consolidación de la arquitectura Clean Architecture (Feature-First) con Atomic Design para presentación en Ando-UI.",
+    "Definición del esquema y documentación de base de datos relacional existente (contracts/schemas/database.md y database.json) como SSOT de solo lectura.",
+    "Configuración de transporte de WebSockets adaptativa por ambiente: ws:// directo sin SSL en ambiente local y wss:// cifrado en entornos de desarrollo y producción.",
+    "Estructuración de product_map en 9 módulos jerárquicos desde los cimientos hasta la distribución productiva sin deuda técnica."
+  ],
+  "product_map": [
+    {
+      "key": "M1",
+      "title": "Esqueleto del proyecto y cimientos de arquitectura",
+      "goal": "Establecer la estructura base del repositorio Flutter en Clean Architecture Feature-First con Atomic Design, inyección de dependencias (GetIt), configuración por ambiente (local, dev, prod) con soporte .env y runner de pruebas verificado en CI con vista de diagnóstico y salud.",
+      "kind": "foundation",
+      "functionalities": [
+        "Estructura inicial del repositorio y configuración de ambientes"
+      ],
+      "requirements": [
+        "PRD-QA-01",
+        "PRD-DEP-01",
+        "PRD-DOC-01"
+      ],
+      "depends_on": []
+    },
+    {
+      "key": "M2",
+      "title": "Cimientos de Red, Seguridad y Persistencia Local",
+      "goal": "Configurar cliente HTTP Dio con interceptores JWT e Idempotency-Key, almacenamiento seguro de sesión local (Flutter Secure Storage), persistencia relacional embebida (Sqflite), gestor de conexión WebSocket con soporte ws:// para local y wss:// para producción, y manejo centralizado de errores y logs.",
+      "kind": "foundation",
+      "functionalities": [
+        "Manejo seguro de sesión y token JWT",
+        "Conexión WebSocket centralizada para posición y estados de viaje con soporte ws/wss según ambiente"
+      ],
+      "requirements": [
+        "PRD-SEC-01",
+        "PRD-OPS-01",
+        "PRD-DATA-04",
+        "MOB-03",
+        "WEB-SEC-02"
+      ],
+      "depends_on": [
+        "M1"
+      ]
+    },
+    {
+      "key": "M3",
+      "title": "Módulo de Autenticación y Onboarding",
+      "goal": "Implementar flujo completo de inicio de sesión y registro para pasajeros y conductores usando Firebase Auth integrado con JWT de Spring Boot, SessionBloc para gestión reactiva de sesión y enrutamiento según rol de usuario (client_routes, conductor_routes).",
+      "kind": "feature",
+      "functionalities": [
+        "Pasajero y Conductor: inicia sesión (JWT con soporte de Firebase Auth)",
+        "Validación de rol y redirección mediante client_routes y conductor_routes"
+      ],
+      "requirements": [
+        "PRD-SEC-03",
+        "WEB-SEC-02"
+      ],
+      "depends_on": [
+        "M2"
+      ]
+    },
+    {
+      "key": "M4",
+      "title": "Módulo de Búsqueda y Selección de Ubicaciones",
+      "goal": "Integrar servicio de Places y Directions API para autocompletado con debounce de origen y destino, cálculo y dibujado de polilíneas de ruta, estimación preliminar de tarifas y visualización en mapa interactivo.",
+      "kind": "feature",
+      "functionalities": [
+        "Pasajero: selecciona origen/destino (vía servicio de rutas/Directions)"
+      ],
+      "requirements": [
+        "WEB-UX-03"
+      ],
+      "depends_on": [
+        "M1"
+      ]
+    },
+    {
+      "key": "M5",
+      "title": "Módulo de Gestión y Seguimiento de Viajes del Pasajero",
+      "goal": "Desarrollar la experiencia completa del cliente para solicitar viajes utilizando cabecera Idempotency-Key, interfaz de espera 'buscando conductor', seguimiento en vivo del conductor y viaje en curso por WebSocket, bloqueo de solicitudes simultáneas si hay viaje activo, finalización y calificación.",
+      "kind": "feature",
+      "functionalities": [
+        "Pasajero: solicita viaje (app muestra 'buscando conductor')",
+        "Un pasajero no puede tener más de un viaje activo a la vez (SOLICITADO, OFERTADO, ACEPTADO, EN_CURSO)",
+        "Las solicitudes de creación/oferta de viaje son idempotentes vía header de idempotencia",
+        "Pasajero: sigue al conductor en tiempo real por WebSocket hasta que inicia el viaje y ve el viaje en curso",
+        "Al finalizar, confirma/califica al conductor (pagos y calificaciones solo habilitados una vez completado)"
+      ],
+      "requirements": [
+        "PRD-QA-02",
+        "WEB-UX-03",
+        "MOB-04"
+      ],
+      "depends_on": [
+        "M2",
+        "M3",
+        "M4"
+      ]
+    },
+    {
+      "key": "M6",
+      "title": "Módulo de Operaciones y Navegación del Conductor",
+      "goal": "Implementar el flujo operativo del conductor para disponibilidad geográfica GPS, recepción de solicitudes filtradas por su cooperativa, aceptación o rechazo, navegación guiada, actualización secuencial del ciclo de viaje (ACEPTADO -> EN_CURSO -> COMPLETADO) y calificación al cliente.",
+      "kind": "feature",
+      "functionalities": [
+        "Conductor: queda disponible para recibir solicitudes de viaje cercanas según posición GPS",
+        "Un conductor solo ve y puede operar sobre viajes de su propia cooperativa",
+        "Conductor: puede aceptar o rechazar cada solicitud",
+        "Conductor: navega hacia el pasajero, inicia el viaje y lo completa",
+        "El ciclo de vida del viaje es estrictamente secuencial",
+        "Al completar, califica al pasajero"
+      ],
+      "requirements": [
+        "PRD-QA-02",
+        "WEB-UX-03",
+        "MOB-04"
+      ],
+      "depends_on": [
+        "M2",
+        "M3"
+      ]
+    },
+    {
+      "key": "M7",
+      "title": "Módulo de Historial de Viajes y Perfil",
+      "goal": "Construir las vistas de perfil y consulta paginada de historial de viajes para pasajeros y conductores, mostrando detalle de estados finales (COMPLETADO, CANCELADO), desglose de cobro/pago, calificaciones emitidas y recibidas, con almacenamiento seguro y mínimo privilegio.",
+      "kind": "feature",
+      "functionalities": [
+        "Pasajero y Conductor: consultar historial de viajes guardados",
+        "Visualización de detalles de viaje completed/cancelled"
+      ],
+      "requirements": [
+        "PRD-DATA-05"
+      ],
+      "depends_on": [
+        "M2",
+        "M3"
+      ]
+    },
+    {
+      "key": "M8",
+      "title": "Endurecimiento de Seguridad, Calidad y Limpieza",
+      "goal": "Ejecutar auditoría de dependencias libres de vulnerabilidades, eliminar código muerto de versiones previas (librerías obsoletas de mapas y blocs sin uso), verificar accesibilidad WCAG 2.1 AA en todas las pantallas y dotar a la aplicación de resiliencia con manejo offline y reporte seguro de fallos.",
+      "kind": "production",
+      "functionalities": [
+        "La app avisa cuando no hay red y reintenta cuando vuelve la conexión",
+        "Sin código muerto ni dependencias innecesarias"
+      ],
+      "requirements": [
+        "PRD-QA-03",
+        "PRD-SEC-02",
+        "WEB-UX-02",
+        "MOB-04",
+        "MOB-05"
+      ],
+      "depends_on": [
+        "M5",
+        "M6",
+        "M7"
+      ]
+    },
+    {
+      "key": "M9",
+      "title": "Preparación para Producción, Multi-Ambiente y Publicación",
+      "goal": "Configurar empaquetado release firmado (Android AAB e iOS Archive), assets visuales completos (iconos y splash screen), verificación cruzada con contratos y esquema de base de datos existente, suite de smoke testing en emulador y dispositivos físicos, y documentación en DEPLOY.md y política de privacidad.",
+      "kind": "production",
+      "functionalities": [
+        "Empaquetado y distribución para tiendas móviles Android e iOS"
+      ],
+      "requirements": [
+        "PRD-DATA-01",
+        "PRD-DATA-03",
+        "PRD-DEP-03",
+        "MOB-01",
+        "MOB-02",
+        "MOB-06",
+        "MOB-07"
+      ],
+      "depends_on": [
+        "M8"
+      ]
+    }
+  ],
+  "tasks": [],
+  "tests": [
+    "test/unit/app/config/environment_config_test.dart: Comprobar lectura de variables de entorno y selección de esquema ws:// para local y wss:// para producción.",
+    "test/unit/app/network/dio_client_test.dart: Validar inyección automática de Bearer Token en encabezados y generación obligatoria de Idempotency-Key en llamadas POST de viajes.",
+    "test/unit/features/auth/domain/session_bloc_test.dart: Verificar transiciones de estado de autenticación (unauthenticated, authenticating, authenticated, failure) y resolución de rutas por rol (pasajero vs conductor).",
+    "test/unit/features/trips/domain/passenger_trip_bloc_test.dart: Validar rechazo de nueva solicitud cuando el pasajero ya tiene un viaje no terminal (SOLICITADO, OFERTADO, ACEPTADO, EN_CURSO).",
+    "test/unit/features/trips/domain/driver_trip_bloc_test.dart: Comprobar filtrado estricto de solicitudes para permitir solo las pertenecientes a la cooperativa del conductor autenticado.",
+    "test/unit/features/trips/domain/trip_state_machine_test.dart: Verificar que las transiciones de estado del viaje sigan la secuencia estricta SOLICITADO -> OFERTADO -> ACEPTADO -> EN_CURSO -> COMPLETADO sin permitir saltos de estado.",
+    "test/integration/network/websocket_manager_test.dart: Probar suscripción, reconexión automática tras corte de red y recepción de eventos en tiempo real tanto en modo no seguro ws:// (local) como seguro wss://.",
+    "test/integration/flows/passenger_trip_e2e_test.dart: Recorrido E2E del pasajero desde selección de destino en mapa, solicitud con Idempotency-Key, recepción de conductor por socket y calificación final.",
+    "test/integration/flows/driver_trip_e2e_test.dart: Recorrido E2E del conductor recibiendo alerta de viaje, aceptando solicitud, transmitiendo GPS e informando inicio y finalización del viaje.",
+    "test/security/secure_storage_test.dart: Comprobar que los tokens JWT y datos sensibles de sesión se almacenan exclusivamente en Keystore/Keychain y nunca en texto plano.",
+    "test/security/dead_code_audit_test.dart: Comprobar mediante flutter analyze y scripts de verificación de imports que no existen componentes huérfanos ni dependencias no utilizadas en el build final.",
+    "test/accessibility/wcag_compliance_test.dart: Ejecutar escaneo automatizado de contraste, tamaños mínimos de toque (44x44) y etiquetas Semantics para lectores de pantalla en las vistas principales."
+  ],
+  "questions": [],
+  "memory_updates": [
+    {
+      "path": "contracts/schemas/database.md",
+      "content_type": "text/markdown",
+      "content": "# Esquema de Base de Datos Existente (PostgreSQL 16)\n\nEste documento describe la estructura y el propósito de las tablas principales alojadas en el backend `micro-auronix`, consumidas por la aplicación móvil `Ando-UI` exclusivamente mediante API REST y WebSockets.\n\n## 1. tb_users\n- **Descripción**: Almacena a cada persona usuaria registrada en el sistema, sea como pasajero o como conductor.\n- **Propósito**: Mantener la identidad, credenciales y rol de transporte de cada usuario.\n- **Uso**: El backend la consulta durante el inicio de sesión (JWT / Firebase) y para resolver permisos y perfiles.\n- **Columnas**:\n  - `id` (uuid, PK): Identificador único del usuario.\n  - `role` (varchar): Rol asignado (`PASAJERO` o `CONDUCTOR`).\n\n## 2. tb_cooperatives\n- **Descripción**: Representa cada cooperativa o empresa de transporte afiliada a la plataforma.\n- **Propósito**: Agrupar conductores y restringir la asignación operativa de viajes a la misma cooperativa.\n- **Uso**: Consultada al filtrar y despachar viajes para asegurar que un conductor solo atienda viajes de su cooperativa.\n- **Columnas**:\n  - `id` (uuid, PK): Identificador único de la cooperativa.\n\n## 3. tb_vehicles\n- **Descripción**: Representa cada vehículo registrado perteneciente a un conductor de una cooperativa.\n- **Propósito**: Proveer los datos de placa, modelo y capacidad del auto asignado a un viaje.\n- **Uso**: El backend la lee al ofertar o confirmar viajes y la transmite al cliente para su visualización.\n- **Columnas**:\n  - `id` (uuid, PK): Identificador único del vehículo.\n\n## 4. tb_trips\n- **Descripción**: Registro principal de cada solicitud y trayecto realizado en la plataforma.\n- **Propósito**: Gestionar el ciclo de vida secuencial del viaje (`SOLICITADO` -> `OFERTADO` -> `ACEPTADO` -> `EN_CURSO` -> `COMPLETADO` / `CANCELADO`), guardando puntos GPS, tarifas, pagos y calificaciones.\n- **Uso**: Actualizada en cada cambio de estado y transmitida en tiempo real vía WebSockets a cliente y conductor.\n- **Columnas**:\n  - `id` (uuid, PK): Identificador único del viaje.\n\n## 5. tb_idempotency_keys\n- **Descripción**: Claves de idempotencia registradas para transacciones críticas y creación de viajes.\n- **Propósito**: Evitar la duplicidad de solicitudes de viajes o cobros ante reintentos de red o fallas de conectividad móvil.\n- **Uso**: Verificada por el backend en cada petición POST con la cabecera HTTP `Idempotency-Key` antes de ejecutar la acción.\n- **Columnas**:\n  - `id` (uuid, PK): Identificador de la clave enviada por el cliente.",
+      "base_sha": "",
+      "reason": "Creación del documento de esquema de base de datos en Markdown correspondiente al archivo contracts/schemas/database.json para sincronización de documentación técnica.",
+      "update": ""
+    }
+  ],
+  "rationale": [
+    "Se verifica que todas las reglas de negocio y funcionalidades originales estén integradas en los módulos de product_map sin alterar las especificaciones del usuario.",
+    "Se respeta la respuesta del usuario respecto a la ejecución local sobre ws:// sin requerir certificados SSL inmediatos, dejando wss:// listo para producción y staging.",
+    "El array de tasks se entrega vacío para proceder con la generación modular detallada de tareas guiada por Mnemosine.",
+    "Todos los códigos del perfil de producción (PRD-*, WEB-*, MOB-*) cuentan con al menos un módulo asignado que garantiza su cumplimiento."
+  ],
+  "warnings": [],
+  "missing_information": [],
+  "assumptions": [
+    "Se asume que la API REST y los WebSockets del backend Spring Boot 3 están completamente operativos y disponibles localmente según la documentación provista."
+  ],
+  "validation": {
+    "contract_version": "1.2",
+    "memory_revision": 4,
+    "status": "READY",
+    "accepted": [
+      {
+        "path": "contracts/schemas/database.md",
+        "operation": "CREATE_FILE",
+        "reason": "Creación del documento de esquema de base de datos en Markdown correspondiente al archivo contracts/schemas/database.json para sincronización de documentación técnica."
+      }
+    ],
+    "rejected": [],
+    "questions": 0,
+    "blocking_questions": 0,
+    "tasks": 0,
+    "modules": 9
+  }
+}

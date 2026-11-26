@@ -12,7 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class AllowPermitsScreen extends StatelessWidget {
-  const AllowPermitsScreen({Key? key}) : super(key: key);
+  const AllowPermitsScreen({super.key});
 
   String _homeRouteForSession(BuildContext context) {
     final session = context.read<SessionBloc>().state;

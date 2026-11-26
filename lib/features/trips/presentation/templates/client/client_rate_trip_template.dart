@@ -15,8 +15,7 @@ class ClientRateTripTemplate extends StatefulWidget {
   const ClientRateTripTemplate({super.key});
 
   @override
-  State<ClientRateTripTemplate> createState() =>
-      _ClientRateTripTemplateState();
+  State<ClientRateTripTemplate> createState() => _ClientRateTripTemplateState();
 }
 
 class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
@@ -57,8 +56,7 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
             ),
             body: SafeArea(
               child: Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -72,11 +70,15 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
                         shape: BoxShape.circle,
                         color: context.appColors.card,
                         border: Border.all(
-                            color: context.appColors.border, width: 2),
+                          color: context.appColors.border,
+                          width: 2,
+                        ),
                       ),
-                      child: Icon(Icons.person_rounded,
-                          size: 44.r,
-                          color: context.appColors.textSecondary),
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 44.r,
+                        color: context.appColors.textSecondary,
+                      ),
                     ),
                     16.verticalSpace,
 
@@ -102,11 +104,9 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
                       children: List.generate(5, (i) {
                         final filled = i < _selectedStars;
                         return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedStars = i + 1),
+                          onTap: () => setState(() => _selectedStars = i + 1),
                           child: Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: 6.w),
+                            padding: EdgeInsets.symmetric(horizontal: 6.w),
                             child: Icon(
                               filled
                                   ? Icons.star_rounded
@@ -127,8 +127,7 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
                       decoration: BoxDecoration(
                         color: context.appColors.input,
                         borderRadius: BorderRadius.circular(12.r),
-                        border:
-                            Border.all(color: context.appColors.border),
+                        border: Border.all(color: context.appColors.border),
                       ),
                       child: TextField(
                         controller: _commentController,
@@ -161,24 +160,23 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
                       onPressed: _selectedStars == 0
                           ? null
                           : () {
-                              final session =
-                                  context.read<SessionBloc>().state;
+                              final session = context.read<SessionBloc>().state;
                               final userId = session is SessionAuthenticated
                                   ? JwtHelpers.getUserId(
-                                          session.dataUser.tokenAccess) ??
-                                      0
+                                          session.dataUser.tokenAccess,
+                                        ) ??
+                                        0
                                   : 0;
                               context.read<ClientTripBloc>().add(
-                                    ClientTripRateDriverEvent(
-                                      userId: userId,
-                                      tripId: state.activeTrip?.id ?? 0,
-                                      calificacion: _selectedStars,
-                                      comentario:
-                                          _commentController.text.isEmpty
-                                              ? null
-                                              : _commentController.text,
-                                    ),
-                                  );
+                                ClientTripRateDriverEvent(
+                                  userId: userId,
+                                  tripId: state.activeTrip?.id ?? 0,
+                                  calificacion: _selectedStars,
+                                  comentario: _commentController.text.isEmpty
+                                      ? null
+                                      : _commentController.text,
+                                ),
+                              );
                             },
                     ),
                     12.verticalSpace,
@@ -186,7 +184,8 @@ class _ClientRateTripTemplateState extends State<ClientRateTripTemplate> {
                       onPressed: isRating
                           ? null
                           : () => context.pushReplacement(
-                              ClientRoutesPath.tripCompleted),
+                              ClientRoutesPath.tripCompleted,
+                            ),
                       child: AppText(
                         'Omitir',
                         variant: AppTextVariant.bodyMedium,

@@ -46,8 +46,7 @@ final class ClientTripState extends Equatable {
 
   bool get isSearching => status == ClientTripStatus.searching;
   bool get hasActiveTrip => activeTrip != null;
-  bool get hasRoute =>
-      origenDireccion != null && destinoDireccion != null;
+  bool get hasRoute => origenDireccion != null && destinoDireccion != null;
   bool get hasDriverPosition => driverLat != null && driverLng != null;
 
   ClientTripState copyWith({
@@ -83,17 +82,17 @@ final class ClientTripState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        activeTrip,
-        errorMessage,
-        origenLatitud,
-        origenLongitud,
-        origenDireccion,
-        destinoLatitud,
-        destinoLongitud,
-        destinoDireccion,
-        distanciaEstimadaKm,
-        driverLat,
-        driverLng,
-      ];
+    status,
+    activeTrip,
+    errorMessage,
+    origenLatitud,
+    origenLongitud,
+    origenDireccion,
+    destinoLatitud,
+    destinoLongitud,
+    destinoDireccion,
+    distanciaEstimadaKm,
+    driverLat,
+    driverLng,
+  ];
 }

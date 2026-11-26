@@ -1,53 +1,26 @@
-# Contexto y alcance
+# Project Context
 
-## Visión del producto
-Auronix es una app de **taxis seguros** para solicitar viajes bajo demanda, con un modelo de negociación de tarifa inspirado en **inDrive** (el pasajero ve un precio sugerido y puede ajustarlo, los conductores lo aceptan o contraofertan) pero con una capa de confianza que inDrive no tiene: **solo conductores afiliados a una cooperativa de taxis convenida, asignados y activados por un administrador de plataforma, pueden operar.**
+Description: Ando-UI es la aplicación móvil (Flutter) para Ando, un servicio de taxi/viajes operado por cooperativas de transporte. Es la capa de frontend que consume el backend Ando ya construido y completado en el repositorio micro-auronix (Spring Boot 3, Java 21, arquitectura hexagonal, backlog de 56 tareas, 100% terminado y verificado en CI).
 
-## Comparación con apps de referencia
+La app tiene dos roles principales: pasajero (cliente) y conductor, cada uno con su propio flujo de navegación (client_routes, conductor_routes). El pasajero puede buscar destino, solicitar un viaje, ver la búsqueda de conductor en tiempo real, seguir el viaje en curso, calificarlo al terminar y consultar su historial. El conductor recibe solicitudes de viaje cercanas, las acepta/rechaza, inicia y completa el viaje, y también califica al pasajero.
 
-| Aspecto | Uber / Didi | inDrive | **Auronix** |
-|---|---|---|---|
-| Precio | Algorítmico, sin negociación | Pasajero propone, conductor contraoferta | Backend sugiere un precio; pasajero puede editarlo (validado, sin ceros/negativos); conductores aceptan o contraofertan |
-| Alta de conductores | Autoservicio, verificación automatizada | Autoservicio, verificación ligera | Conductor se autorregistra; **el administrador** le asigna cooperativa y activa la cuenta tras verificación por un flujo externo (correo + portal web, fuera de esta app) |
-| Matching | Automático por cercanía | El pasajero elige entre ofertas | El pasajero elige entre ofertas, ordenadas por el backend combinando precio + cercanía/ETA + bono por calificación del conductor |
-| Flota | Privada | Privada | Solo vehículos de taxi vinculados de forma fija y exclusiva a un conductor de una cooperativa |
-| Pago | Tarjeta/billetera in-app | Variable por país | Solo efectivo en v1; comisión de plataforma configurable, descontada del monto que ve el conductor |
-| Confianza | Calificación + verificación propia | Calificación, verificación variable | Calificación (todos arrancan en 5 estrellas) + verificación documental manual gestionada fuera de la app + insignia de conductor verificado |
+Autenticación vía JWT contra el backend, con sesión manejada en un SessionBloc y helpers de rol (role_helpers) para enrutar según el tipo de usuario. Se integró recientemente Firebase Auth como parte del flujo de login/registro. El seguimiento en tiempo real del viaje (posición del conductor, estado del viaje) se hace por WebSockets (sockets dedicados para posición del conductor, posición del cliente y estado del viaje), y la selección de origen/destino usa un servicio de "places" (Directions API) para rutas y direcciones.
 
-## Actores del sistema
-- **Pasajero (cliente)** — se autorregistra con datos de contacto. Publica solicitudes de viaje de inmediato tras verificar su cuenta. Rol `rolUser`. Empieza con calificación 5.0; cancelaciones o solicitudes falsas la reducen.
-- **Conductor** — se autorregistra igual que un pasajero (no existe un rol "gerente de cooperativa" que lo registre por él). Queda en estado `PENDIENTE` hasta que **el administrador** le asigna una cooperativa y aprueba su verificación. La verificación de documentos (licencia, SOAT, biometría si aplica) ocurre **fuera de esta app**: el administrador envía al conductor un correo con un enlace a un portal web de verificación (parte del dashboard admin, fuera de este repositorio). Esta app móvil solo necesita mostrar el **estado** (`PENDIENTE`/`APROBADO`/`RECHAZADO`) y bloquear el acceso a funciones de conductor hasta `APROBADO`. Rol `rolDriver`.
-- **Vehículo** — relación **fija y exclusiva** con un conductor; solo el administrador puede reasignar un vehículo a otro conductor (no es una acción disponible en esta app).
-- **Cooperativa de taxis** — entidad convenida, gestionada íntegramente desde el dashboard admin. Para esta app es solo un dato de referencia (nombre) que se muestra en el perfil del conductor.
-- **Administrador de plataforma** — **no usa esta app móvil**. Opera desde un dashboard web separado (fuera de este repositorio) donde asigna cooperativas, activa conductores/vehículos, configura el porcentaje de comisión, y recibe alertas SOS. Ver [`requerimientos_backend.md`](requerimientos_backend.md) para lo que ese dashboard necesita del backend.
-- No existe rol "gerente de cooperativa" — descartado.
+Arquitectura del código por features (auth, home, trips, client_profile, onboarding), cada una dividida en data/domain/presentation siguiendo el patrón BLoC, con inyección de dependencias centralizada (dependency_injection.dart) y persistencia local (base de datos local embebida vía app_database.dart) para caché/sesión offline.
 
-## Ciclo de vida de un viaje (resumen — detalle completo en [`flow.md`](flow.md))
-1. Pasajero define origen/destino → ve un precio sugerido (calculado siempre por backend) → puede ajustarlo (validado: numérico, decimal permitido, no puede acercarse a cero) → publica la solicitud.
-2. La solicitud queda visible 5 minutos para conductores disponibles cercanos. Si nadie oferta, expira; el pasajero puede republicarla solo con el mismo precio o uno mayor, nunca menor.
-3. Conductores aceptan al precio sugerido o contraofertan; pueden retirar su oferta antes de que sea aceptada (no editarla). El pasajero ve las ofertas ya ordenadas por el backend (combinación de precio, cercanía/ETA y bono por calificación del conductor) y elige una.
-4. Conductor viaja al punto de recogida (tracking en vivo) → confirma llegada → el pasajero le muestra un código OTP que el conductor valida → viaje en curso, con **chat de texto en vivo** habilitado desde la asignación hasta el fin del viaje → conductor finaliza al llegar al destino.
-5. Pago en efectivo (v1). Se calcula el monto neto para el conductor tras aplicar la comisión de plataforma (porcentaje global, configurable por el admin, no visible como configuración en esta app — solo se muestra el resultado). Ambas partes pueden calificarse mutuamente en los 15 minutos siguientes; si no lo hacen, el backend aplica automáticamente 5 estrellas.
+El objetivo de este proyecto en Mnemosine es exclusivamente de frontend: terminar, pulir y estabilizar las pantallas y flujos ya avanzados (hay bastante código funcional, pero con partes que van a necesitar refactor/alineación con los endpoints reales del backend ya completado), sin tocar ni rehacer el backend ni la base de datos, que ya existen y están en producción/listos.
+Development type: frontend
+Application type: mobile
+Environments in scope: development, local, production
+Database: existing (postgresql); the project uses a database the user already has and must not recreate it
+Database notes: Es la base de datos PostgreSQL 16 ya existente y en uso del backend Ando (micro-auronix), gestionada por migraciones Flyway versionadas (actualmente hasta V12+). No se crea ninguna base nueva: la app Flutter nunca se conecta a ella directamente, sino siempre a través de la API REST/WebSocket del backend Spring Boot.
 
-## Seguridad y confianza ("taxi seguro")
-- Insignia de conductor verificado (foto, placa, cooperativa, calificación).
-- Código OTP de recogida.
-- Chat de texto en vivo (no solo llamada) durante el viaje.
-- Botón SOS: notifica al **contacto de emergencia del usuario** y al **administrador** (vía el sistema del dashboard, fuera de esta app).
-- Sistema de calificación como mecanismo de moderación: sin penalidad monetaria, pero un usuario o conductor con calificación baja pierde prioridad en el matching (el backend decide el orden; el cliente solo lo consume).
-- Historial y auditoría de eventos del viaje.
+Contiene, entre otras, tablas de usuarios (tb_users, con roles pasajero/conductor), cooperativas de transporte (tb_cooperatives), vehículos (tb_vehicles), viajes con su ciclo de vida completo (tb_trips: SOLICITADO → OFERTADO → ACEPTADO → EN_CURSO → finalizado, origen/destino, pagos y calificaciones), invitaciones de registro de conductores, claves de idempotencia para reintentos seguros de creación de viajes (tb_idempotency_keys), y registros de auditoría. También soporta funciones geoespaciales (extensiones earthdistance/cube) para cálculos de cercanía conductor-pasajero.
 
-## Fuera de alcance de la v1 (explícito, para no generar de más — ver [`rules.md`](rules.md))
-- Panel de administrador (dashboard web separado).
-- Carga de documentos de verificación dentro de la app móvil.
-- Pagos con tarjeta/billetera (previsto para v2).
-- Reporte de incidencias post-viaje más allá de la calificación con comentario (previsto para v2).
+Desde el punto de vista de este proyecto de frontend, la base de datos es solo contexto: ninguna tarea de Ando-UI debe modificar su esquema ni acceder a ella fuera de los endpoints ya expuestos por el backend.
 
-## Internacionalización — revertido a solo español (confirmado)
-El requisito de multi-idioma por turismo se descartó para v1: no hay proveedor de traducción disponible actualmente. **V1 se lanza únicamente en español.** Se mantiene la externalización de strings vía `l10n` como buena práctica (para no requerir refactor cuando se agreguen idiomas en el futuro), pero no se traduce a ningún otro idioma en este lanzamiento.
+El backend de Ando (API REST + WebSocket en Spring Boot, repo micro-auronix) ya está 100% construido y en producción: maneja usuarios, cooperativas, vehículos, viajes, pagos, calificaciones, autenticación JWT, auditoría e idempotencia. Lo que falta es la aplicación móvil Flutter (app_auronix) que los pasajeros y conductores realmente usan para interactuar con ese backend.
 
-## Alcance de publicación
-**V1 se publica solo en Ecuador** (confirmado) — Colombia y Perú quedan como mercados de v2, aunque el modelo de datos (moneda, formato de placa) ya está preparado para ellos (ver [`database.md`](database.md)).
+Ya existe bastante código de frontend avanzado (pantallas de auth, home de cliente/conductor, flujo completo de viaje, sockets de tracking en tiempo real, integración reciente con Firebase Auth), pero fue construido en paralelo al backend y antes de que varias reglas de negocio y endpoints quedaran definitivos. El problema concreto: hay pantallas y blocs que no reflejan exactamente los contratos finales del backend (nombres de campos, estados de viaje, nuevos mecanismos como idempotencia en la creación de viajes), y probablemente partes del flujo que cambiaron de diseño (p. ej. el cambio de librería de mapas) dejaron código muerto o inconsistente.
 
-## Alcance de este repositorio
-Este repositorio contiene **solo el frontend Flutter** para pasajeros y conductores. El backend es una API REST en **Spring Boot** con JWT emitido tras el login, más un canal de tiempo real y FCM ya existente (a auditar). El panel de administrador y el portal de verificación documental **no** viven aquí. El contrato exacto que el frontend necesita del backend se especifica en [`requerimientos_backend.md`](requerimientos_backend.md).
+Resultado esperado: una app Flutter estable, que consuma correctamente cada endpoint real del backend Ando ya terminado, sin duplicar lógica de negocio que debe vivir en el servidor (la app es solo presentación + orquestación de llamadas), con los flujos de pasajero y conductor funcionando de punta a punta contra el backend real (no mocks).

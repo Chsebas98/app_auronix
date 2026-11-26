@@ -1,9 +1,7 @@
 import 'dart:io';
-import 'package:auronix_app/app/core/network/interceptors/auth_interceptor.dart';
 import 'package:auronix_app/app/core/network/interceptors/cache_control_interceptors.dart';
 import 'package:auronix_app/app/core/network/interceptors/retry_control_interceptor.dart';
-import 'package:auronix_app/app/database/app_database.dart';
-import 'package:auronix_app/features/auth/auth.dart';
+import 'package:auronix_app/app/network/interceptors/logging_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -22,8 +20,6 @@ class DioClient {
     bool enableSSLPinning = false,
     Duration? connectTimeout,
     Duration? receiveTimeout,
-    AppDatabase? database,
-    AuthRemoteDatasource? authRemote,
   }) async {
     if (_dio != null && _initialized) return _dio!;
 
@@ -58,12 +54,8 @@ class DioClient {
       );
     }
 
-    if (database != null && authRemote != null) {
-      dio.interceptors.add(
-        AuthInterceptor(db: database, authRemote: authRemote, dio: dio),
-      );
-      debugPrint('Auth Interceptor agregado');
-    }
+    // AuthInterceptor se agrega en dependency_injection.dart, ya con las
+    // dependencias reales (incluido SessionBloc) — no aqui.
 
     // 3. Retry Control Interceptor (controla retry dinámicamente)
     dio.interceptors.add(
@@ -74,16 +66,8 @@ class DioClient {
       ),
     );
 
-    // 4. Log Interceptor (último para ver todo)
-    dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        requestHeader: false,
-        responseHeader: false,
-        logPrint: (obj) => debugPrint('Dio: $obj'),
-      ),
-    );
+    // 4. Log Interceptor (último para ver todo; enmascara tokens/contraseñas)
+    dio.interceptors.add(LoggingInterceptor());
 
     _dio = dio;
     _initialized = true;

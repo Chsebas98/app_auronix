@@ -11,17 +11,16 @@ import 'package:flutter/foundation.dart';
 part 'client_profile_event.dart';
 part 'client_profile_state.dart';
 
-class ClientProfileBloc
-    extends Bloc<ClientProfileEvent, ClientProfileState> {
+class ClientProfileBloc extends Bloc<ClientProfileEvent, ClientProfileState> {
   final GetClientProfileUseCase _getProfile;
   final UpdateClientProfileUseCase _updateProfile;
 
   ClientProfileBloc({
     required GetClientProfileUseCase getProfile,
     required UpdateClientProfileUseCase updateProfile,
-  })  : _getProfile = getProfile,
-        _updateProfile = updateProfile,
-        super(const ClientProfileState()) {
+  }) : _getProfile = getProfile,
+       _updateProfile = updateProfile,
+       super(const ClientProfileState()) {
     on<ClientProfileLoadEvent>(_onLoad);
     on<ClientProfileUpdateEvent>(_onUpdate);
   }
@@ -37,15 +36,16 @@ class ClientProfileBloc
     result.fold(
       (failure) {
         debugPrint('[ProfileBloc] Load falló: ${failure.message}');
-        emit(state.copyWith(
-          status: ClientProfileStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: ClientProfileStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (profile) => emit(state.copyWith(
-        status: ClientProfileStatus.ready,
-        profile: profile,
-      )),
+      (profile) => emit(
+        state.copyWith(status: ClientProfileStatus.ready, profile: profile),
+      ),
     );
   }
 
@@ -70,15 +70,16 @@ class ClientProfileBloc
     result.fold(
       (failure) {
         debugPrint('[ProfileBloc] Update falló: ${failure.message}');
-        emit(state.copyWith(
-          status: ClientProfileStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: ClientProfileStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (updated) => emit(state.copyWith(
-        status: ClientProfileStatus.saved,
-        profile: updated,
-      )),
+      (updated) => emit(
+        state.copyWith(status: ClientProfileStatus.saved, profile: updated),
+      ),
     );
   }
 }

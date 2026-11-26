@@ -45,7 +45,9 @@ class HowItWorksSectionWidget extends StatelessWidget {
           ...List.generate(_steps.length, (i) {
             final step = _steps[i];
             return Padding(
-              padding: EdgeInsets.only(bottom: i < _steps.length - 1 ? 12.h : 0),
+              padding: EdgeInsets.only(
+                bottom: i < _steps.length - 1 ? 12.h : 0,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

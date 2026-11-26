@@ -39,25 +39,27 @@ class DriverHomeModel {
       dailyEarnings: (json['daily_earnings'] as num?)?.toDouble() ?? 0.0,
       completedTrips: json['completed_trips'] as int? ?? 0,
       earningsHistory: historyRaw
-          .map((e) => EarningsPoint(
-                label: e['label'] as String,
-                amount: (e['amount'] as num).toDouble(),
-                index: e['index'] as int,
-              ))
+          .map(
+            (e) => EarningsPoint(
+              label: e['label'] as String,
+              amount: (e['amount'] as num).toDouble(),
+              index: e['index'] as int,
+            ),
+          )
           .toList(),
     );
   }
 
   DriverHomeData toEntity() => DriverHomeData(
-        username: username,
-        firstName: firstName,
-        lastName: lastName,
-        photoUrl: photoUrl,
-        isAvailable: isAvailable,
-        currentAddress: currentAddress,
-        rating: rating,
-        dailyEarnings: dailyEarnings,
-        completedTrips: completedTrips,
-        earningsHistory: earningsHistory,
-      );
+    username: username,
+    firstName: firstName,
+    lastName: lastName,
+    photoUrl: photoUrl,
+    isAvailable: isAvailable,
+    currentAddress: currentAddress,
+    rating: rating,
+    dailyEarnings: dailyEarnings,
+    completedTrips: completedTrips,
+    earningsHistory: earningsHistory,
+  );
 }

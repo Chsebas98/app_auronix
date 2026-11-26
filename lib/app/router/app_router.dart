@@ -4,11 +4,13 @@ import 'package:auronix_app/app/core/bloc/bloc.dart';
 import 'package:auronix_app/app/router/client/client_routes.dart';
 import 'package:auronix_app/app/router/client/client_routes_path.dart';
 import 'package:auronix_app/app/router/driver/conductor_routes.dart';
-import 'package:auronix_app/app/router/driver/conductor_routes_path.dart';
+import 'package:auronix_app/app/router/role_redirect_guard.dart';
 import 'package:auronix_app/app/router/router.dart';
-import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/auth/presentation/pages/client/auth_page.dart';
+import 'package:auronix_app/features/onBoarding/presentation/screens/register_screen.dart';
+import 'package:auronix_app/features/home/presentation/pages/health_check_screen.dart';
 import 'package:auronix_app/features/onBoarding/onboarding_screen.dart';
+import 'package:auronix_app/shared/pages/not_found_screen.dart';
 import 'package:auronix_app/shared/pages/root_page.dart';
 import 'package:auronix_app/shared/templates/presentation/allow_permits_screen.dart';
 
@@ -18,6 +20,7 @@ import 'package:go_router/go_router.dart';
 final _publicRoutes = <String>{
   Routes.onBoarding,
   Routes.about,
+  Routes.health,
   Routes.auth,
   Routes.register,
   Routes.login,
@@ -40,71 +43,25 @@ class AppRouter {
       navigatorKey: rootNavKey,
       initialLocation: Routes.onBoarding,
       refreshListenable: GoRouterRefreshBloc(sessionBloc.stream),
-      // errorBuilder: (context, state) => const NotFoundScreen(),
+      errorBuilder: (context, state) => const NotFoundScreen(),
       redirect: (context, state) {
-        final sessionState = sessionBloc.state;
-        final currentLocation = state.uri.path;
+        if (state.error != null) return null;
 
+        final currentLocation = state.uri.path;
         final isPublic =
             _publicRoutes.contains(currentLocation) ||
             _publicPrefixes.any((p) => currentLocation.contains(p));
 
-        debugPrint('Router redirect:');
-        debugPrint('Ruta: $currentLocation');
-        debugPrint('Estado: ${sessionState.runtimeType}');
+        final target = resolveRedirect(
+          sessionState: sessionBloc.state,
+          currentLocation: currentLocation,
+          isPublic: isPublic,
+        );
 
-        // Si está verificando sesión, dejar en la ruta actual
-        if (sessionState is SessionLoading) {
-          debugPrint('Loading... manteniendo ruta');
-          return null;
-        }
-
-        // Si no hay sesión
-        if (sessionState is SessionUnauthenticated ||
-            sessionState is SessionTokenExpired) {
-          if (sessionState is SessionTokenExpired) {
-            debugPrint('Token expirado → /session_expired');
-            return Routes.sessionExpired;
-          }
-
-          if (!isPublic) {
-            debugPrint('No autenticado → /auth');
-            return Routes.auth;
-          }
-
-          // debugPrint('Ya en ruta pública');
-          return null;
-        }
-
-        //Si está autenticado y en ruta pública
-        if (sessionState is SessionAuthenticated) {
-          // No redirigir si ya está en allow-location
-          if (currentLocation == Routes.allowLocation) {
-            return null;
-          }
-
-          final role = sessionState.dataUser.role;
-          // Si está en rutas públicas y no es onBoarding
-          if (isPublic && currentLocation != Routes.onBoarding) {
-            return switch (role) {
-              Roles.rolUser => ClientRoutesPath.home,
-              Roles.rolDriver => ConductorRoutesPath.home,
-              // 'socio' => SocioRoutesPath.home,
-              // 'gerente' => GerenteRoutesPath.home,
-              // 'superadmin' => SuperAdminRoutesPath.home,
-              _ => Routes.root,
-            };
-          }
-
-          // Si está en onBoarding, dejarlo ahí
-          if (currentLocation == Routes.onBoarding) {
-            debugPrint('En onboarding, esperando acción del usuario');
-            return null;
-          }
-        }
-
-        debugPrint('Sin redirect');
-        return null;
+        debugPrint(
+          'Router redirect: $currentLocation (${sessionBloc.state.runtimeType}) → ${target ?? 'sin redirect'}',
+        );
+        return target;
       },
       routes: [
         //Generales
@@ -114,6 +71,11 @@ class AppRouter {
           builder: (context, state) {
             return AllowPermitsScreen();
           },
+        ),
+        GoRoute(
+          name: 'health',
+          path: Routes.health,
+          builder: (context, state) => const HealthCheckScreen(),
         ),
         //Protegidas - Cliente
         GoRoute(
@@ -137,6 +99,14 @@ class AppRouter {
           path: Routes.auth,
           builder: (context, state) {
             return const AuthPage();
+          },
+        ),
+
+        GoRoute(
+          name: 'register',
+          path: Routes.register,
+          builder: (context, state) {
+            return const RegisterScreen();
           },
         ),
 

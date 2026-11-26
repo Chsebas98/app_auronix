@@ -1,6 +1,7 @@
 import 'package:auronix_app/core/core.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/client_trip_remote_datasource.dart';
 import 'package:auronix_app/features/trips/data/datasources/remote/driver_trip_remote_datasource.dart';
+import 'package:auronix_app/features/trips/domain/exceptions/active_trip_exception.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/complete_trip_result.dart';
 import 'package:auronix_app/features/trips/domain/models/interfaces/trip_entity.dart';
 import 'package:auronix_app/features/trips/domain/repository/trip_repository.dart';
@@ -14,18 +15,30 @@ class TripRepositoryImpl implements TripRepository {
   TripRepositoryImpl({
     required ClientTripRemoteDatasource clientRemote,
     required DriverTripRemoteDatasource driverRemote,
-  })  : _clientRemote = clientRemote,
-        _driverRemote = driverRemote;
+  }) : _clientRemote = clientRemote,
+       _driverRemote = driverRemote;
 
   // ──────────────────── Helpers ────────────────────
+
+  /// T23-C4: un 409 significa que el pasajero ya tiene un viaje activo
+  /// (micro-auronix CreateTripUseCase) — se relanza como excepcion de
+  /// dominio especifica en vez de devolverse como Failure generico, para
+  /// que la capa de presentacion pueda distinguirlo de un error de servidor.
+  void _throwIfActiveTripConflict(Object e) {
+    if (e is DioException && e.response?.statusCode == 409) {
+      throw const ActiveTripException();
+    }
+  }
 
   Either<Failure, T> _handleError<T>(Object e) {
     if (e is DioException && e.response?.data != null) {
       final body = e.response!.data as Map<String, dynamic>;
-      return Left(ServerFailure(
-        message: body['message'] as String? ?? 'Error del servidor',
-        statusCode: e.response?.statusCode,
-      ));
+      return Left(
+        ServerFailure(
+          message: body['message'] as String? ?? 'Error del servidor',
+          statusCode: e.response?.statusCode,
+        ),
+      );
     }
     return Left(UnexpectedFailure(message: e.toString()));
   }
@@ -58,6 +71,7 @@ class TripRepositoryImpl implements TripRepository {
       );
       return Right(model.toEntity());
     } catch (e) {
+      _throwIfActiveTripConflict(e);
       return _handleError(e);
     }
   }
@@ -86,7 +100,10 @@ class TripRepositoryImpl implements TripRepository {
   }) async {
     try {
       await _clientRemote.cancelTrip(
-          userId: userId, tripId: tripId, motivo: motivo);
+        userId: userId,
+        tripId: tripId,
+        motivo: motivo,
+      );
       return const Right(null);
     } catch (e) {
       return _handleError(e);
@@ -117,7 +134,8 @@ class TripRepositoryImpl implements TripRepository {
 
   @override
   Future<Either<Failure, List<TripEntity>>> getAvailableTrips(
-      int userId) async {
+    int userId,
+  ) async {
     try {
       final models = await _driverRemote.getAvailableTrips(userId);
       return Right(models.map((m) => m.toEntity()).toList());
@@ -132,8 +150,10 @@ class TripRepositoryImpl implements TripRepository {
     required int tripId,
   }) async {
     try {
-      final model =
-          await _driverRemote.acceptTrip(userId: userId, tripId: tripId);
+      final model = await _driverRemote.acceptTrip(
+        userId: userId,
+        tripId: tripId,
+      );
       return Right(model.toEntity());
     } catch (e) {
       return _handleError(e);
@@ -148,7 +168,10 @@ class TripRepositoryImpl implements TripRepository {
   }) async {
     try {
       await _driverRemote.rejectTrip(
-          userId: userId, tripId: tripId, motivo: motivo);
+        userId: userId,
+        tripId: tripId,
+        motivo: motivo,
+      );
       return const Right(null);
     } catch (e) {
       return _handleError(e);
@@ -161,8 +184,10 @@ class TripRepositoryImpl implements TripRepository {
     required int tripId,
   }) async {
     try {
-      final model =
-          await _driverRemote.startTrip(userId: userId, tripId: tripId);
+      final model = await _driverRemote.startTrip(
+        userId: userId,
+        tripId: tripId,
+      );
       return Right(model.toEntity());
     } catch (e) {
       return _handleError(e);

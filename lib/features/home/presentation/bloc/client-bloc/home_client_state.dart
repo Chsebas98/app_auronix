@@ -51,13 +51,13 @@ final class HomeClientState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        dataProfile,
-        userId,
-        currentAddress,
-        currentLat,
-        currentLng,
-        isLoadingAddress,
-        currentTrip,
-      ];
+    status,
+    dataProfile,
+    userId,
+    currentAddress,
+    currentLat,
+    currentLng,
+    isLoadingAddress,
+    currentTrip,
+  ];
 }

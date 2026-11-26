@@ -9,8 +9,8 @@ class ClientStartTripPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ClientTripBloc>(),
+    return BlocProvider.value(
+      value: sl<ClientTripBloc>(),
       child: const ClientTripTemplate(),
     );
   }

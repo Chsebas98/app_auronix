@@ -1,0 +1,32 @@
+name: Flutter CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - environment/dev
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Copiar .env.example a .env.dev/.env.prod si no existen
+        run: |
+          [ -f .env.dev ] || cp .env.example .env.dev
+          [ -f .env.prod ] || cp .env.example .env.prod
+      - run: flutter analyze --fatal-infos
+      - run: dart format --output=none --set-exit-if-changed .
+      # --concurrency=1: varios archivos de test usan la AppDatabase real
+      # (sqflite_common_ffi) sobre el mismo archivo .db — correrlos en
+      # paralelo produce "database is locked" de forma intermitente.
+      - run: flutter test --coverage --concurrency=1

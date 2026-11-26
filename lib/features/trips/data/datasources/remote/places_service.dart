@@ -23,14 +23,14 @@ class PlacePrediction {
   });
 
   PlacePrediction copyWith({double? distanceKm}) => PlacePrediction(
-        placeId: placeId,
-        description: description,
-        mainText: mainText,
-        secondaryText: secondaryText,
-        latitude: latitude,
-        longitude: longitude,
-        distanceKm: distanceKm ?? this.distanceKm,
-      );
+    placeId: placeId,
+    description: description,
+    mainText: mainText,
+    secondaryText: secondaryText,
+    latitude: latitude,
+    longitude: longitude,
+    distanceKm: distanceKm ?? this.distanceKm,
+  );
 
   factory PlacePrediction.fromGooglePlaces(Map<String, dynamic> json) {
     final mainText =
@@ -62,9 +62,10 @@ class PlaceDetails {
 }
 
 class PlacesService {
-  static const _baseUrl = 'https://maps.googleapis.com/maps/api';
+  static const _defaultBaseUrl = 'https://maps.googleapis.com/maps/api';
 
   final String _apiKey;
+  final String _baseUrl;
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -73,7 +74,9 @@ class PlacesService {
     ),
   );
 
-  PlacesService({required String apiKey}) : _apiKey = apiKey;
+  PlacesService({required String apiKey, String? baseUrl})
+    : _apiKey = apiKey,
+      _baseUrl = baseUrl ?? _defaultBaseUrl;
 
   Future<List<PlacePrediction>> autocomplete(
     String input, {
@@ -99,12 +102,14 @@ class PlacesService {
       final predictions =
           (response.data['predictions'] as List<dynamic>?) ?? [];
       debugPrint(
-          '[PlacesService] Google Places: ${predictions.length} resultados para "$input"');
+        '[PlacesService] Google Places: ${predictions.length} resultados para "$input"',
+      );
 
       final results = <PlacePrediction>[];
       for (final p in predictions) {
-        final pred =
-            PlacePrediction.fromGooglePlaces(p as Map<String, dynamic>);
+        final pred = PlacePrediction.fromGooglePlaces(
+          p as Map<String, dynamic>,
+        );
         if (pred.placeId.isEmpty) continue;
 
         final details = await getDetails(pred.placeId);
@@ -124,8 +129,7 @@ class PlacesService {
         );
 
         if (lat != null && lng != null) {
-          final d =
-              _haversineKm(lat, lng, details.latitude, details.longitude);
+          final d = _haversineKm(lat, lng, details.latitude, details.longitude);
           enriched = enriched.copyWith(distanceKm: d);
         }
         results.add(enriched);
@@ -140,6 +144,38 @@ class PlacesService {
       debugPrint('[PlacesService] Google Places error: $e');
       return [];
     }
+  }
+
+  /// Variante sin captura de errores, para PlacesRemoteDataSource (T17): deja
+  /// propagar DioException para que la capa de repositorio pueda mapearla a
+  /// un Failure tipado, en vez de colapsarla en una lista vacia como
+  /// [autocomplete] (que las UI existentes ya asumen que nunca lanza).
+  Future<List<dynamic>> fetchAutocompleteRaw(String input) async {
+    final response = await _dio.get(
+      '$_baseUrl/place/autocomplete/json',
+      queryParameters: {
+        'input': input,
+        'key': _apiKey,
+        'components': 'country:ec',
+        'language': 'es',
+      },
+    );
+    return (response.data['predictions'] as List<dynamic>?) ?? [];
+  }
+
+  /// Ver [fetchAutocompleteRaw]: equivalente sin captura de errores para el
+  /// detalle de un lugar.
+  Future<Map<String, dynamic>?> fetchDetailsRaw(String placeId) async {
+    final response = await _dio.get(
+      '$_baseUrl/place/details/json',
+      queryParameters: {
+        'place_id': placeId,
+        'key': _apiKey,
+        'fields': 'geometry,formatted_address,name',
+        'language': 'es',
+      },
+    );
+    return response.data['result'] as Map<String, dynamic>?;
   }
 
   Future<PlaceDetails?> getDetails(String placeId) async {
@@ -157,14 +193,14 @@ class PlacesService {
       final result = response.data['result'] as Map<String, dynamic>?;
       if (result == null) return null;
 
-      final location =
-          result['geometry']?['location'] as Map<String, dynamic>?;
+      final location = result['geometry']?['location'] as Map<String, dynamic>?;
       if (location == null) return null;
 
       return PlaceDetails(
         latitude: (location['lat'] as num).toDouble(),
         longitude: (location['lng'] as num).toDouble(),
-        formattedAddress: result['formatted_address'] as String? ??
+        formattedAddress:
+            result['formatted_address'] as String? ??
             result['name'] as String? ??
             '',
       );
@@ -186,8 +222,7 @@ class PlacesService {
         },
       );
 
-      final results =
-          (response.data['results'] as List<dynamic>?) ?? [];
+      final results = (response.data['results'] as List<dynamic>?) ?? [];
       if (results.isEmpty) return null;
 
       return results.first['formatted_address'] as String?;
@@ -214,22 +249,43 @@ class PlacesService {
         },
       );
 
-      final routes =
-          (response.data['routes'] as List<dynamic>?) ?? [];
+      final routes = (response.data['routes'] as List<dynamic>?) ?? [];
       if (routes.isEmpty) return [];
 
-      final polyline =
-          routes.first['overview_polyline']?['points'] as String?;
+      final polyline = routes.first['overview_polyline']?['points'] as String?;
       if (polyline == null) return [];
 
-      return _decodePolyline(polyline);
+      return decodePolyline(polyline);
     } catch (e) {
       debugPrint('[PlacesService] getRoutePoints error: $e');
       return [];
     }
   }
 
-  static List<List<double>> _decodePolyline(String encoded) {
+  /// Ver [fetchAutocompleteRaw]: equivalente sin captura de errores para
+  /// direcciones/ruta (T18), usado por DirectionsRemoteDataSource. Devuelve
+  /// el JSON crudo de Directions (incluye `status`: la API responde HTTP 200
+  /// con `ZERO_RESULTS`/`NOT_FOUND` para una ruta no transitable, no un
+  /// error HTTP).
+  Future<Map<String, dynamic>> fetchDirectionsRaw({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+  }) async {
+    final response = await _dio.get(
+      '$_baseUrl/directions/json',
+      queryParameters: {
+        'origin': '$originLat,$originLng',
+        'destination': '$destLat,$destLng',
+        'key': _apiKey,
+        'mode': 'driving',
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  static List<List<double>> decodePolyline(String encoded) {
     final points = <List<double>>[];
     int index = 0;
     int lat = 0;
@@ -261,12 +317,16 @@ class PlacesService {
   }
 
   static double _haversineKm(
-    double lat1, double lng1, double lat2, double lng2,
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
   ) {
     const r = 6371.0;
     final dLat = _toRad(lat2 - lat1);
     final dLng = _toRad(lng2 - lng1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_toRad(lat1)) *
             math.cos(_toRad(lat2)) *
             math.sin(dLng / 2) *

@@ -10,15 +10,17 @@ class ClientProfileRepositoryImpl implements ClientProfileRepository {
   final ClientProfileRemoteDatasource _remote;
 
   ClientProfileRepositoryImpl({required ClientProfileRemoteDatasource remote})
-      : _remote = remote;
+    : _remote = remote;
 
   Either<Failure, T> _handleError<T>(Object e) {
     if (e is DioException && e.response?.data != null) {
       final body = e.response!.data as Map<String, dynamic>;
-      return Left(ServerFailure(
-        message: body['message'] as String? ?? 'Error del servidor',
-        statusCode: e.response?.statusCode,
-      ));
+      return Left(
+        ServerFailure(
+          message: body['message'] as String? ?? 'Error del servidor',
+          statusCode: e.response?.statusCode,
+        ),
+      );
     }
     return Left(UnexpectedFailure(message: e.toString()));
   }
@@ -40,7 +42,8 @@ class ClientProfileRepositoryImpl implements ClientProfileRepository {
 
   @override
   Future<Either<Failure, AuthenticationCredentials>> getProfile(
-      int userId) async {
+    int userId,
+  ) async {
     try {
       final result = await _remote.getProfile(userId);
       return Right(_parseCredentials(result));

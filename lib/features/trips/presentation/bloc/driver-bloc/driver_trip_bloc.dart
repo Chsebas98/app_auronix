@@ -42,15 +42,15 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     required RatePassengerUseCase ratePassenger,
     required DriverTripSocket socket,
     required DriverPositionSender positionSender,
-  })  : _getAvailableTrips = getAvailableTrips,
-        _acceptTrip = acceptTrip,
-        _rejectTrip = rejectTrip,
-        _startTrip = startTrip,
-        _completeTrip = completeTrip,
-        _ratePassenger = ratePassenger,
-        _socket = socket,
-        _positionSender = positionSender,
-        super(const DriverTripState()) {
+  }) : _getAvailableTrips = getAvailableTrips,
+       _acceptTrip = acceptTrip,
+       _rejectTrip = rejectTrip,
+       _startTrip = startTrip,
+       _completeTrip = completeTrip,
+       _ratePassenger = ratePassenger,
+       _socket = socket,
+       _positionSender = positionSender,
+       super(const DriverTripState()) {
     on<DriverTripLoadNearbyEvent>(_onLoadNearby);
     on<DriverTripConnectSocketEvent>(_onConnectSocket);
     on<DriverTripSocketReceivedEvent>(_onSocketReceived);
@@ -82,10 +82,7 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
         pos = await Geolocator.getLastKnownPosition();
       }
       if (pos != null) {
-        emit(state.copyWith(
-          driverLat: pos.latitude,
-          driverLng: pos.longitude,
-        ));
+        emit(state.copyWith(driverLat: pos.latitude, driverLng: pos.longitude));
         debugPrint('[DriverTrip] GPS: ${pos.latitude}, ${pos.longitude}');
       }
     } catch (e) {
@@ -95,16 +92,20 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     final result = await _getAvailableTrips(event.userId);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: DriverTripStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: DriverTripStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (entities) {
         debugPrint('[DriverTrip] viajes disponibles: ${entities.length}');
-        emit(state.copyWith(
-          status: DriverTripStatus.ready,
-          nearbyRequests: entities.map(_entityToRequest).toList(),
-        ));
+        emit(
+          state.copyWith(
+            status: DriverTripStatus.ready,
+            nearbyRequests: entities.map(_entityToRequest).toList(),
+          ),
+        );
       },
     );
   }
@@ -115,9 +116,12 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   ) {
     _driverId = event.driverId;
     _socketSub?.cancel();
-    _socketSub = _socket.connect(event.driverId).listen(
-      (socketEvent) => add(DriverTripSocketReceivedEvent(event: socketEvent)),
-    );
+    _socketSub = _socket
+        .connect(event.driverId)
+        .listen(
+          (socketEvent) =>
+              add(DriverTripSocketReceivedEvent(event: socketEvent)),
+        );
   }
 
   FutureOr<void> _onSocketReceived(
@@ -147,7 +151,9 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     DriverTripAcceptEvent event,
     Emitter<DriverTripState> emit,
   ) async {
-    debugPrint('[DriverTrip] accept userId=${event.userId} tripId=${event.tripId}');
+    debugPrint(
+      '[DriverTrip] accept userId=${event.userId} tripId=${event.tripId}',
+    );
     emit(state.copyWith(status: DriverTripStatus.accepting));
 
     final result = await _acceptTrip(
@@ -158,19 +164,25 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     result.fold(
       (failure) {
         debugPrint('[DriverTrip] accept FAILED: ${failure.message}');
-        emit(state.copyWith(
-          status: DriverTripStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: DriverTripStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (trip) {
-        debugPrint('[DriverTrip] accept OK → trip ${trip.id} estado: ${trip.estado}');
+        debugPrint(
+          '[DriverTrip] accept OK → trip ${trip.id} estado: ${trip.estado.toBackendValue()}',
+        );
         _positionSender.start(_driverId);
-        emit(state.copyWith(
-          status: DriverTripStatus.accepted,
-          activeTrip: trip,
-          clearSelected: true,
-        ));
+        emit(
+          state.copyWith(
+            status: DriverTripStatus.accepted,
+            activeTrip: trip,
+            clearSelected: true,
+          ),
+        );
       },
     );
   }
@@ -179,8 +191,9 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     DriverTripRejectEvent event,
     Emitter<DriverTripState> emit,
   ) async {
-    final updated =
-        state.nearbyRequests.where((r) => r.id != event.requestId).toList();
+    final updated = state.nearbyRequests
+        .where((r) => r.id != event.requestId)
+        .toList();
     emit(state.copyWith(nearbyRequests: updated, clearSelected: true));
 
     await _rejectTrip(
@@ -191,32 +204,32 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
   }
 
   TripRequest _entityToRequest(TripEntity e) => TripRequest(
-        id: e.id.toString(),
-        clientName: '',
-        clientRating: 0,
-        distanceKm: e.distanciaKm,
-        originAddress: e.origenDireccion,
-        originEta: '',
-        destinationAddress: e.destinoDireccion,
-        destinationEta: '',
-        estimatedFare: e.precioTotal,
-        latitude: e.origenLatitud,
-        longitude: e.origenLongitud,
-      );
+    id: e.id.toString(),
+    clientName: '',
+    clientRating: 0,
+    distanceKm: e.distanciaKm,
+    originAddress: e.origenDireccion,
+    originEta: '',
+    destinationAddress: e.destinoDireccion,
+    destinationEta: '',
+    estimatedFare: e.precioTotal,
+    latitude: e.origenLatitud,
+    longitude: e.origenLongitud,
+  );
 
   TripRequest _socketEventToRequest(TripRequestEvent e) => TripRequest(
-        id: e.id.toString(),
-        clientName: '',
-        clientRating: 0,
-        distanceKm: e.distanciaKm,
-        originAddress: e.origenDireccion,
-        originEta: '',
-        destinationAddress: e.destinoDireccion,
-        destinationEta: '',
-        estimatedFare: e.precioTotal,
-        latitude: e.origenLatitud,
-        longitude: e.origenLongitud,
-      );
+    id: e.id.toString(),
+    clientName: '',
+    clientRating: 0,
+    distanceKm: e.distanciaKm,
+    originAddress: e.origenDireccion,
+    originEta: '',
+    destinationAddress: e.destinoDireccion,
+    destinationEta: '',
+    estimatedFare: e.precioTotal,
+    latitude: e.origenLatitud,
+    longitude: e.origenLongitud,
+  );
 
   FutureOr<void> _onStart(
     DriverTripStartEvent event,
@@ -227,14 +240,15 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     final result = await _startTrip(userId: event.userId, tripId: event.tripId);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: DriverTripStatus.error,
-        errorMessage: failure.message,
-      )),
-      (trip) => emit(state.copyWith(
-        status: DriverTripStatus.inProgress,
-        activeTrip: trip,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: DriverTripStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (trip) => emit(
+        state.copyWith(status: DriverTripStatus.inProgress, activeTrip: trip),
+      ),
     );
   }
 
@@ -252,16 +266,20 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: DriverTripStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: DriverTripStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (result) {
         _positionSender.stop();
-        emit(state.copyWith(
-          status: DriverTripStatus.completed,
-          completedTrip: result,
-        ));
+        emit(
+          state.copyWith(
+            status: DriverTripStatus.completed,
+            completedTrip: result,
+          ),
+        );
       },
     );
   }
@@ -280,17 +298,21 @@ class DriverTripBloc extends Bloc<DriverTripEvent, DriverTripState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: DriverTripStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: DriverTripStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => emit(state.copyWith(status: DriverTripStatus.rated)),
     );
   }
 
-  // ignore: must_call_super
   @override
-  Future<void> close() async {
-    // Singleton gestionado por GetIt — no cerrar
+  Future<void> close() {
+    _socketSub?.cancel();
+    _socket.disconnect();
+    _positionSender.stop();
+    return super.close();
   }
 }
